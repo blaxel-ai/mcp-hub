@@ -27,13 +27,24 @@ type Repository struct {
 	Dockerfile      string                   `yaml:"dockerfile" mendatory:"false" default:"Dockerfile"`
 	PackageManager  PackageManager           `yaml:"packageManager" mendatory:"false" default:"npm"`
 	Branch          string                   `yaml:"branch" mendatory:"false" default:"main"`
+	URL             string                   `yaml:"url" mendatory:"false"`
 	DisplayName     string                   `yaml:"displayName" mendatory:"true"`
 	Icon            string                   `yaml:"icon" mendatory:"true"`
 	Description     string                   `yaml:"description" mendatory:"true"`
 	LongDescription string                   `yaml:"longDescription" mendatory:"true"`
+	Enterprise      bool                     `yaml:"enterprise" mendatory:"false" default:"false"`
+	ComingSoon      bool                     `yaml:"comingSoon" mendatory:"false" default:"false"`
+	Secrets         []string                 `yaml:"secrets" mendatory:"false"`
+	OAuth           *OAuth                   `yaml:"oauth" mendatory:"false"`
+	Integration     string                   `yaml:"integration" mendatory:"false"`
 	Overrider       []map[string]interface{} `yaml:"overrider"`
 	Tags            []string                 `yaml:"tags"`
 	Categories      []string                 `yaml:"categories"`
+}
+
+type OAuth struct {
+	Type   string   `yaml:"type"`
+	Scopes []string `yaml:"scopes"`
 }
 
 func (h *Hub) Read(path string) error {

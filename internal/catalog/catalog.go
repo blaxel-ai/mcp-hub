@@ -14,15 +14,36 @@ const (
 )
 
 type Artifact struct {
-	DisplayName     string                `json:"displayName"`
-	Repository      string                `json:"repository"`
-	Description     string                `json:"description"`
-	Icon            string                `json:"icon"`
-	Tags            []string              `json:"tags"`
-	Categories      []string              `json:"categories"`
-	LongDescription string                `json:"longDescription"`
-	Entrypoint      Entrypoint            `json:"entrypoint"`
-	Schema          smithery.ConfigSchema `json:"schema"`
+	Name            string     `json:"name"`
+	Enterprise      bool       `json:"enterprise"`
+	ComingSoon      bool       `json:"coming_soon"`
+	DisplayName     string     `json:"displayName"`
+	Categories      []string   `json:"categories"`
+	Integration     string     `json:"integration"`
+	Description     string     `json:"description"`
+	LongDescription string     `json:"longDescription"`
+	Icon            string     `json:"icon"`
+	URL             string     `json:"url"`
+	Form            Form       `json:"form"`
+	Entrypoint      Entrypoint `json:"entrypoint"`
+}
+
+type Form struct {
+	Config  map[string]Field `json:"config"`
+	Secrets map[string]Field `json:"secrets"`
+	OAuth   *OAuth           `json:"oauth,omitempty"`
+}
+
+type Field struct {
+	Description string `json:"description"`
+	Label       string `json:"label"`
+	Required    bool   `json:"required"`
+	Hidden      bool   `json:"hidden,omitempty"`
+}
+
+type OAuth struct {
+	Type  string   `json:"type"`
+	Scope []string `json:"scope"`
 }
 
 type Entrypoint struct {
@@ -52,20 +73,73 @@ func (c *Catalog) Save() error {
 }
 
 func (c *Catalog) Load(name string, hub *hub.Repository, smithery *smithery.SmitheryConfig) error {
+	secrets := make(map[string]Field)
+	config := make(map[string]Field)
+	for _, secret := range hub.Secrets {
+		p, ok := smithery.StartCommand.ConfigSchema.Properties[secret]
+		if !ok {
+			return fmt.Errorf("secret %s not found in smithery config", secret)
+		}
+		isRequired := false
+		for _, required := range smithery.StartCommand.ConfigSchema.Required {
+			if required == secret {
+				isRequired = true
+			}
+		}
+		secrets[secret] = Field{
+			Description: p.Description,
+			Label:       ToLabel(secret),
+			Required:    isRequired,
+			Hidden:      p.Default != "",
+		}
+	}
+
+	for name, property := range smithery.StartCommand.ConfigSchema.Properties {
+		if _, ok := secrets[name]; ok {
+			continue
+		}
+		isRequired := false
+		for _, required := range smithery.StartCommand.ConfigSchema.Required {
+			if required == name {
+				isRequired = true
+			}
+		}
+		config[name] = Field{
+			Description: property.Description,
+			Label:       ToLabel(name),
+			Required:    isRequired,
+		}
+	}
+
+	var oauth *OAuth
+	if hub.OAuth != nil {
+		oauth = &OAuth{
+			Type:  hub.OAuth.Type,
+			Scope: hub.OAuth.Scopes,
+		}
+	}
+
 	artifact := Artifact{
+		Name:            name,
 		DisplayName:     name,
-		Repository:      hub.Repository,
 		Description:     hub.Description,
-		Icon:            hub.Icon,
-		Tags:            hub.Tags,
-		Categories:      hub.Categories,
 		LongDescription: hub.LongDescription,
+		Icon:            hub.Icon,
+		Categories:      hub.Categories,
+		URL:             hub.URL,
+		Form: Form{
+			Config:  config,
+			Secrets: secrets,
+			OAuth:   oauth,
+		},
 		Entrypoint: Entrypoint{
 			Command: smithery.ParsedCommand.Command,
 			Args:    smithery.ParsedCommand.Args,
 			Env:     smithery.ParsedCommand.Env,
 		},
-		Schema: smithery.StartCommand.ConfigSchema,
+		Enterprise:  hub.Enterprise,
+		ComingSoon:  hub.ComingSoon,
+		Integration: hub.Integration,
 	}
 	c.AddArtifact(artifact)
 	return nil

@@ -1,16 +1,8 @@
 {
+  "name": "brave-search",
+  "enterprise": false,
+  "coming_soon": false,
   "displayName": "brave-search",
-  "repository": "https://github.com/smithery-ai/reference-servers.git",
-  "description": "A search engine for Brave.",
-  "icon": "https://github.com/brave/brave-search/blob/main/src/brave/logo.jpg",
-  "tags": [
-    "reference-servers",
-    "smithery",
-    "github",
-    "brave-search",
-    "brave-search-smithery",
-    "brave-search-smithery-reference-servers"
-  ],
   "categories": [
     "reference-servers",
     "smithery",
@@ -19,7 +11,21 @@
     "brave-search-smithery",
     "brave-search-smithery-reference-servers"
   ],
+  "integration": "",
+  "description": "A search engine for Brave.",
   "longDescription": "A search engine for Brave.",
+  "icon": "https://github.com/brave/brave-search/blob/main/src/brave/logo.jpg",
+  "url": "https://github.com/brave/brave-search",
+  "form": {
+    "config": {},
+    "secrets": {
+      "braveApiKey": {
+        "description": "The API key for the BRAVE Search server.",
+        "label": "Brave Api Key",
+        "required": true
+      }
+    }
+  },
   "entrypoint": {
     "command": "node",
     "args": [
@@ -27,19 +33,6 @@
     ],
     "env": {
       "BRAVE_API_KEY": "$braveApiKey"
-    }
-  },
-  "schema": {
-    "Type": "object",
-    "Required": [
-      "braveApiKey"
-    ],
-    "Properties": {
-      "braveApiKey": {
-        "Type": "string",
-        "Default": "",
-        "Description": "The API key for the BRAVE Search server."
-      }
     }
   }
 }

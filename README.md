@@ -68,6 +68,8 @@ repositories:
     icon: https://github.com/brave/brave-search/blob/main/src/brave/logo.jpg
     description: A search engine for Brave.
     longDescription: A search engine for Brave.
+    secrets:
+      - braveApiKey
     tags:
       - brave-search
       - brave-search-smithery
