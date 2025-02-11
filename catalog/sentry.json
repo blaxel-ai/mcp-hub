@@ -1,0 +1,42 @@
+{
+  "displayName": "sentry",
+  "repository": "https://github.com/smithery-ai/reference-servers.git",
+  "description": "An MCP Toolkit for Sentry.",
+  "icon": "https://github.com/smithery-ai/reference-servers/blob/main/src/sentry/logo.jpg",
+  "tags": [
+    "reference-servers",
+    "smithery",
+    "github",
+    "sentry",
+    "sentry-smithery",
+    "sentry-smithery-reference-servers"
+  ],
+  "categories": [
+    "reference-servers",
+    "smithery",
+    "github",
+    "sentry"
+  ],
+  "longDescription": "An MCP Toolkit for Sentry.",
+  "entrypoint": {
+    "command": "mcp-server-sentry",
+    "args": [
+      "--auth-token",
+      "$authToken"
+    ],
+    "env": {}
+  },
+  "schema": {
+    "Type": "object",
+    "Required": [
+      "authToken"
+    ],
+    "Properties": {
+      "authToken": {
+        "Type": "string",
+        "Default": "",
+        "Description": "The authentication token for accessing Sentry data."
+      }
+    }
+  }
+}

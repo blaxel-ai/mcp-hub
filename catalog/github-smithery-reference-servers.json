@@ -1,0 +1,45 @@
+{
+  "displayName": "github-smithery-reference-servers",
+  "repository": "https://github.com/smithery-ai/reference-servers.git",
+  "description": "A collection of reference servers for GitHub.",
+  "icon": "https://github.com/smithery-ai/reference-servers/blob/main/src/github/gtasks-mcp/logo.jpg",
+  "tags": [
+    "reference-servers",
+    "smithery",
+    "github",
+    "gtasks-mcp",
+    "gtasks-mcp-smithery",
+    "gtasks-mcp-smithery-reference-servers"
+  ],
+  "categories": [
+    "reference-servers",
+    "smithery",
+    "github",
+    "gtasks-mcp",
+    "gtasks-mcp-smithery",
+    "gtasks-mcp-smithery-reference-servers"
+  ],
+  "longDescription": "A collection of reference servers for GitHub.",
+  "entrypoint": {
+    "command": "node",
+    "args": [
+      "dist/index.js"
+    ],
+    "env": {
+      "GITHUB_PERSONAL_ACCESS_TOKEN": "$githubPersonalAccessToken"
+    }
+  },
+  "schema": {
+    "Type": "object",
+    "Required": [
+      "githubPersonalAccessToken"
+    ],
+    "Properties": {
+      "githubPersonalAccessToken": {
+        "Type": "string",
+        "Default": "",
+        "Description": "The personal access token for accessing the GitHub API."
+      }
+    }
+  }
+}

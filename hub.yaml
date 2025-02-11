@@ -1,0 +1,73 @@
+repositories:
+  github-smithery-reference-servers:
+    repository: https://github.com/smithery-ai/reference-servers.git
+    smitheryPath: src/github/smithery.yaml
+    dockerfile: src/github/Dockerfile
+    branch: main
+    displayName: GitHub
+    icon: https://github.com/smithery-ai/reference-servers/blob/main/src/github/gtasks-mcp/logo.jpg
+    description: A collection of reference servers for GitHub.
+    longDescription: A collection of reference servers for GitHub.
+    tags:
+      - reference-servers
+      - smithery
+      - github
+      - gtasks-mcp
+      - gtasks-mcp-smithery
+      - gtasks-mcp-smithery-reference-servers
+    categories:
+      - reference-servers
+      - smithery
+      - github
+      - gtasks-mcp
+      - gtasks-mcp-smithery
+      - gtasks-mcp-smithery-reference-servers
+  
+  brave-search:
+    repository: https://github.com/smithery-ai/reference-servers.git
+    smitheryPath: src/brave-search/smithery.yaml
+    dockerfile: src/brave-search/Dockerfile
+    branch: main
+    displayName: Brave Search
+    icon: https://github.com/brave/brave-search/blob/main/src/brave/logo.jpg
+    description: A search engine for Brave.
+    longDescription: A search engine for Brave.
+    tags:
+      - reference-servers
+      - smithery
+      - github
+      - brave-search
+      - brave-search-smithery
+      - brave-search-smithery-reference-servers
+    categories:
+      - reference-servers
+      - smithery
+      - github
+      - brave-search
+      - brave-search-smithery
+      - brave-search-smithery-reference-servers
+  
+  sentry:
+    repository: https://github.com/smithery-ai/reference-servers.git
+    smitheryPath: src/sentry/smithery.yaml
+    dockerfile: src/sentry/Dockerfile
+    branch: main
+    packageManager: apt
+    displayName: Sentry
+    icon: https://github.com/smithery-ai/reference-servers/blob/main/src/sentry/logo.jpg
+    description: An MCP Toolkit for Sentry.
+    longDescription: An MCP Toolkit for Sentry.
+    overrider:
+      - build.dockerBuildPath: "."
+    tags:
+      - reference-servers
+      - smithery
+      - github
+      - sentry
+      - sentry-smithery
+      - sentry-smithery-reference-servers
+    categories:
+      - reference-servers
+      - smithery
+      - github
+      - sentry
