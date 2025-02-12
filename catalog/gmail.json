@@ -1,0 +1,23 @@
+{
+  "name": "gmail",
+  "enterprise": false,
+  "coming_soon": false,
+  "displayName": "gmail",
+  "categories": [
+    "email"
+  ],
+  "integration": "",
+  "description": "Send emails using Gmail",
+  "longDescription": "Send emails using Gmail",
+  "icon": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Gmail_icon_%282020%29.svg/1024px-Gmail_icon_%282020%29.svg.png",
+  "url": "https://console.cloud.google.com/apis/credentials",
+  "form": {
+    "config": null,
+    "secrets": null
+  },
+  "entrypoint": {
+    "command": "",
+    "args": null,
+    "env": null
+  }
+}

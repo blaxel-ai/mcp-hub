@@ -1,0 +1,23 @@
+{
+  "name": "aws-s3",
+  "enterprise": false,
+  "coming_soon": false,
+  "displayName": "aws-s3",
+  "categories": [
+    "storage"
+  ],
+  "integration": "",
+  "description": "Create, read and update objects in your S3 storage",
+  "longDescription": "Create, read and update objects in your S3 storage",
+  "icon": "https://a.b.cdn.console.awsstatic.com/a/v1/DKY2SIL5N3MJQCULDNOQE7TKLNQIUXRSOHBJKJGQAHLZO7TLH3TQ/icon/c0828e0381730befd1f7a025057c74fb-43acc0496e64afba82dbc9ab774dc622.svg",
+  "url": "https://aws.amazon.com/s3",
+  "form": {
+    "config": null,
+    "secrets": null
+  },
+  "entrypoint": {
+    "command": "",
+    "args": null,
+    "env": null
+  }
+}

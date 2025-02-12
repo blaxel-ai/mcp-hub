@@ -1,0 +1,23 @@
+{
+  "name": "qdrant",
+  "enterprise": false,
+  "coming_soon": false,
+  "displayName": "qdrant",
+  "categories": [
+    "search"
+  ],
+  "integration": "",
+  "description": "Store and retrieve memories using Qdrant",
+  "longDescription": "Store and retrieve memories using Qdrant",
+  "icon": "https://avatars.githubusercontent.com/u/73504361?s=200\u0026v=4",
+  "url": "https://qdrant.tech/documentation/cloud/authentication/",
+  "form": {
+    "config": null,
+    "secrets": null
+  },
+  "entrypoint": {
+    "command": "",
+    "args": null,
+    "env": null
+  }
+}

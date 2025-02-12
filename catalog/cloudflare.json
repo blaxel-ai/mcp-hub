@@ -1,0 +1,25 @@
+{
+  "name": "cloudflare",
+  "enterprise": false,
+  "coming_soon": false,
+  "displayName": "cloudflare",
+  "categories": [
+    "analytics",
+    "storage",
+    "database"
+  ],
+  "integration": "",
+  "description": "Manage your Cloudflare resources (incl. KV, D1, R2, Workers)",
+  "longDescription": "Manage your Cloudflare resources (incl. KV, D1, R2, Workers)",
+  "icon": "https://qualified-production.s3.us-east-1.amazonaws.com/uploads/4898d5ad5603fcf8e0607d31b7be4a7a7d58c5679929464fa38a3b1562ae7cb0.png",
+  "url": "https://dash.cloudflare.com/profile/api-tokens",
+  "form": {
+    "config": null,
+    "secrets": null
+  },
+  "entrypoint": {
+    "command": "",
+    "args": null,
+    "env": null
+  }
+}
