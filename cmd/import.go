@@ -76,16 +76,15 @@ func processRepository(name string, repository *hub.Repository) error {
 		return fmt.Errorf("clone repository: %w", err)
 	}
 
-	cfg, err := smithery.Parse(filepath.Join(repoPath, repository.SmitheryPath), repository.Overrider)
+	cfg, err := smithery.Parse(filepath.Join(repoPath, repository.SmitheryPath), repository.Overriders)
 	if err != nil {
 		return fmt.Errorf("parse smithery file: %w", err)
 	}
 
 	imageName := fmt.Sprintf("%s/%s:latest", strings.ToLower(registry), strings.ToLower(name))
-	smitheryDir := strings.TrimSuffix(repository.SmitheryPath, "/smithery.yaml")
 	deps := manageDeps(repository)
 
-	if err := buildAndPushImage(&cfg, repoPath, smitheryDir, imageName, deps); err != nil {
+	if err := buildAndPushImage(&cfg, repoPath, strings.TrimSuffix(repository.Dockerfile, "/Dockerfile"), imageName, deps); err != nil {
 		return fmt.Errorf("build and push image: %w", err)
 	}
 

@@ -76,6 +76,7 @@ func (c *Catalog) Load(name string, hub *hub.Repository, smithery *smithery.Smit
 	secrets := make(map[string]Field)
 	config := make(map[string]Field)
 	for _, secret := range hub.Secrets {
+
 		p, ok := smithery.StartCommand.ConfigSchema.Properties[secret]
 		if !ok {
 			return fmt.Errorf("secret %s not found in smithery config", secret)

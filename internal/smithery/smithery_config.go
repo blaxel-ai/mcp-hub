@@ -2,8 +2,11 @@ package smithery
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 type SmitheryConfig struct {
@@ -55,6 +58,13 @@ type Property struct {
 func (c *SmitheryConfig) ApplyOverrides(overrides []map[string]interface{}) error {
 	for _, override := range overrides {
 		for key, value := range override {
+			if key == "file" {
+				fmt.Printf("Applying file override: %s\n", value.(string))
+				if err := c.ApplyFileOverrides(value.(string)); err != nil {
+					return err
+				}
+				continue
+			}
 			parts := strings.Split(key, ".")
 			current := reflect.ValueOf(c).Elem()
 
@@ -110,5 +120,30 @@ func (c *SmitheryConfig) ApplyOverrides(overrides []map[string]interface{}) erro
 			}
 		}
 	}
+	return nil
+}
+
+func (c *SmitheryConfig) ApplyFileOverrides(file string) error {
+	yamlFile, err := os.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	overrides := &SmitheryConfig{}
+	err = yaml.Unmarshal(yamlFile, overrides)
+	if err != nil {
+		return err
+	}
+	c.StartCommand.ConfigSchema.Properties = overrides.StartCommand.ConfigSchema.Properties
+	c.StartCommand.ConfigSchema.Required = overrides.StartCommand.ConfigSchema.Required
+	c.StartCommand.CommandFunction = overrides.StartCommand.CommandFunction
+
+	if overrides.ParsedCommand != nil {
+		c.ParsedCommand = overrides.ParsedCommand
+	}
+
+	if overrides.Build != nil {
+		c.Build = overrides.Build
+	}
+
 	return nil
 }

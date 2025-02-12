@@ -37,7 +37,7 @@ type Repository struct {
 	Secrets         []string                 `yaml:"secrets" mendatory:"false"`
 	OAuth           *OAuth                   `yaml:"oauth" mendatory:"false"`
 	Integration     string                   `yaml:"integration" mendatory:"false"`
-	Overrider       []map[string]interface{} `yaml:"overrider"`
+	Overriders      []map[string]interface{} `yaml:"overriders"`
 	Tags            []string                 `yaml:"tags"`
 	Categories      []string                 `yaml:"categories"`
 }

@@ -22,15 +22,15 @@ func Parse(path string, overrider []map[string]interface{}) (SmitheryConfig, err
 	if err != nil {
 		return SmitheryConfig{}, err
 	}
+	if err := smithery.ApplyOverrides(overrider); err != nil {
+		return SmitheryConfig{}, fmt.Errorf("failed to apply overrides: %w", err)
+	}
 
 	parsedCommand, err := ExecuteCommandFunction(smithery.StartCommand.CommandFunction, smithery.StartCommand.ConfigSchema.Properties)
 	if err != nil {
 		return SmitheryConfig{}, err
 	}
 	parsedCommand.Type = smithery.StartCommand.Type
-	if err := smithery.ApplyOverrides(overrider); err != nil {
-		return SmitheryConfig{}, fmt.Errorf("failed to apply overrides: %w", err)
-	}
 
 	smithery.ParsedCommand = parsedCommand
 

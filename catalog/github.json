@@ -1,0 +1,34 @@
+{
+  "name": "github",
+  "enterprise": false,
+  "coming_soon": false,
+  "displayName": "github",
+  "categories": [
+    "code",
+    "git"
+  ],
+  "integration": "github",
+  "description": "Search repos, files and issues, and commit in GitHub",
+  "longDescription": "Search repos, files and issues, and commit in GitHub",
+  "icon": "https://github.githubassets.com/favicons/favicon.svg",
+  "url": "https://github.com/settings/personal-access-tokens",
+  "form": {
+    "config": {},
+    "secrets": {
+      "personalAccessToken": {
+        "description": "The personal access token for accessing the GitHub API.",
+        "label": "Personal Access Token",
+        "required": true
+      }
+    }
+  },
+  "entrypoint": {
+    "command": "node",
+    "args": [
+      "dist/index.js"
+    ],
+    "env": {
+      "GITHUB_PERSONAL_ACCESS_TOKEN": "$personalAccessToken"
+    }
+  }
+}

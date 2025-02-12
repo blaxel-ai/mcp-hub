@@ -4,24 +4,19 @@
   "coming_soon": false,
   "displayName": "brave-search",
   "categories": [
-    "reference-servers",
-    "smithery",
-    "github",
-    "brave-search",
-    "brave-search-smithery",
-    "brave-search-smithery-reference-servers"
+    "search"
   ],
   "integration": "brave-search",
-  "description": "A search engine for Brave.",
-  "longDescription": "A search engine for Brave.",
-  "icon": "https://github.com/brave/brave-search/blob/main/src/brave/logo.jpg",
-  "url": "https://github.com/brave/brave-search",
+  "description": "Search the web using Brave's search engine.",
+  "longDescription": "Search the web using Brave's search engine.",
+  "icon": "https://cdn.search.brave.com/serp/v2/_app/immutable/assets/brave-logo-small.1fMdoHsa.svg",
+  "url": "https://api-dashboard.search.brave.com/app/keys",
   "form": {
     "config": {},
     "secrets": {
-      "braveApiKey": {
+      "apiKey": {
         "description": "The API key for the BRAVE Search server.",
-        "label": "Brave Api Key",
+        "label": "Api Key",
         "required": true
       }
     }
@@ -32,7 +27,7 @@
       "dist/index.js"
     ],
     "env": {
-      "BRAVE_API_KEY": "$braveApiKey"
+      "BRAVE_API_KEY": "$apiKey"
     }
   }
 }

@@ -1,0 +1,21 @@
+build:
+  dockerBuildPath: ../../
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - botToken
+      - teamId
+    properties:
+      botToken:
+        type: string
+        description: The Bot User OAuth Token for the Slack app.
+      teamId:
+        type: string
+        description: The Slack Team ID for the workspace.
+  commandFunction:
+    # A function that produces the CLI command to start the MCP on stdio.
+    |-
+    (config) => ({ command: 'node', args: ['dist/index.js'], env: { SLACK_BOT_TOKEN: config.botToken, SLACK_TEAM_ID: config.teamId } })
