@@ -1,0 +1,23 @@
+{
+  "name": "gcalendar",
+  "enterprise": false,
+  "coming_soon": true,
+  "displayName": "gcalendar",
+  "categories": [
+    "calendar"
+  ],
+  "integration": "",
+  "description": "Google Calendar integration",
+  "longDescription": "Google Calendar integration",
+  "icon": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Google_Calendar_icon_%282020%29.svg/1024px-Google_Calendar_icon_%282020%29.svg.png",
+  "url": "https://console.cloud.google.com/apis/credentials",
+  "form": {
+    "config": null,
+    "secrets": null
+  },
+  "entrypoint": {
+    "command": "",
+    "args": null,
+    "env": null
+  }
+}

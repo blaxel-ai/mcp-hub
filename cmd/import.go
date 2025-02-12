@@ -72,6 +72,13 @@ func processRepository(name string, repository *hub.Repository) error {
 	repoPath := fmt.Sprintf("%s/%s/%s", tmpDir, strings.TrimPrefix(repository.Repository, githubPrefix), repository.Branch)
 	defer git.DeleteRepository(repoPath)
 
+	if repository.Disabled {
+		catalog := catalog.Catalog{}
+		handleError("load catalog", catalog.Load(name, repository, &smithery.SmitheryConfig{}))
+		handleError("save catalog", catalog.Save())
+		return nil
+	}
+
 	if _, err := git.CloneRepository(repoPath, repository.Branch, repository.Repository); err != nil {
 		return fmt.Errorf("clone repository: %w", err)
 	}

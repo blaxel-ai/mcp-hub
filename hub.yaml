@@ -201,6 +201,7 @@ repositories:
     smitheryPath: src/gdocs/smithery.yaml
     dockerfile: src/gdocs/Dockerfile
     branch: main
+    disabled: true
     displayName: Google Docs
     url: https://console.cloud.google.com/apis/credentials
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Google_Docs_2020_Logo.svg/872px-Google_Docs_2020_Logo.svg.png
@@ -215,6 +216,7 @@ repositories:
     smitheryPath: src/gcalendar/smithery.yaml
     dockerfile: src/gcalendar/Dockerfile
     branch: main
+    disabled: true
     displayName: Google Calendar
     url: https://console.cloud.google.com/apis/credentials
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Google_Calendar_icon_%282020%29.svg/1024px-Google_Calendar_icon_%282020%29.svg.png

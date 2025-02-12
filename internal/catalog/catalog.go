@@ -73,10 +73,24 @@ func (c *Catalog) Save() error {
 }
 
 func (c *Catalog) Load(name string, hub *hub.Repository, smithery *smithery.SmitheryConfig) error {
+	if hub.Disabled {
+		c.AddArtifact(Artifact{
+			Name:            name,
+			DisplayName:     name,
+			Description:     hub.Description,
+			LongDescription: hub.LongDescription,
+			Icon:            hub.Icon,
+			Categories:      hub.Categories,
+			URL:             hub.URL,
+			Enterprise:      hub.Enterprise,
+			ComingSoon:      hub.ComingSoon,
+			Integration:     hub.Integration,
+		})
+		return nil
+	}
 	secrets := make(map[string]Field)
 	config := make(map[string]Field)
 	for _, secret := range hub.Secrets {
-
 		p, ok := smithery.StartCommand.ConfigSchema.Properties[secret]
 		if !ok {
 			return fmt.Errorf("secret %s not found in smithery config", secret)

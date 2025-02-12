@@ -30,6 +30,7 @@ type Repository struct {
 	URL             string                   `yaml:"url" mendatory:"false"`
 	DisplayName     string                   `yaml:"displayName" mendatory:"true"`
 	Icon            string                   `yaml:"icon" mendatory:"true"`
+	Disabled        bool                     `yaml:"disabled" mendatory:"false" default:"false"`
 	Description     string                   `yaml:"description" mendatory:"true"`
 	LongDescription string                   `yaml:"longDescription" mendatory:"true"`
 	Enterprise      bool                     `yaml:"enterprise" mendatory:"false" default:"false"`
