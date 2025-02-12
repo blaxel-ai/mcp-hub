@@ -11,7 +11,7 @@
     "brave-search-smithery",
     "brave-search-smithery-reference-servers"
   ],
-  "integration": "",
+  "integration": "brave-search",
   "description": "A search engine for Brave.",
   "longDescription": "A search engine for Brave.",
   "icon": "https://github.com/brave/brave-search/blob/main/src/brave/logo.jpg",

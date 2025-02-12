@@ -9,7 +9,7 @@
     "github",
     "sentry"
   ],
-  "integration": "",
+  "integration": "sentry",
   "description": "An MCP Toolkit for Sentry.",
   "longDescription": "An MCP Toolkit for Sentry.",
   "icon": "https://github.com/smithery-ai/reference-servers/blob/main/src/sentry/logo.jpg",

@@ -119,6 +119,10 @@ func (c *Catalog) Load(name string, hub *hub.Repository, smithery *smithery.Smit
 		}
 	}
 
+	if hub.Integration == "" {
+		hub.Integration = name
+	}
+
 	artifact := Artifact{
 		Name:            name,
 		DisplayName:     name,
