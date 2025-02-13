@@ -14,14 +14,14 @@
   "form": {
     "config": {
       "teamId": {
-        "description": "The Slack Team ID for the workspace.",
+        "description": "The team ID for the Slack server.",
         "label": "Team Id",
         "required": true
       }
     },
     "secrets": {
       "botToken": {
-        "description": "The Bot User OAuth Token for the Slack app.",
+        "description": "The bot token for the Slack server.",
         "label": "Bot Token",
         "required": true
       }
@@ -30,11 +30,13 @@
   "entrypoint": {
     "command": "node",
     "args": [
-      "dist/index.js"
+      "dist/index.js",
+      "start",
+      "slack"
     ],
     "env": {
-      "SLACK_BOT_TOKEN": "$botToken",
-      "SLACK_TEAM_ID": "$teamId"
+      "BOT_TOKEN": "$botToken",
+      "TEAM_ID": "$teamId"
     }
   }
 }

@@ -6,18 +6,38 @@
   "categories": [
     "email"
   ],
-  "integration": "",
+  "integration": "gmail",
   "description": "Send emails using Gmail",
   "longDescription": "Send emails using Gmail",
   "icon": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Gmail_icon_%282020%29.svg/1024px-Gmail_icon_%282020%29.svg.png",
   "url": "https://console.cloud.google.com/apis/credentials",
   "form": {
-    "config": null,
-    "secrets": null
+    "config": {},
+    "secrets": {
+      "refreshToken": {
+        "description": "The refresh token for the Gmail server.",
+        "label": "Refresh Token",
+        "required": true
+      }
+    },
+    "oauth": {
+      "type": "google",
+      "scope": [
+        "https://www.googleapis.com/auth/gmail.send"
+      ]
+    }
   },
   "entrypoint": {
-    "command": "",
-    "args": null,
-    "env": null
+    "command": "node",
+    "args": [
+      "dist/index.js",
+      "start",
+      "gmail"
+    ],
+    "env": {
+      "CLIENT_ID": "$clientId",
+      "CLIENT_SECRET": "$clientSecret",
+      "REFRESH_TOKEN": "$refreshToken"
+    }
   }
 }

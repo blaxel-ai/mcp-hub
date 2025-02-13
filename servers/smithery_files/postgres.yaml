@@ -1,0 +1,19 @@
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - connectionString
+      - password
+    properties:
+      connectionString:
+        type: string
+        description: The connection string for the PostgreSQL server.
+      password:
+        type: string
+        description: The password for the PostgreSQL server.
+  commandFunction:
+    # A function that produces the CLI command to start the MCP on stdio.
+    |-
+    config=>({command:'node',args:['dist/index.js', 'start', 'postgres'],env:{CONNECTION_STRING:config.connectionString,PASSWORD:config.password}})

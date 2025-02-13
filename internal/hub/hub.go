@@ -22,7 +22,8 @@ const (
 )
 
 type Repository struct {
-	Repository      string                   `yaml:"repository" mendatory:"true"`
+	Repository      string                   `yaml:"repository" mendatory:"false"`
+	Path            string                   `yaml:"path" mendatory:"false"`
 	SmitheryPath    string                   `yaml:"smitheryPath" mendatory:"false" default:"smithery.yaml"`
 	Dockerfile      string                   `yaml:"dockerfile" mendatory:"false" default:"Dockerfile"`
 	PackageManager  PackageManager           `yaml:"packageManager" mendatory:"false" default:"npm"`
@@ -36,6 +37,7 @@ type Repository struct {
 	Enterprise      bool                     `yaml:"enterprise" mendatory:"false" default:"false"`
 	ComingSoon      bool                     `yaml:"comingSoon" mendatory:"false" default:"false"`
 	Secrets         []string                 `yaml:"secrets" mendatory:"false"`
+	HiddenSecrets   []string                 `yaml:"hiddenSecrets" mendatory:"false"`
 	OAuth           *OAuth                   `yaml:"oauth" mendatory:"false"`
 	Integration     string                   `yaml:"integration" mendatory:"false"`
 	Overriders      []map[string]interface{} `yaml:"overriders"`

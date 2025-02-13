@@ -69,8 +69,13 @@ func runImport(cmd *cobra.Command, args []string) {
 }
 
 func processRepository(name string, repository *hub.Repository) error {
-	repoPath := fmt.Sprintf("%s/%s/%s", tmpDir, strings.TrimPrefix(repository.Repository, githubPrefix), repository.Branch)
-	defer git.DeleteRepository(repoPath)
+	var repoPath string
+	if repository.Path != "" {
+		repoPath = repository.Path
+	} else {
+		repoPath = fmt.Sprintf("%s/%s/%s", tmpDir, strings.TrimPrefix(repository.Repository, githubPrefix), repository.Branch)
+		defer git.DeleteRepository(repoPath)
+	}
 
 	if repository.Disabled {
 		catalog := catalog.Catalog{}
@@ -79,8 +84,10 @@ func processRepository(name string, repository *hub.Repository) error {
 		return nil
 	}
 
-	if _, err := git.CloneRepository(repoPath, repository.Branch, repository.Repository); err != nil {
-		return fmt.Errorf("clone repository: %w", err)
+	if repository.Path == "" {
+		if _, err := git.CloneRepository(repoPath, repository.Branch, repository.Repository); err != nil {
+			return fmt.Errorf("clone repository: %w", err)
+		}
 	}
 
 	cfg, err := smithery.Parse(filepath.Join(repoPath, repository.SmitheryPath), repository.Overriders)
@@ -90,7 +97,6 @@ func processRepository(name string, repository *hub.Repository) error {
 
 	imageName := fmt.Sprintf("%s/%s:latest", strings.ToLower(registry), strings.ToLower(name))
 	deps := manageDeps(repository)
-
 	if err := buildAndPushImage(&cfg, repoPath, strings.TrimSuffix(repository.Dockerfile, "/Dockerfile"), imageName, deps); err != nil {
 		return fmt.Errorf("build and push image: %w", err)
 	}

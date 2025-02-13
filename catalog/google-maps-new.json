@@ -1,0 +1,33 @@
+{
+  "name": "google-maps-new",
+  "enterprise": false,
+  "coming_soon": false,
+  "displayName": "google-maps-new",
+  "categories": [
+    "maps"
+  ],
+  "integration": "google-maps-new",
+  "description": "Search for addresses, locations and directions",
+  "longDescription": "Search for addresses, locations and directions",
+  "icon": "https://www.google.com/favicon.ico",
+  "url": "https://console.cloud.google.com/apis/credentials",
+  "form": {
+    "config": {},
+    "secrets": {
+      "apiKey": {
+        "description": "The personal access token for accessing the GitHub API.",
+        "label": "Api Key",
+        "required": true
+      }
+    }
+  },
+  "entrypoint": {
+    "command": "node",
+    "args": [
+      "dist/index.js"
+    ],
+    "env": {
+      "GOOGLE_MAPS_API_KEY": "$apiKey"
+    }
+  }
+}

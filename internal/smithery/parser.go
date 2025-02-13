@@ -9,7 +9,6 @@ import (
 )
 
 func Parse(path string, overrider []map[string]interface{}) (SmitheryConfig, error) {
-
 	file, err := os.Open(path)
 	if err != nil {
 		return SmitheryConfig{}, err

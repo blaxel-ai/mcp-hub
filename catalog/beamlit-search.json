@@ -6,18 +6,24 @@
   "categories": [
     "search"
   ],
-  "integration": "",
+  "integration": "beamlit-search",
   "description": "Search the web for information",
   "longDescription": "Search the web for information",
   "icon": "https://app.beamlit.com/logo_short.png",
   "url": "https://app.beamlit.com",
   "form": {
-    "config": null,
-    "secrets": null
+    "config": {},
+    "secrets": {}
   },
   "entrypoint": {
-    "command": "",
-    "args": null,
-    "env": null
+    "command": "node",
+    "args": [
+      "dist/index.js",
+      "start",
+      "beamlit-search"
+    ],
+    "env": {
+      "API_KEY": "$apiKey"
+    }
   }
 }

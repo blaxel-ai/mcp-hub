@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/beamlit/mcp-hub/internal/hub"
 	"github.com/beamlit/mcp-hub/internal/smithery"
@@ -111,6 +112,9 @@ func (c *Catalog) Load(name string, hub *hub.Repository, smithery *smithery.Smit
 
 	for name, property := range smithery.StartCommand.ConfigSchema.Properties {
 		if _, ok := secrets[name]; ok {
+			continue
+		}
+		if slices.Contains(hub.HiddenSecrets, name) {
 			continue
 		}
 		isRequired := false

@@ -1,0 +1,19 @@
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - apiToken
+      - accountId
+    properties:
+      apiToken:
+        type: string
+        description: The API token for the Cloudflare server.
+      accountId:
+        type: string
+        description: The account ID for the Cloudflare server.
+  commandFunction:
+    # A function that produces the CLI command to start the MCP on stdio.
+    |-
+    config=>({command:'node',args:['dist/index.js', 'start', 'cloudflare'],env:{API_TOKEN:config.apiToken,ACCOUNT_ID:config.accountId}})

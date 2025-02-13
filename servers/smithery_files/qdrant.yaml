@@ -1,0 +1,31 @@
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - apiKey
+      - url
+      - collectionName
+      - embeddingModel
+      - blRunApiKey
+    properties:
+      apiKey:
+        type: string
+        description: The API key for the Qdrant server.
+      url:
+        type: string
+        description: The URL of the Qdrant server.
+      collectionName:
+        type: string
+        description: The name of the collection to store the memories.
+      embeddingModel:
+        type: string
+        description: The embedding model to use.
+      blRunApiKey:
+        type: string
+        description: The API key for the BL Run server.
+  commandFunction:
+    # A function that produces the CLI command to start the MCP on stdio.
+    |-
+    config=>({command:'node',args:['dist/index.js', 'start', 'qdrant'],env:{API_KEY:config.apiKey,URL:config.url,COLLECTION_NAME:config.collectionName,EMBEDDING_MODEL:config.embeddingModel,BL_RUN_API_KEY:config.blRunApiKey}})
