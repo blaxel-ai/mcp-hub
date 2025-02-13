@@ -123,6 +123,10 @@ func buildAndPushImage(cfg *smithery.SmitheryConfig, repoPath, smitheryDir, imag
 		return fmt.Errorf("build image: %w", err)
 	}
 
+	if err := os.Remove(fmt.Sprintf("%s.tmp", dockerfilePath)); err != nil {
+		return fmt.Errorf("remove tmp dockerfile: %w", err)
+	}
+
 	if push {
 		if err := docker.PushImage(context.Background(), imageName); err != nil {
 			return fmt.Errorf("push image: %w", err)
@@ -138,18 +142,21 @@ func setupTempDirectory() {
 }
 
 func manageDeps(repository *hub.Repository) []string {
+	deps := []string{
+		"npm install -g pnpm",
+		"pnpm install https://github.com/beamlit/supergateway",
+	}
 	switch repository.PackageManager {
-	case hub.PackageManagerNPM:
-		return []string{}
 	case hub.PackageManagerAPK:
-		return []string{
-			"apk add --no-cache node npm",
+		if !repository.HasNPM {
+			return append([]string{"apk add --no-cache node npm git"}, deps...)
 		}
+		return append([]string{"apk add --no-cache git"}, deps...)
 	case hub.PackageManagerAPT:
-		return []string{
-			"apt-get update",
-			"apt-get install -y nodejs npm",
+		if !repository.HasNPM {
+			return append([]string{"apt-get update", "apt-get install -y nodejs npm git"}, deps...)
 		}
+		return append([]string{"apt-get update", "apt-get install -y git"}, deps...)
 	default:
 		log.Fatalf("Unsupported package manager: %s", repository.PackageManager)
 		return []string{}

@@ -7,7 +7,7 @@ import (
 )
 
 func BuildImage(ctx context.Context, imageName string, dockerfile string, directory string, context string) error {
-	cmd := exec.Command("docker", "build", "-t", imageName, "-f", "Dockerfile", context)
+	cmd := exec.Command("docker", "build", "-t", imageName, "-f", "Dockerfile.tmp", context)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = directory

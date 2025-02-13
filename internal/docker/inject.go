@@ -9,6 +9,7 @@ import (
 )
 
 func Inject(ctx context.Context, dockerFilePath string, cmd string, deps []string) error {
+	os.Remove(fmt.Sprintf("%s.tmp", dockerFilePath))
 	dockerFile, err := os.Open(dockerFilePath)
 	if err != nil {
 		return err
@@ -30,7 +31,11 @@ func Inject(ctx context.Context, dockerFilePath string, cmd string, deps []strin
 		}
 		lines = append(lines, line)
 	}
-
-	lines[len(lines)-1] = fmt.Sprintf("ENTRYPOINT [%s]", cmd)
-	return os.WriteFile(dockerFilePath, []byte(strings.Join(lines, "\n")), 0644)
+	fmt.Println(deps)
+	lines[len(lines)-1] = ""
+	for _, dep := range deps {
+		lines = append(lines, fmt.Sprintf("RUN %s", dep))
+	}
+	lines = append(lines, fmt.Sprintf("ENTRYPOINT [%s]", cmd))
+	return os.WriteFile(fmt.Sprintf("%s.tmp", dockerFilePath), []byte(strings.Join(lines, "\n")), 0644)
 }

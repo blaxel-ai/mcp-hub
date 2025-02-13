@@ -16,7 +16,6 @@ type Hub struct {
 type PackageManager string
 
 const (
-	PackageManagerNPM PackageManager = "npm"
 	PackageManagerAPK PackageManager = "apk"
 	PackageManagerAPT PackageManager = "apt"
 )
@@ -26,7 +25,8 @@ type Repository struct {
 	Path            string                   `yaml:"path" mendatory:"false"`
 	SmitheryPath    string                   `yaml:"smitheryPath" mendatory:"false" default:"smithery.yaml"`
 	Dockerfile      string                   `yaml:"dockerfile" mendatory:"false" default:"Dockerfile"`
-	PackageManager  PackageManager           `yaml:"packageManager" mendatory:"false" default:"npm"`
+	PackageManager  PackageManager           `yaml:"packageManager" mendatory:"false" default:"apk"`
+	HasNPM          bool                     `yaml:"hasNPM" mendatory:"false" default:"true"`
 	Branch          string                   `yaml:"branch" mendatory:"false" default:"main"`
 	URL             string                   `yaml:"url" mendatory:"false"`
 	DisplayName     string                   `yaml:"displayName" mendatory:"true"`
@@ -89,6 +89,8 @@ func (h *Hub) ValidateWithDefaultValues() error {
 				switch value.Kind() {
 				case reflect.String:
 					value.SetString(defaultVal)
+				case reflect.Bool:
+					value.SetBool(defaultVal == "true")
 				}
 			}
 		}
