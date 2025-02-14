@@ -36,7 +36,7 @@ export async function call(
 	const body: { name: string; arguments: Record<string, string> } = await request.json() as { name: string; arguments: Record<string, string> };
 	body.name = body.name.replace('beamlit_', 'brave_');
 	const rewriteSecrets = {
-		apiKey: secrets.apiKey || '',
+		apiKey: process.env.API_KEY || '',
 	};
 	const call = await braveCall(request, config, rewriteSecrets, body);
 	return call;
