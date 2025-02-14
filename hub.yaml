@@ -96,6 +96,8 @@ repositories:
         - https://www.googleapis.com/auth/gmail.send
     secrets:
       - refreshToken
+    doNotShow:
+      - refreshToken
     hiddenSecrets:
       - clientId
       - clientSecret

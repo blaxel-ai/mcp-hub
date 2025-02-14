@@ -17,7 +17,8 @@
       "refreshToken": {
         "description": "The refresh token for the Gmail server.",
         "label": "Refresh Token",
-        "required": true
+        "required": true,
+        "hidden": true
       }
     },
     "oauth": {
