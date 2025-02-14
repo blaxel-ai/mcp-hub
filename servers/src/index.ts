@@ -66,7 +66,6 @@ program
 		});
 	}
     // Start receiving messages on stdin and sending messages on stdout
-	console.log("Starting server...");
     const transport = new StdioServerTransport();
     await server.connect(transport);
 })

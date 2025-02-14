@@ -2,7 +2,7 @@
   "name": "google-maps",
   "enterprise": false,
   "coming_soon": false,
-  "displayName": "Google Maps",
+  "displayName": "Google Maps (new)",
   "categories": [
     "maps"
   ],
@@ -15,7 +15,7 @@
     "config": {},
     "secrets": {
       "apiKey": {
-        "description": "The API key for the Google Maps server.",
+        "description": "The personal access token for accessing the GitHub API.",
         "label": "Api Key",
         "required": true
       }
@@ -24,12 +24,10 @@
   "entrypoint": {
     "command": "node",
     "args": [
-      "dist/index.js",
-      "start",
-      "google-maps"
+      "dist/index.js"
     ],
     "env": {
-      "API_KEY": "$apiKey"
+      "GOOGLE_MAPS_API_KEY": "$apiKey"
     }
   }
 }

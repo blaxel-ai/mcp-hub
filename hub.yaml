@@ -1,5 +1,5 @@
 repositories:
-  brave-search-new:
+  brave-search:
     repository: https://github.com/smithery-ai/reference-servers.git
     smitheryPath: src/brave-search/smithery.yaml
     dockerfile: src/brave-search/Dockerfile
@@ -16,7 +16,7 @@ repositories:
     overriders:
       - file: overriders/brave-search/smithery.yaml
 
-  github-new:
+  github:
     repository: https://github.com/smithery-ai/reference-servers.git
     smitheryPath: src/github/smithery.yaml
     dockerfile: src/github/Dockerfile
@@ -34,7 +34,7 @@ repositories:
       - code
       - git
 
-  slack-new:
+  slack:
     repository: https://github.com/smithery-ai/reference-servers.git
     smitheryPath: src/slack/smithery.yaml
     dockerfile: src/slack/Dockerfile
@@ -51,7 +51,7 @@ repositories:
     categories:
       - communication
 
-  google-maps-new:
+  google-maps:
     repository: https://github.com/smithery-ai/reference-servers.git
     smitheryPath: ../../../../overriders/google-maps/smithery.yaml
     dockerfile: src/google-maps/Dockerfile
@@ -80,63 +80,6 @@ repositories:
       - postgresConnectionString
     categories:
       - database
-
-  brave-search:
-    path: servers/
-    smitheryPath: smithery_files/brave-search.yaml
-    dockerfile: /
-    displayName: Brave Search
-    icon: https://cdn.search.brave.com/serp/v2/_app/immutable/assets/brave-logo-small.1fMdoHsa.svg
-    url: https://api-dashboard.search.brave.com/app/keys
-    description: Search the web using Brave's search engine.
-    longDescription: Search the web using Brave's search engine.
-    secrets:
-      - apiKey
-    categories:
-      - search
-
-  github:
-    path: servers/
-    smitheryPath: smithery_files/github.yaml
-    dockerfile: /
-    displayName: GitHub
-    url: https://github.com/settings/personal-access-tokens
-    icon: https://github.githubassets.com/favicons/favicon.svg
-    description: Search repos, files and issues, and commit in GitHub
-    longDescription: Search repos, files and issues, and commit in GitHub
-    secrets:
-      - personalAccessToken
-    categories:
-      - code
-      - git
-
-  slack:
-    path: servers/
-    smitheryPath: smithery_files/slack.yaml
-    dockerfile: /
-    displayName: Slack
-    url: https://api.slack.com/apps
-    icon: https://a.slack-edge.com/fd21de4/marketing/img/nav/logo.svg
-    description: Post and retrieve messages in Slack channels
-    longDescription: Post and retrieve messages in Slack channels
-    secrets:
-      - botToken
-    categories:
-      - communication
-
-  google-maps:
-    path: servers/
-    smitheryPath: smithery_files/google-maps.yaml
-    dockerfile: /
-    displayName: Google Maps
-    url: https://console.cloud.google.com/apis/credentials
-    icon: https://www.google.com/favicon.ico
-    description: Search for addresses, locations and directions
-    longDescription: Search for addresses, locations and directions
-    secrets:
-      - apiKey
-    categories:
-      - maps
 
   postgres:
     path: servers/

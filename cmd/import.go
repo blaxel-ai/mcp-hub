@@ -28,6 +28,7 @@ var (
 	registry   string
 	mcp        string
 	skipBuild  bool
+	tag        string
 )
 
 var importCmd = &cobra.Command{
@@ -43,6 +44,7 @@ func init() {
 	importCmd.Flags().StringVarP(&registry, "registry", "r", "ghcr.io/beamlit/hub", "The registry to push the images to")
 	importCmd.Flags().StringVarP(&mcp, "mcp", "m", "", "The MCP to import, if not provided, all MCPs will be imported")
 	importCmd.Flags().BoolVarP(&skipBuild, "skip-build", "s", false, "Skip building the image")
+	importCmd.Flags().StringVarP(&tag, "tag", "t", "latest", "The tag to use for the image")
 	rootCmd.AddCommand(importCmd)
 }
 
@@ -98,7 +100,7 @@ func processRepository(name string, repository *hub.Repository) error {
 	}
 
 	if !skipBuild {
-		imageName := fmt.Sprintf("%s/%s:latest", strings.ToLower(registry), strings.ToLower(name))
+		imageName := fmt.Sprintf("%s/%s:%s", strings.ToLower(registry), strings.ToLower(name), tag)
 		deps := manageDeps(repository)
 		if err := buildAndPushImage(&cfg, repoPath, strings.TrimSuffix(repository.Dockerfile, "/Dockerfile"), imageName, deps); err != nil {
 			return fmt.Errorf("build and push image: %w", err)

@@ -1,0 +1,19 @@
+{
+  "name": "hack",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "tsc && node dist/client.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@beamlit/sdk": "0.0.57-alpha.65",
+    "@hey-api/client-fetch": "^0.8.1",
+    "@modelcontextprotocol/sdk": "^1.5.0",
+    "typescript": "^5.7.3",
+    "yargs": "^17.7.2"
+  }
+}

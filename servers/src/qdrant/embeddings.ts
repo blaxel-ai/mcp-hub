@@ -21,7 +21,26 @@ export class Embeddings {
 
 	async openAIEmbed(query: string): Promise<number[]> {
 		const { model } = this.config;
-
+		const clientCreds = process.env.BL_CLIENT_CREDENTIALS;
+		if (!clientCreds) {
+			throw new Error('BL_CLIENT_CREDENTIALS is not set');
+		}
+		const token = await fetch(`${process.env.BL_BASE_URL}/oauth/token`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Basic ${clientCreds}`,
+			},
+			body: JSON.stringify({
+				grant_type: 'client_credentials',
+			}),
+		});
+		type TokenResponse = {
+			access_token: string;
+			token_type: string;
+			expires_in: number;
+		};
+		const tokenBody = await token.json() as TokenResponse;
 		const request = new Request(`${process.env.BL_RUN_URL}/models/${model}/v1/embeddings`, {
 			method: 'POST',
 			body: JSON.stringify({
@@ -29,7 +48,7 @@ export class Embeddings {
 			}),
 			headers: {
 				'Content-Type': 'application/json',
-				Authorization: `Bearer ${process.env.BL_RUN_API_KEY}`,
+				Authorization: `Bearer ${tokenBody.access_token}`,
 			},
 		});
 		const response = await fetch(request);

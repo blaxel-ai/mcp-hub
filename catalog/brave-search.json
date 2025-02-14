@@ -2,7 +2,7 @@
   "name": "brave-search",
   "enterprise": false,
   "coming_soon": false,
-  "displayName": "Brave Search",
+  "displayName": "Brave Search (new)",
   "categories": [
     "search"
   ],
@@ -24,12 +24,10 @@
   "entrypoint": {
     "command": "node",
     "args": [
-      "dist/index.js",
-      "start",
-      "brave-search"
+      "dist/index.js"
     ],
     "env": {
-      "API_KEY": "$apiKey"
+      "BRAVE_API_KEY": "$apiKey"
     }
   }
 }

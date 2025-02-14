@@ -2,7 +2,7 @@
   "name": "slack",
   "enterprise": false,
   "coming_soon": false,
-  "displayName": "Slack",
+  "displayName": "Slack (new)",
   "categories": [
     "communication"
   ],
@@ -14,14 +14,14 @@
   "form": {
     "config": {
       "teamId": {
-        "description": "The team ID for the Slack server.",
+        "description": "The Slack Team ID for the workspace.",
         "label": "Team Id",
         "required": true
       }
     },
     "secrets": {
       "botToken": {
-        "description": "The bot token for the Slack server.",
+        "description": "The Bot User OAuth Token for the Slack app.",
         "label": "Bot Token",
         "required": true
       }
@@ -30,13 +30,11 @@
   "entrypoint": {
     "command": "node",
     "args": [
-      "dist/index.js",
-      "start",
-      "slack"
+      "dist/index.js"
     ],
     "env": {
-      "BOT_TOKEN": "$botToken",
-      "TEAM_ID": "$teamId"
+      "SLACK_BOT_TOKEN": "$botToken",
+      "SLACK_TEAM_ID": "$teamId"
     }
   }
 }
