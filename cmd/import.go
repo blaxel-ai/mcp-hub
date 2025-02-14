@@ -27,6 +27,7 @@ var (
 	push       bool
 	registry   string
 	mcp        string
+	skipBuild  bool
 )
 
 var importCmd = &cobra.Command{
@@ -41,6 +42,7 @@ func init() {
 	importCmd.Flags().BoolVarP(&push, "push", "p", false, "Push the images to the registry")
 	importCmd.Flags().StringVarP(&registry, "registry", "r", "ghcr.io/beamlit/hub", "The registry to push the images to")
 	importCmd.Flags().StringVarP(&mcp, "mcp", "m", "", "The MCP to import, if not provided, all MCPs will be imported")
+	importCmd.Flags().BoolVarP(&skipBuild, "skip-build", "s", false, "Skip building the image")
 	rootCmd.AddCommand(importCmd)
 }
 
@@ -78,9 +80,9 @@ func processRepository(name string, repository *hub.Repository) error {
 	}
 
 	if repository.Disabled {
-		catalog := catalog.Catalog{}
-		handleError("load catalog", catalog.Load(name, repository, &smithery.SmitheryConfig{}))
-		handleError("save catalog", catalog.Save())
+		c := catalog.Catalog{}
+		handleError("load catalog", c.Load(name, repository, &smithery.SmitheryConfig{}))
+		handleError("save catalog", c.Save())
 		return nil
 	}
 
@@ -95,15 +97,17 @@ func processRepository(name string, repository *hub.Repository) error {
 		return fmt.Errorf("parse smithery file: %w", err)
 	}
 
-	imageName := fmt.Sprintf("%s/%s:latest", strings.ToLower(registry), strings.ToLower(name))
-	deps := manageDeps(repository)
-	if err := buildAndPushImage(&cfg, repoPath, strings.TrimSuffix(repository.Dockerfile, "/Dockerfile"), imageName, deps); err != nil {
-		return fmt.Errorf("build and push image: %w", err)
+	if !skipBuild {
+		imageName := fmt.Sprintf("%s/%s:latest", strings.ToLower(registry), strings.ToLower(name))
+		deps := manageDeps(repository)
+		if err := buildAndPushImage(&cfg, repoPath, strings.TrimSuffix(repository.Dockerfile, "/Dockerfile"), imageName, deps); err != nil {
+			return fmt.Errorf("build and push image: %w", err)
+		}
 	}
 
-	catalog := catalog.Catalog{}
-	handleError("load catalog", catalog.Load(name, repository, &cfg))
-	handleError("save catalog", catalog.Save())
+	c := catalog.Catalog{}
+	handleError("load catalog", c.Load(name, repository, &cfg))
+	handleError("save catalog", c.Save())
 	return nil
 }
 
@@ -139,6 +143,8 @@ func buildAndPushImage(cfg *smithery.SmitheryConfig, repoPath, smitheryDir, imag
 func setupTempDirectory() {
 	os.RemoveAll(tmpDir)
 	handleError("create temp directory", os.MkdirAll(tmpDir, 0755))
+	os.RemoveAll(catalog.CatalogDir)
+	handleError("create catalog directory", os.MkdirAll(catalog.CatalogDir, 0755))
 }
 
 func manageDeps(repository *hub.Repository) []string {

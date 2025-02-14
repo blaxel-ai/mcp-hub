@@ -62,13 +62,12 @@ func (c *Catalog) AddArtifact(artifact Artifact) {
 }
 
 func (c *Catalog) Save() error {
-	os.MkdirAll(CatalogDir, 0755)
 	for _, artifact := range c.Artifacts {
 		json, err := json.MarshalIndent(artifact, "", "  ")
 		if err != nil {
 			return err
 		}
-		os.WriteFile(fmt.Sprintf("%s/%s.json", CatalogDir, artifact.DisplayName), json, 0644)
+		os.WriteFile(fmt.Sprintf("%s/%s.json", CatalogDir, artifact.Name), json, 0644)
 	}
 	return nil
 }
@@ -77,7 +76,7 @@ func (c *Catalog) Load(name string, hub *hub.Repository, smithery *smithery.Smit
 	if hub.Disabled {
 		c.AddArtifact(Artifact{
 			Name:            name,
-			DisplayName:     name,
+			DisplayName:     hub.DisplayName,
 			Description:     hub.Description,
 			LongDescription: hub.LongDescription,
 			Icon:            hub.Icon,
@@ -144,7 +143,7 @@ func (c *Catalog) Load(name string, hub *hub.Repository, smithery *smithery.Smit
 
 	artifact := Artifact{
 		Name:            name,
-		DisplayName:     name,
+		DisplayName:     hub.DisplayName,
 		Description:     hub.Description,
 		LongDescription: hub.LongDescription,
 		Icon:            hub.Icon,

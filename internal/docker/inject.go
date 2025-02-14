@@ -31,7 +31,6 @@ func Inject(ctx context.Context, dockerFilePath string, cmd string, deps []strin
 		}
 		lines = append(lines, line)
 	}
-	fmt.Println(deps)
 	lines[len(lines)-1] = ""
 	for _, dep := range deps {
 		lines = append(lines, fmt.Sprintf("RUN %s", dep))

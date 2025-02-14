@@ -2,7 +2,7 @@
   "name": "aws-s3",
   "enterprise": false,
   "coming_soon": false,
-  "displayName": "aws-s3",
+  "displayName": "AWS S3",
   "categories": [
     "storage"
   ],

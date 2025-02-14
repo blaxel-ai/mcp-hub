@@ -4,7 +4,7 @@ repositories:
     smitheryPath: src/brave-search/smithery.yaml
     dockerfile: src/brave-search/Dockerfile
     branch: main
-    displayName: Brave Search
+    displayName: Brave Search (new)
     icon: https://cdn.search.brave.com/serp/v2/_app/immutable/assets/brave-logo-small.1fMdoHsa.svg
     url: https://api-dashboard.search.brave.com/app/keys
     description: Search the web using Brave's search engine.
@@ -21,7 +21,7 @@ repositories:
     smitheryPath: src/github/smithery.yaml
     dockerfile: src/github/Dockerfile
     branch: main
-    displayName: GitHub
+    displayName: GitHub (new)
     url: https://github.com/settings/personal-access-tokens
     icon: https://github.githubassets.com/favicons/favicon.svg
     description: Search repos, files and issues, and commit in GitHub
@@ -39,7 +39,7 @@ repositories:
     smitheryPath: src/slack/smithery.yaml
     dockerfile: src/slack/Dockerfile
     branch: main
-    displayName: Slack
+    displayName: Slack (new)
     url: https://api.slack.com/apps
     icon: https://a.slack-edge.com/fd21de4/marketing/img/nav/logo.svg
     description: Post and retrieve messages in Slack channels
@@ -56,7 +56,7 @@ repositories:
     smitheryPath: ../../../../overriders/google-maps/smithery.yaml
     dockerfile: src/google-maps/Dockerfile
     branch: main
-    displayName: Google Maps
+    displayName: Google Maps (new)
     url: https://console.cloud.google.com/apis/credentials
     icon: https://www.google.com/favicon.ico
     description: Search for addresses, locations and directions
@@ -71,7 +71,7 @@ repositories:
     smitheryPath: src/postgres/smithery.yaml
     dockerfile: src/postgres/Dockerfile
     branch: main
-    displayName: PostgreSQL
+    displayName: PostgreSQL (new)
     url: https://www.postgresql.org
     icon: https://www.postgresql.org/media/img/about/press/elephant.png
     description: List tables and run queries in your PostgreSQL database
