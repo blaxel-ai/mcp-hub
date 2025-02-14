@@ -1,0 +1,33 @@
+{
+  "name": "exa",
+  "enterprise": false,
+  "coming_soon": false,
+  "displayName": "exa",
+  "categories": [
+    "search"
+  ],
+  "integration": "exa",
+  "description": "Exa integration",
+  "longDescription": "Exa integration",
+  "icon": "https://avatars.githubusercontent.com/u/77906174?s=200\u0026v=4",
+  "url": "https://dashboard.exa.ai/api-keys",
+  "form": {
+    "config": {},
+    "secrets": {
+      "exaApiKey": {
+        "description": "The API key for accessing the Exa Search API.",
+        "label": "Exa Api Key",
+        "required": true
+      }
+    }
+  },
+  "entrypoint": {
+    "command": "node",
+    "args": [
+      "build/index.js"
+    ],
+    "env": {
+      "EXA_API_KEY": "$exaApiKey"
+    }
+  }
+}
