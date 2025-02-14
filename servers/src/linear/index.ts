@@ -74,7 +74,6 @@ export async function list() {
 			createIssueTool,
 			listTeamsTool,
 			listUsersTool,
-			getUserIssuesTool,
 			addCommentTool,
 			getUserIssuesTool,
 			updateIssueTool,
