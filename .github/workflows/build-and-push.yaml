@@ -39,8 +39,8 @@ jobs:
       - name: Validate hub
         run: go run main.go validate -c hub.yaml
       - name: Build and push
-        if: inputs.approve == ''
+        if: inputs.mcp == ''
         run: go run main.go import -c hub.yaml -p -r ${{ env.REGISTRY }}/${{ github.repository }}
       - name: Build and push
-        if: inputs.approve != ''
+        if: inputs.mcp != ''
         run: go run main.go import -c hub.yaml -p -r ${{ env.REGISTRY }}/${{ github.repository }} -m ${{ inputs.mcp }}
