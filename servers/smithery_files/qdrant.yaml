@@ -8,7 +8,6 @@ startCommand:
       - url
       - collectionName
       - embeddingModel
-      - blRunApiKey
     properties:
       apiKey:
         type: string
@@ -22,10 +21,7 @@ startCommand:
       embeddingModel:
         type: string
         description: The embedding model to use.
-      blRunApiKey:
-        type: string
-        description: The API key for the BL Run server.
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
     |-
-    config=>({command:'node',args:['dist/index.js', 'start', 'qdrant'],env:{API_KEY:config.apiKey,URL:config.url,COLLECTION_NAME:config.collectionName,EMBEDDING_MODEL:config.embeddingModel,BL_RUN_API_KEY:config.blRunApiKey}})
+    config=>({command:'node',args:['dist/index.js', 'start', 'qdrant'],env:{API_KEY:config.apiKey,URL:config.url,COLLECTION_NAME:config.collectionName,EMBEDDING_MODEL:config.embeddingModel}})

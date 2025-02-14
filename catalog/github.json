@@ -2,7 +2,7 @@
   "name": "github",
   "enterprise": false,
   "coming_soon": false,
-  "displayName": "GitHub",
+  "displayName": "GitHub (new)",
   "categories": [
     "code",
     "git"
@@ -16,7 +16,7 @@
     "config": {},
     "secrets": {
       "personalAccessToken": {
-        "description": "The personal access token for the GitHub server.",
+        "description": "The personal access token for accessing the GitHub API.",
         "label": "Personal Access Token",
         "required": true
       }
@@ -25,12 +25,10 @@
   "entrypoint": {
     "command": "node",
     "args": [
-      "dist/index.js",
-      "start",
-      "github"
+      "dist/index.js"
     ],
     "env": {
-      "PERSONAL_ACCESS_TOKEN": "$personalAccessToken"
+      "GITHUB_PERSONAL_ACCESS_TOKEN": "$personalAccessToken"
     }
   }
 }
