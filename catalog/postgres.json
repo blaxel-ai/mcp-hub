@@ -12,17 +12,11 @@
   "icon": "https://www.postgresql.org/media/img/about/press/elephant.png",
   "url": "https://www.postgresql.org",
   "form": {
-    "config": {
-      "connectionString": {
-        "description": "The connection string for the PostgreSQL server.",
-        "label": "Connection String",
-        "required": true
-      }
-    },
+    "config": {},
     "secrets": {
-      "password": {
-        "description": "The password for the PostgreSQL server.",
-        "label": "Password",
+      "postgresConnectionString": {
+        "description": "The connection string for the PostgreSQL database, including the host, port, and database name, e.g., 'postgresql://user:password@host:port/db-name'.",
+        "label": "Postgres Connection String",
         "required": true
       }
     }
@@ -31,12 +25,8 @@
     "command": "node",
     "args": [
       "dist/index.js",
-      "start",
-      "postgres"
+      "$postgresConnectionString"
     ],
-    "env": {
-      "CONNECTION_STRING": "$connectionString",
-      "PASSWORD": "$password"
-    }
+    "env": {}
   }
 }

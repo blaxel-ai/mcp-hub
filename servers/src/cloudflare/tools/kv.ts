@@ -162,7 +162,7 @@ export async function handlePut(
 	namespaceId: string,
 	key: string,
 	value: string,
-	expirationTtl?: number,
+	expirationTtl?: number
 ) {
 	const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/storage/kv/namespaces/${namespaceId}/values/${key}`;
 
@@ -228,14 +228,13 @@ export const KV_HANDLERS: ToolHandlers = {
 	get_kvs: async (request, accountId, apiToken) => {
 		const results = await handleGetKVs(accountId, apiToken);
 		return {
-			toolResult: {
-				content: [
-					{
-						type: 'text',
-						text: JSON.stringify(results, null, 2),
-					},
-				],
-			},
+			content: [
+				{
+					type: 'text',
+					text: JSON.stringify(results, null, 2),
+				},
+			],
+			isError: false,
 		};
 	},
 
@@ -243,14 +242,12 @@ export const KV_HANDLERS: ToolHandlers = {
 		const { namespaceId, key } = request.arguments as { namespaceId: string; key: string };
 		const value = await handleGet(accountId, apiToken, namespaceId, key);
 		return {
-			toolResult: {
-				content: [
-					{
-						type: 'text',
-						text: value,
-					},
-				],
-			},
+			content: [
+				{
+					type: 'text',
+					text: value,
+				},
+			],
 		};
 	},
 
@@ -263,14 +260,12 @@ export const KV_HANDLERS: ToolHandlers = {
 		};
 		await handlePut(accountId, apiToken, namespaceId, key, value, expirationTtl);
 		return {
-			toolResult: {
-				content: [
-					{
-						type: 'text',
-						text: `Successfully stored value for key: ${key}`,
-					},
-				],
-			},
+			content: [
+				{
+					type: 'text',
+					text: `Successfully stored value for key: ${key}`,
+				},
+			],
 		};
 	},
 
@@ -278,14 +273,12 @@ export const KV_HANDLERS: ToolHandlers = {
 		const { namespaceId, key } = request.arguments as { namespaceId: string; key: string };
 		await handleDelete(accountId, apiToken, namespaceId, key);
 		return {
-			toolResult: {
-				content: [
-					{
-						type: 'text',
-						text: `Successfully deleted key: ${key}`,
-					},
-				],
-			},
+			content: [
+				{
+					type: 'text',
+					text: `Successfully deleted key: ${key}`,
+				},
+			],
 		};
 	},
 
@@ -297,14 +290,12 @@ export const KV_HANDLERS: ToolHandlers = {
 		};
 		const results = await handleList(accountId, apiToken, namespaceId, prefix, limit);
 		return {
-			toolResult: {
-				content: [
-					{
-						type: 'text',
-						text: JSON.stringify(results, null, 2),
-					},
-				],
-			},
+			content: [
+				{
+					type: 'text',
+					text: JSON.stringify(results, null, 2),
+				},
+			],
 		};
 	},
 };

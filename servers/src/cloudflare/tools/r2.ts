@@ -219,7 +219,7 @@ export async function handleR2ListObjects(
 	bucket: string,
 	prefix?: string,
 	delimiter?: string,
-	limit?: number,
+	limit?: number
 ) {
 	const params = new URLSearchParams();
 	if (prefix) params.append('prefix', prefix);
@@ -263,7 +263,7 @@ export async function handleR2PutObject(
 	bucket: string,
 	key: string,
 	content: string,
-	contentType?: string,
+	contentType?: string
 ) {
 	const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${bucket}/objects/${key}`;
 
@@ -309,9 +309,7 @@ export const R2_HANDLERS: ToolHandlers = {
 	r2_list_buckets: async (request, accountId, apiToken) => {
 		const results = await handleR2ListBuckets(accountId, apiToken);
 		return {
-			toolResult: {
-				content: [{ type: 'text', text: JSON.stringify(results, null, 2) }],
-			},
+			content: [{ type: 'text', text: JSON.stringify(results, null, 2) }],
 		};
 	},
 
@@ -319,9 +317,7 @@ export const R2_HANDLERS: ToolHandlers = {
 		const { name } = request as { name: string };
 		await handleR2CreateBucket(accountId, apiToken, name);
 		return {
-			toolResult: {
-				content: [{ type: 'text', text: `Successfully created bucket: ${name}` }],
-			},
+			content: [{ type: 'text', text: `Successfully created bucket: ${name}` }],
 		};
 	},
 
@@ -329,9 +325,7 @@ export const R2_HANDLERS: ToolHandlers = {
 		const { name } = request as { name: string };
 		await handleR2DeleteBucket(accountId, apiToken, name);
 		return {
-			toolResult: {
-				content: [{ type: 'text', text: `Successfully deleted bucket: ${name}` }],
-			},
+			content: [{ type: 'text', text: `Successfully deleted bucket: ${name}` }],
 		};
 	},
 
@@ -344,9 +338,7 @@ export const R2_HANDLERS: ToolHandlers = {
 		};
 		const results = await handleR2ListObjects(accountId, apiToken, bucket, prefix, delimiter, limit);
 		return {
-			toolResult: {
-				content: [{ type: 'text', text: JSON.stringify(results, null, 2) }],
-			},
+			content: [{ type: 'text', text: JSON.stringify(results, null, 2) }],
 		};
 	},
 
@@ -354,9 +346,7 @@ export const R2_HANDLERS: ToolHandlers = {
 		const { bucket, key } = request.arguments as { bucket: string; key: string };
 		const content = await handleR2GetObject(accountId, apiToken, bucket, key);
 		return {
-			toolResult: {
-				content: [{ type: 'text', text: content }],
-			},
+			content: [{ type: 'text', text: content }],
 		};
 	},
 
@@ -369,9 +359,7 @@ export const R2_HANDLERS: ToolHandlers = {
 		};
 		await handleR2PutObject(accountId, apiToken, bucket, key, content, contentType);
 		return {
-			toolResult: {
-				content: [{ type: 'text', text: `Successfully stored object: ${key}` }],
-			},
+			content: [{ type: 'text', text: `Successfully stored object: ${key}` }],
 		};
 	},
 
@@ -379,9 +367,7 @@ export const R2_HANDLERS: ToolHandlers = {
 		const { bucket, key } = request.arguments as { bucket: string; key: string };
 		await handleR2DeleteObject(accountId, apiToken, bucket, key);
 		return {
-			toolResult: {
-				content: [{ type: 'text', text: `Successfully deleted object: ${key}` }],
-			},
+			content: [{ type: 'text', text: `Successfully deleted object: ${key}` }],
 		};
 	},
 };

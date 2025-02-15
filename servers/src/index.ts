@@ -43,7 +43,6 @@ program
 					config[key] = process.env[transformKeyInEnVarName(key)] || '';
 				}
 				for (const key in infos.form.secrets) {
-					console.log(key);
 					secrets[key] = process.env[transformKeyInEnVarName(key)] || '';
 				}
 			}

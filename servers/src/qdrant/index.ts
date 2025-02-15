@@ -86,6 +86,7 @@ export const list = async () => {
 export async function call(request: Request, config: Record<string, string>, secrets: Record<string, string>) {
 	try {
 		const body: { name: string; arguments: Record<string, string> } = await request.json();
+
 		const { name, arguments: args } = body;
 		const qdrantConnector = new QdrantConnector({
 			url: config.url,
@@ -101,12 +102,10 @@ export async function call(request: Request, config: Record<string, string>, sec
 			throw new Error('Query is required');
 		}
 
-		const embeddings = new Embeddings(
-			{
-				model: config.embeddingModel,
-				modelType: config.embeddingModelType || 'openai',
-			},
-		);
+		const embeddings = new Embeddings({
+			model: config.embeddingModel,
+			modelType: config.embeddingModelType || 'openai',
+		});
 		switch (name) {
 			case 'qdrant_store_memory': {
 				const embedding = await embeddings.embed(query);
@@ -132,14 +131,20 @@ export async function call(request: Request, config: Record<string, string>, sec
 				throw new Error(`Unknown tool: ${name}`);
 		}
 	} catch (error) {
+		let content: String;
+		try {
+			content = JSON.stringify({
+				error: error instanceof Error ? error.message : String(error),
+			});
+		} catch (error) {
+			content = String(error);
+		}
 		return {
 			isError: true,
 			content: [
 				{
 					type: 'text',
-					text: JSON.stringify({
-						error: error instanceof Error ? error.message : String(error),
-					}),
+					text: content,
 				},
 			],
 		};

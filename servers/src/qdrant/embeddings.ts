@@ -4,9 +4,7 @@ export interface EmbeddingsConfig {
 }
 
 export class Embeddings {
-	constructor(
-		private readonly config: EmbeddingsConfig,
-	) {
+	constructor(private readonly config: EmbeddingsConfig) {
 		this.config = config;
 	}
 
@@ -40,8 +38,8 @@ export class Embeddings {
 			token_type: string;
 			expires_in: number;
 		};
-		const tokenBody = await token.json() as TokenResponse;
-		const request = new Request(`${process.env.BL_RUN_URL}/models/${model}/v1/embeddings`, {
+		const tokenBody = (await token.json()) as TokenResponse;
+		const request = new Request(`${process.env.BL_RUN_URL}/${process.env.BL_WORKSPACE}/models/${model}/v1/embeddings`, {
 			method: 'POST',
 			body: JSON.stringify({
 				input: query,
@@ -52,6 +50,9 @@ export class Embeddings {
 			},
 		});
 		const response = await fetch(request);
+		if (response.status >= 400) {
+			throw new Error(`Failed to embed query: ${response.statusText}`);
+		}
 		const body = (await response.json()) as { data: [{ embedding: number[] }] };
 		return body.data[0].embedding;
 	}

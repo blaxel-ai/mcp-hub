@@ -7,8 +7,8 @@
     "search"
   ],
   "integration": "exa",
-  "description": "Exa integration",
-  "longDescription": "Exa integration",
+  "description": "Exa search engine",
+  "longDescription": "Exa is a search engine that allows you to search the web for information, specifically tailored for the needs of AI agents.",
   "icon": "https://avatars.githubusercontent.com/u/77906174?s=200\u0026v=4",
   "url": "https://dashboard.exa.ai/api-keys",
   "form": {

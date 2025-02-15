@@ -1,6 +1,5 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { ToolHandlers } from '../utils/types';
-import { File } from 'buffer';
 
 interface CloudflareWorkerListResponse {
 	result: Array<{
@@ -290,7 +289,7 @@ export async function handleWorkerPut(
 	compatibility_flags?: string[],
 	migrations?: CfDurableObjectMigrations,
 	workers_dev?: boolean,
-	observability?: boolean,
+	observability?: boolean
 ) {
 	const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/${name}`;
 
@@ -365,14 +364,12 @@ export const WORKERS_HANDLERS: ToolHandlers = {
 	worker_list: async (request, accountId, apiToken) => {
 		const results = await handleWorkerList(accountId, apiToken);
 		return {
-			toolResult: {
-				content: [
-					{
-						type: 'text',
-						text: JSON.stringify(results, null, 2),
-					},
-				],
-			},
+			content: [
+				{
+					type: 'text',
+					text: JSON.stringify(results, null, 2),
+				},
+			],
 		};
 	},
 
@@ -380,14 +377,12 @@ export const WORKERS_HANDLERS: ToolHandlers = {
 		const { name } = request;
 		const script = await handleWorkerGet(accountId, apiToken, name);
 		return {
-			toolResult: {
-				content: [
-					{
-						type: 'text',
-						text: script,
-					},
-				],
-			},
+			content: [
+				{
+					type: 'text',
+					text: script,
+				},
+			],
 		};
 	},
 
@@ -413,17 +408,15 @@ export const WORKERS_HANDLERS: ToolHandlers = {
 			compatibility_flags,
 			migrations,
 			!skip_workers_dev,
-			!no_observability,
+			!no_observability
 		);
 		return {
-			toolResult: {
-				content: [
-					{
-						type: 'text',
-						text: `Successfully deployed worker: ${name}`,
-					},
-				],
-			},
+			content: [
+				{
+					type: 'text',
+					text: `Successfully deployed worker: ${name}`,
+				},
+			],
 		};
 	},
 
@@ -431,14 +424,12 @@ export const WORKERS_HANDLERS: ToolHandlers = {
 		const { name } = request;
 		await handleWorkerDelete(accountId, apiToken, name);
 		return {
-			toolResult: {
-				content: [
-					{
-						type: 'text',
-						text: `Successfully deleted worker: ${name}`,
-					},
-				],
-			},
+			content: [
+				{
+					type: 'text',
+					text: `Successfully deleted worker: ${name}`,
+				},
+			],
 		};
 	},
 };

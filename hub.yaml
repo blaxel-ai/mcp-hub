@@ -4,7 +4,7 @@ repositories:
     smitheryPath: src/brave-search/smithery.yaml
     dockerfile: src/brave-search/Dockerfile
     branch: main
-    displayName: Brave Search (new)
+    displayName: Brave Search
     icon: https://cdn.search.brave.com/serp/v2/_app/immutable/assets/brave-logo-small.1fMdoHsa.svg
     url: https://api-dashboard.search.brave.com/app/keys
     description: Search the web using Brave's search engine.
@@ -21,7 +21,7 @@ repositories:
     smitheryPath: src/github/smithery.yaml
     dockerfile: src/github/Dockerfile
     branch: main
-    displayName: GitHub (new)
+    displayName: GitHub
     url: https://github.com/settings/personal-access-tokens
     icon: https://github.githubassets.com/favicons/favicon.svg
     description: Search repos, files and issues, and commit in GitHub
@@ -39,7 +39,7 @@ repositories:
     smitheryPath: src/slack/smithery.yaml
     dockerfile: src/slack/Dockerfile
     branch: main
-    displayName: Slack (new)
+    displayName: Slack
     url: https://api.slack.com/apps
     icon: https://a.slack-edge.com/fd21de4/marketing/img/nav/logo.svg
     description: Post and retrieve messages in Slack channels
@@ -56,7 +56,7 @@ repositories:
     smitheryPath: ../../../../overriders/google-maps/smithery.yaml
     dockerfile: src/google-maps/Dockerfile
     branch: main
-    displayName: Google Maps (new)
+    displayName: Google Maps
     url: https://console.cloud.google.com/apis/credentials
     icon: https://www.google.com/favicon.ico
     description: Search for addresses, locations and directions
@@ -66,32 +66,18 @@ repositories:
     categories:
       - maps
 
-  postgres-new:
+  postgres:
     repository: https://github.com/smithery-ai/reference-servers.git
     smitheryPath: src/postgres/smithery.yaml
     dockerfile: src/postgres/Dockerfile
     branch: main
-    displayName: PostgreSQL (new)
-    url: https://www.postgresql.org
-    icon: https://www.postgresql.org/media/img/about/press/elephant.png
-    description: List tables and run queries in your PostgreSQL database
-    longDescription: List tables and run queries in your PostgreSQL database
-    secrets:
-      - postgresConnectionString
-    categories:
-      - database
-
-  postgres:
-    path: servers/
-    smitheryPath: smithery_files/postgres.yaml
-    dockerfile: /
     displayName: PostgreSQL
     url: https://www.postgresql.org
     icon: https://www.postgresql.org/media/img/about/press/elephant.png
     description: List tables and run queries in your PostgreSQL database
     longDescription: List tables and run queries in your PostgreSQL database
     secrets:
-      - password
+      - postgresConnectionString
     categories:
       - database
 
@@ -109,6 +95,8 @@ repositories:
       scopes:
         - https://www.googleapis.com/auth/gmail.send
     secrets:
+      - refreshToken
+    doNotShow:
       - refreshToken
     hiddenSecrets:
       - clientId
@@ -228,8 +216,8 @@ repositories:
     branch: main
     url: https://dashboard.exa.ai/api-keys
     icon: https://avatars.githubusercontent.com/u/77906174?s=200&v=4
-    description: Exa integration
-    longDescription: Exa integration
+    description: Exa search engine
+    longDescription: Exa is a search engine that allows you to search the web for information, specifically tailored for the needs of AI agents.
     secrets:
       - exaApiKey
     categories:

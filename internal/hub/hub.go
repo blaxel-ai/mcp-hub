@@ -26,6 +26,7 @@ type Repository struct {
 	SmitheryPath    string                   `yaml:"smitheryPath" mendatory:"false" default:"smithery.yaml"`
 	Dockerfile      string                   `yaml:"dockerfile" mendatory:"false" default:"Dockerfile"`
 	PackageManager  PackageManager           `yaml:"packageManager" mendatory:"false" default:"apk"`
+	DoNotShow       []string                 `yaml:"doNotShow" mendatory:"false"`
 	HasNPM          bool                     `yaml:"hasNPM" mendatory:"false" default:"true"`
 	Branch          string                   `yaml:"branch" mendatory:"false" default:"main"`
 	URL             string                   `yaml:"url" mendatory:"false"`

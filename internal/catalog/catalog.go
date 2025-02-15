@@ -90,6 +90,10 @@ func (c *Catalog) Load(name string, hub *hub.Repository, smithery *smithery.Smit
 	}
 	secrets := make(map[string]Field)
 	config := make(map[string]Field)
+	hidden := make(map[string]bool)
+	for _, doNotShow := range hub.DoNotShow {
+		hidden[doNotShow] = true
+	}
 	for _, secret := range hub.Secrets {
 		p, ok := smithery.StartCommand.ConfigSchema.Properties[secret]
 		if !ok {
@@ -105,7 +109,7 @@ func (c *Catalog) Load(name string, hub *hub.Repository, smithery *smithery.Smit
 			Description: p.Description,
 			Label:       ToLabel(secret),
 			Required:    isRequired,
-			Hidden:      p.Default != "",
+			Hidden:      hidden[secret],
 		}
 	}
 

@@ -51,8 +51,8 @@ class GmailClient {
 
 	constructor(config: Record<string, string>, secrets: Record<string, string>) {
 		this.refreshToken = secrets.refreshToken;
-		this.clientId = config.clientId;
-		this.clientSecret = config.clientSecret;
+		this.clientId = process.env.CLIENT_ID || '';
+		this.clientSecret = process.env.CLIENT_SECRET || '';
 	}
 
 	private async login() {

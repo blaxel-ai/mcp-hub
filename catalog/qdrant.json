@@ -13,11 +13,6 @@
   "url": "https://qdrant.tech/documentation/cloud/authentication/",
   "form": {
     "config": {
-      "blRunApiKey": {
-        "description": "The API key for the BL Run server.",
-        "label": "Bl Run Api Key",
-        "required": true
-      },
       "collectionName": {
         "description": "The name of the collection to store the memories.",
         "label": "Collection Name",
@@ -51,7 +46,6 @@
     ],
     "env": {
       "API_KEY": "$apiKey",
-      "BL_RUN_API_KEY": "$blRunApiKey",
       "COLLECTION_NAME": "$collectionName",
       "EMBEDDING_MODEL": "$embeddingModel",
       "URL": "$url"
