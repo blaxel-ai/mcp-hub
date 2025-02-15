@@ -12,14 +12,37 @@ const main = async () => {
   const toolkit = new LocalToolkit(client, name, url);
   await toolkit.initialize(name, description);
   const functions = await toolkit.getTools();
-  console.log(functions.map((f) => f.name));
-  const tool = functions.find((f) => f.name === payload.name);
-  if (!tool) {
-    logger.error(`Tool with name ${payload.name} not found`);
-    return;
+  for (const fn of functions) {
+    let params: string[] = [];
+    if (fn.schema && "shape" in fn.schema) {
+      const schema = fn.schema.shape;
+      params = Object.keys(schema);
+    }
+    logger.info(`${fn.name} (${params.join(", ")})`);
   }
-  const result = await tool.invoke(payload.arguments);
-  logger.info(result);
+
+  let previousResult: Record<string, any> = {};
+  for (const fn of payload) {
+    const params = fn(previousResult);
+    const tool = functions.find((f) => f.name === params.name);
+    if (!tool) {
+      logger.error(`Tool with name ${params.name} not found`);
+      return;
+    }
+    try {
+      const result = await tool.invoke(params.arguments);
+
+      const parsedResult = JSON.parse(result);
+      if (parsedResult.length > 0 && parsedResult[0].text) {
+        previousResult[params.name] = JSON.parse(parsedResult[0].text);
+        console.log(`Result: ${params.name}`, previousResult[params.name]);
+      } else {
+        console.log(`Result: ${params.name}`, parsedResult);
+      }
+    } catch (error) {
+      console.log(`Error: ${params.name}`, error);
+    }
+  }
 };
 
 main();

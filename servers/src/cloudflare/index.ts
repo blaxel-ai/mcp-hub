@@ -17,7 +17,10 @@ export async function list() {
 
 // Handle tool calls
 export async function call(request: Request, config: Record<string, string>, secrets: Record<string, string>) {
-	const body: { name: string; arguments: Record<string, string> } = await request.json() as { name: string; arguments: Record<string, string> };
+	const body: { name: string; arguments: Record<string, string> } = (await request.json()) as {
+		name: string;
+		arguments: Record<string, string>;
+	};
 	const toolName = body.name;
 	const apiToken = secrets.apiToken;
 	const accountId = config.accountId;
@@ -41,15 +44,13 @@ export async function call(request: Request, config: Record<string, string>, sec
 		throw new Error(`Unknown tool: ${toolName}`);
 	} catch (error) {
 		return {
-			toolResult: {
-				content: [
-					{
-						type: 'text',
-						text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-					},
-				],
-				isError: true,
-			},
+			content: [
+				{
+					type: 'text',
+					text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+				},
+			],
+			isError: true,
 		};
 	}
 }

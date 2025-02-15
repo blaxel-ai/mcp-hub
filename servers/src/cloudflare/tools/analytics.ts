@@ -77,14 +77,12 @@ export const ANALYTICS_HANDLERS: ToolHandlers = {
 
 		const analyticsData = await analyticsResponse.json();
 		return {
-			toolResult: {
-				content: [
-					{
-						type: 'text',
-						text: JSON.stringify(analyticsData, null, 2),
-					},
-				],
-			},
+			content: [
+				{
+					type: 'text',
+					text: JSON.stringify(analyticsData, null, 2),
+				},
+			],
 		};
 	},
 };
