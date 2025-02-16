@@ -1,5 +1,8 @@
 let namespaceId = "";
-export const payload = [
+export const payload: ((previousResult: Record<string, any>) => {
+  name: string;
+  arguments: Record<string, any>;
+})[] = [
   () => ({
     name: "get_kvs",
     arguments: {},

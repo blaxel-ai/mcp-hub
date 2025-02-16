@@ -31,10 +31,13 @@ const main = async () => {
     }
     try {
       const result = await tool.invoke(params.arguments);
-
       const parsedResult = JSON.parse(result);
       if (parsedResult.length > 0 && parsedResult[0].text) {
-        previousResult[params.name] = JSON.parse(parsedResult[0].text);
+        try {
+          previousResult[params.name] = JSON.parse(parsedResult[0].text);
+        } catch {
+          previousResult[params.name] = parsedResult[0].text;
+        }
         console.log(`Result: ${params.name}`, previousResult[params.name]);
       } else {
         console.log(`Result: ${params.name}`, parsedResult);
