@@ -325,7 +325,7 @@ class SlackClient {
 export async function call(request: Request, config: Record<string, string>, secrets: Record<string, string>) {
 	const slackClient = new SlackClient(secrets.bot_token, config.team_id);
 	try {
-		const requestBody: { name: string; arguments: any } = await request.json() as { name: string; arguments: any };
+		const requestBody: { name: string; arguments: any } = (await request.json()) as { name: string; arguments: any };
 		if (!requestBody.arguments) {
 			throw new Error('No arguments provided');
 		}
@@ -335,6 +335,7 @@ export async function call(request: Request, config: Record<string, string>, sec
 				const response = await slackClient.getChannels(args.limit, args.cursor);
 				return {
 					content: [{ type: 'text', text: JSON.stringify(response) }],
+					isError: false,
 				};
 			}
 
@@ -346,6 +347,7 @@ export async function call(request: Request, config: Record<string, string>, sec
 				const response = await slackClient.postMessage(args.channel_id, args.text);
 				return {
 					content: [{ type: 'text', text: JSON.stringify(response) }],
+					isError: false,
 				};
 			}
 
@@ -357,6 +359,7 @@ export async function call(request: Request, config: Record<string, string>, sec
 				const response = await slackClient.postReply(args.channel_id, args.thread_ts, args.text);
 				return {
 					content: [{ type: 'text', text: JSON.stringify(response) }],
+					isError: false,
 				};
 			}
 
@@ -368,6 +371,7 @@ export async function call(request: Request, config: Record<string, string>, sec
 				const response = await slackClient.addReaction(args.channel_id, args.timestamp, args.reaction);
 				return {
 					content: [{ type: 'text', text: JSON.stringify(response) }],
+					isError: false,
 				};
 			}
 
@@ -379,6 +383,7 @@ export async function call(request: Request, config: Record<string, string>, sec
 				const response = await slackClient.getChannelHistory(args.channel_id, args.limit);
 				return {
 					content: [{ type: 'text', text: JSON.stringify(response) }],
+					isError: false,
 				};
 			}
 
@@ -390,6 +395,7 @@ export async function call(request: Request, config: Record<string, string>, sec
 				const response = await slackClient.getThreadReplies(args.channel_id, args.thread_ts);
 				return {
 					content: [{ type: 'text', text: JSON.stringify(response) }],
+					isError: false,
 				};
 			}
 
@@ -398,6 +404,7 @@ export async function call(request: Request, config: Record<string, string>, sec
 				const response = await slackClient.getUsers(args.limit, args.cursor);
 				return {
 					content: [{ type: 'text', text: JSON.stringify(response) }],
+					isError: false,
 				};
 			}
 
@@ -409,6 +416,7 @@ export async function call(request: Request, config: Record<string, string>, sec
 				const response = await slackClient.getUserProfile(args.user_id);
 				return {
 					content: [{ type: 'text', text: JSON.stringify(response) }],
+					isError: false,
 				};
 			}
 
@@ -426,6 +434,7 @@ export async function call(request: Request, config: Record<string, string>, sec
 					}),
 				},
 			],
+			isError: true,
 		};
 	}
 }
