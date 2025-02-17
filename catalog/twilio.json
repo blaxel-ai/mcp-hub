@@ -36,10 +36,14 @@
   "entrypoint": {
     "command": "node",
     "args": [
-      "dist/index.js"
+      "dist/index.js",
+      "start",
+      "twilio"
     ],
     "env": {
-      "BRAVE_API_KEY": "\u003cnil\u003e"
+      "ACCOUNT_SID": "$accountSid",
+      "AUTH_TOKEN": "$authToken",
+      "FROM_NUMBER": "$fromNumber"
     }
   }
 }
