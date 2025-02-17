@@ -1,0 +1,40 @@
+{
+  "name": "telegram",
+  "enterprise": false,
+  "coming_soon": false,
+  "displayName": "Telegram",
+  "categories": [
+    "communication"
+  ],
+  "integration": "telegram",
+  "description": "Enables communication with users through Telegram",
+  "longDescription": "This server provides tools to interact with users via a Telegram bot, including asking questions, sending notifications, sharing files, and creating project archives.",
+  "icon": "https://telegram.org/img/t_logo.svg",
+  "url": "https://core.telegram.org/bots#how-do-i-create-a-bot",
+  "form": {
+    "config": {
+      "chatId": {
+        "description": "The Telegram chat ID.",
+        "label": "Chat Id",
+        "required": true
+      }
+    },
+    "secrets": {
+      "telegramToken": {
+        "description": "The Telegram bot token.",
+        "label": "Telegram Token",
+        "required": true
+      }
+    }
+  },
+  "entrypoint": {
+    "command": "node",
+    "args": [
+      "build/index.js"
+    ],
+    "env": {
+      "CHAT_ID": "$chatId",
+      "TELEGRAM_TOKEN": "$telegramToken"
+    }
+  }
+}
