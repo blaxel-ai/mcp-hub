@@ -17,19 +17,19 @@
       "accountSid": {
         "description": "Twilio account SID.",
         "label": "Account Sid",
-        "required": false
+        "required": true
       },
       "fromNumber": {
         "description": "Twilio phone number to send messages from.",
         "label": "From Number",
-        "required": false
+        "required": true
       }
     },
     "secrets": {
       "authToken": {
         "description": "Twilio auth token.",
         "label": "Auth Token",
-        "required": false
+        "required": true
       }
     }
   },
