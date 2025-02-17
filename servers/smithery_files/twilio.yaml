@@ -1,5 +1,3 @@
-build:
-  dockerBuildPath: ../../
 startCommand:
   type: stdio
   configSchema:
@@ -22,4 +20,4 @@ startCommand:
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
     |-
-    config=>({command:'node',args:['dist/index.js'],env:{BRAVE_API_KEY:config.apiKey}})
+    config=>({command:'node',args:['dist/index.js', 'start', 'twilio'],env:{FROM_NUMBER:config.fromNumber,ACCOUNT_SID:config.accountSid,AUTH_TOKEN:config.authToken}})
