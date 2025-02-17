@@ -183,10 +183,12 @@ class AWSS3Client {
 			return {
 				content: [
 					{
-						type: 'file',
-						name: request.key,
-						mimeType: mimetype,
-						blob: bodyBuffer.toString('base64'),
+						type: 'text',
+						text: JSON.stringify({
+							name: request.key,
+							mimeType: mimetype,
+							blob: bodyBuffer.toString('base64'),
+						}),
 					},
 				],
 				isError: false,
