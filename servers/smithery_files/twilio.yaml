@@ -6,8 +6,9 @@ startCommand:
     # JSON Schema defining the configuration options for the MCP.
     type: object
     required:
-      - botToken
-      - teamId
+      - fromNumber
+      - accountSid
+      - authToken
     properties:
       fromNumber:
         type: string
