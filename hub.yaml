@@ -34,6 +34,22 @@ repositories:
       - code
       - git
 
+  gitlab:
+    repository: https://github.com/smithery-ai/reference-servers.git
+    smitheryPath: src/gitlab/smithery.yaml
+    dockerfile: src/gitlab/Dockerfile
+    branch: main
+    displayName: Gitlab
+    url: https://gitlab.com/-/user_settings/personal_access_tokens?page=1
+    icon: https://gitlab.com/uploads/-/system/group/avatar/6543/logo-extra-whitespace.png?width=48
+    description: Search repos, files and issues, and commit in Gitlab
+    longDescription: Search repos, files and issues, and commit in Gitlab
+    secrets:
+      - gitlabPersonalAccessToken
+    categories:
+      - code
+      - git
+
   slack:
     repository: https://github.com/smithery-ai/reference-servers.git
     smitheryPath: src/slack/smithery.yaml
@@ -193,7 +209,7 @@ repositories:
       - apiKey
     categories:
       - search
-  
+
   beamlit-search:
     path: servers/
     smitheryPath: smithery_files/beamlit-search.yaml
@@ -252,6 +268,3 @@ repositories:
     comingSoon: true
     categories:
       - calendar
-   
-  
-    
