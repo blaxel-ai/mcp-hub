@@ -28,6 +28,7 @@
 		"openai": "^4.81.0",
 		"postgres": "^3.4.5",
 		"ts-node": "^10.9.2",
+		"twilio": "^5.4.4",
 		"zod": "^3.24.1",
 		"zod-to-json-schema": "^3.24.1"
 	}

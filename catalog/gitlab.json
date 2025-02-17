@@ -1,42 +1,24 @@
 {
   "name": "gitlab",
   "enterprise": false,
-  "coming_soon": false,
+  "coming_soon": true,
   "displayName": "Gitlab",
   "categories": [
     "code",
     "git"
   ],
-  "integration": "gitlab",
+  "integration": "",
   "description": "Search repos, files and issues, and commit in Gitlab",
   "longDescription": "Search repos, files and issues, and commit in Gitlab",
   "icon": "https://gitlab.com/uploads/-/system/group/avatar/6543/logo-extra-whitespace.png?width=48",
   "url": "https://gitlab.com/-/user_settings/personal_access_tokens?page=1",
   "form": {
-    "config": {
-      "gitlabApiUrl": {
-        "description": "Base URL for GitLab API, optional for self-hosted instances.",
-        "label": "Gitlab Api Url",
-        "required": false,
-        "default": "https://gitlab.com/api/v4"
-      }
-    },
-    "secrets": {
-      "gitlabPersonalAccessToken": {
-        "description": "Your GitLab personal access token.",
-        "label": "Gitlab Personal Access Token",
-        "required": true
-      }
-    }
+    "config": null,
+    "secrets": null
   },
   "entrypoint": {
-    "command": "node",
-    "args": [
-      "dist/index.js"
-    ],
-    "env": {
-      "GITLAB_API_URL": "https://gitlab.com/api/v4",
-      "GITLAB_PERSONAL_ACCESS_TOKEN": "$gitlabPersonalAccessToken"
-    }
+    "command": "",
+    "args": null,
+    "env": null
   }
 }

@@ -1,0 +1,24 @@
+build:
+  dockerBuildPath: ../../
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - botToken
+      - teamId
+    properties:
+      fromNumber:
+        type: string
+        description: Twilio phone number to send messages from.
+      accountSid:
+        type: string
+        description: Twilio account SID.
+      authToken:
+        type: string
+        description: Twilio auth token.
+  commandFunction:
+    # A function that produces the CLI command to start the MCP on stdio.
+    |-
+    config=>({command:'node',args:['dist/index.js'],env:{BRAVE_API_KEY:config.apiKey}})
