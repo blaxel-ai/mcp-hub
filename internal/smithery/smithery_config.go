@@ -28,7 +28,7 @@ type Command struct {
 }
 
 func (c *Command) Entrypoint() string {
-	entrypoint := []string{"\"npx\"", "\"-y\"", "\"@beamlit/supergateway\"", "\"--port\"", "\"80\""}
+	entrypoint := []string{"\"npx\"", "\"-y\"", "\"@baxel/supergateway\"", "\"--port\"", "\"80\""}
 	switch c.Type {
 	case "stdio":
 		entrypoint = append(entrypoint, "\"--stdio\"")

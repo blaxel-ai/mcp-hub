@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/beamlit/mcp-hub/cmd"
+	"github.com/baxel/mcp-hub/cmd"
 )
 
 func main() {

@@ -6,8 +6,8 @@ import (
 	"os"
 	"slices"
 
-	"github.com/beamlit/mcp-hub/internal/hub"
-	"github.com/beamlit/mcp-hub/internal/smithery"
+	"github.com/baxel/mcp-hub/internal/hub"
+	"github.com/baxel/mcp-hub/internal/smithery"
 )
 
 const (

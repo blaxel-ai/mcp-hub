@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { call, list } from '../src/linear';
-import { Call, DefineSecret, StandardDecode } from './beamlit';
+import { Call, DefineSecret, StandardDecode } from './baxel';
 
 
 let silent = true;
@@ -47,7 +47,7 @@ describe('Linear', async() => {
       title: 'Test Issue',
       teamKey: 'CHA',
       description: 'This is a test issue',
-      assigneeEmail: 'cdrappier@beamlit.com',
+      assigneeEmail: 'cdrappier@baxel.com',
       status: 'In Progress',
       priority: 2,
     })
@@ -60,7 +60,7 @@ describe('Linear', async() => {
       issueKey: 'CHA-52',
       title: 'CA ZAGOUILLE',
       description: 'This is a test issue changed',
-      assigneeEmail: 'cdrappier@beamlit.com',
+      assigneeEmail: 'cdrappier@baxel.com',
       status: 'In Progress',
       priority: 2,
     })
@@ -72,7 +72,7 @@ describe('Linear', async() => {
     let response = await Call(call, 'add_comment', {
       issueKey: 'CHA-52',
       comment: 'This is a test comment',
-      userEmail: 'cdrappier@beamlit.com',
+      userEmail: 'cdrappier@baxel.com',
     })
     let value = StandardDecode(response)
     expect(value.id).toBeDefined();
@@ -83,7 +83,7 @@ describe('Linear', async() => {
 			query: 'Test Issue',
       teamKey: 'CHA',
       // status: 'Todo',
-      // assigneeEmail: 'cdrappier@beamlit.com',
+      // assigneeEmail: 'cdrappier@baxel.com',
       // assigneeName: 'Charles Drappier',
       // labels: ['Bug'],
       // priority: 2,
@@ -117,7 +117,7 @@ describe('Linear', async() => {
 
   it('get_user_issues', async () => {
     let response = await Call(call, 'get_user_issues', {
-      userEmail: 'cdrappier@beamlit.com',
+      userEmail: 'cdrappier@baxel.com',
     })
     let value = StandardDecode(response)
     expect(value.length).toBeGreaterThan(0);

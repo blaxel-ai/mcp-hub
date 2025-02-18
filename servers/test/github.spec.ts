@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { call, list } from '../src/github';
 
-import { Call, DefineSecret, StandardDecode } from './beamlit';
+import { Call, DefineSecret, StandardDecode } from './baxel';
 
 let silent = true;
 
@@ -41,13 +41,13 @@ describe('Github', async () => {
 		expect(listFunc.every((func) => tools.some((tool) => tool.name === func))).toBe(true);
 	});
 	it('list_issues', async () => {
-		let response = await Call(call, 'list_issues', { owner: 'beamlit', repo: 'controlplane' });
+		let response = await Call(call, 'list_issues', { owner: 'baxel', repo: 'controlplane' });
 		let value = StandardDecode(response);
 		expect(value).toBeDefined();
 		expect(value).instanceOf(Array);
 	});
 	it('search_repositories', async () => {
-		let response = await Call(call, 'search_repositories', { query: 'beamlit/controlplane' });
+		let response = await Call(call, 'search_repositories', { query: 'baxel/controlplane' });
 		let value = StandardDecode(response);
 		expect(value.total_count).toEqual(1);
 	});

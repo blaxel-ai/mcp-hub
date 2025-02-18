@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/beamlit/mcp-hub/internal/hub"
+	"github.com/baxel/mcp-hub/internal/hub"
 	"github.com/spf13/cobra"
 )
 

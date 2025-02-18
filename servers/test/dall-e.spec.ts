@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { call, list } from '../src/dall-e';
 
-import { Call, DefineSecret, StandardDecode } from './beamlit';
+import { Call, DefineSecret, StandardDecode } from './baxel';
 
 
 let silent = true;

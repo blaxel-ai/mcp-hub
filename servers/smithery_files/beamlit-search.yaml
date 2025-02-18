@@ -12,4 +12,4 @@ startCommand:
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
     |-
-    config=>({command:'node',args:['dist/index.js', 'start', 'beamlit-search'],env:{API_KEY:config.apiKey}})
+    config=>({command:'node',args:['dist/index.js', 'start', 'baxel-search'],env:{API_KEY:config.apiKey}})
