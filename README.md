@@ -12,7 +12,7 @@ A command-line interface (CLI) tool for importing Model Context Protocol servers
 ## Installation
 
 ```bash
-go install github.com/blaxel/mcp-hub@latest
+go install github.com/beamlit/mcp-hub@latest
 ```
 
 ## Usage
@@ -95,4 +95,4 @@ This project is licensed under the [Apache License 2.0](LICENSE).
 
 ## Support
 
-If you encounter any issues or have questions, please file an issue on our [GitHub repository](https://github.com/blaxel/mcp-hub/issues).
+If you encounter any issues or have questions, please file an issue on our [GitHub repository](https://github.com/beamlit/mcp-hub/issues).

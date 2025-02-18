@@ -5,14 +5,14 @@ export const payload: ((previousResult: Record<string, any>) => {
   () => ({
     name: "list_files",
     arguments: {
-      bucket: "cli-blaxel-test",
+      bucket: "cli-beamlit-test",
     },
   }),
   () => {
     return {
       name: "upload_file",
       arguments: {
-        bucket: "cli-blaxel-test",
+        bucket: "cli-beamlit-test",
         key: "test.txt",
         data: "Hello, world!",
       },

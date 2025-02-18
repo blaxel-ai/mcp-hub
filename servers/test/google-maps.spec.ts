@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { call, list } from '../src/google-maps';
 
-import { Call, DefineSecret, StandardDecode } from './blaxel';
+import { Call, DefineSecret, StandardDecode } from './beamlit';
 
 
 describe('GoogleMap', async() => {

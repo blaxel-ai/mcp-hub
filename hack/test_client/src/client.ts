@@ -3,8 +3,8 @@ import WebSocket from "ws";
 // @ts-ignore
 global.WebSocket = WebSocket;
 
-import { logger, newClient } from "@blaxel/sdk";
-import { LocalToolkit } from "@blaxel/sdk/functions/local.js";
+import { logger, newClient } from "@beamlit/sdk";
+import { LocalToolkit } from "@beamlit/sdk/functions/local.js";
 import { description, name, payload, url } from "./config.js";
 
 const main = async () => {

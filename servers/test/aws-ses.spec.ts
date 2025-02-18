@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { call, list } from '../src/aws-ses';
 
-import { Call, DefineConfig, DefineSecret, StandardDecode } from './blaxel';
+import { Call, DefineConfig, DefineSecret, StandardDecode } from './beamlit';
 
 
 let silent = true;

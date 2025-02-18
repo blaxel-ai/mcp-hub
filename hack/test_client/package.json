@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@blaxel/sdk": "0.0.57-alpha.65",
+    "@beamlit/sdk": "0.0.57-alpha.65",
     "ws": "^8.16.0"
   },
   "devDependencies": {

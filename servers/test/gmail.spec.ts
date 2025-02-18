@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { call, list } from '../src/gmail';
 
-import { Call, DefineSecret, StandardDecode } from './blaxel';
+import { Call, DefineSecret, StandardDecode } from './beamlit';
 
 
 let silent = true;
