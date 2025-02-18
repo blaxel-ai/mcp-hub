@@ -28,12 +28,28 @@ export const infos = async () => {
 					type: 'model-embedding',
 					required: true,
 				},
+				blBaseUrl: {
+					description: 'Blaxel Base URL',
+					label: 'Blaxel Base URL',
+					required: true,
+				},
+				blWorkspace: {
+					description: 'Blaxel Workspace',
+					label: 'Blaxel Workspace',
+					required: true,
+				},
 			},
 			secrets: {
 				apiKey: {
 					description: 'API Key',
 					label: 'API Key',
 					required: true,
+				},
+				blClientCredentials: {
+					description: 'Client Credentials',
+					label: 'Client Credentials',
+					required: true,
+					hidden: true,
 				},
 			},
 		},
@@ -110,6 +126,9 @@ export async function call(request: Request, config: Record<string, string>, sec
 		const embeddings = new Embeddings({
 			model: config.embeddingModel,
 			modelType: config.embeddingModelType || 'openai',
+			clientCredentials: secrets.blClientCredentials,
+			baseUrl: config.blBaseUrl,
+			workspace: config.blWorkspace,
 		});
 		switch (name) {
 			case 'qdrant_store_memory': {
