@@ -1,16 +1,16 @@
 {
-  "name": "beamlit-search",
+  "name": "blaxel-search",
   "enterprise": false,
   "coming_soon": false,
-  "displayName": "Beamlit Search",
+  "displayName": "blaxel Search",
   "categories": [
     "search"
   ],
-  "integration": "beamlit-search",
+  "integration": "blaxel-search",
   "description": "Search the web for information",
   "longDescription": "Search the web for information",
-  "icon": "https://app.beamlit.com/logo_short.png",
-  "url": "https://app.beamlit.com",
+  "icon": "https://app.blaxel.ai/logo_short.png",
+  "url": "https://app.blaxel.ai",
   "form": {
     "config": {},
     "secrets": {}
@@ -20,7 +20,7 @@
     "args": [
       "dist/index.js",
       "start",
-      "beamlit-search"
+      "blaxel-search"
     ],
     "env": {
       "API_KEY": "$apiKey"

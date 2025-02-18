@@ -194,13 +194,13 @@ repositories:
     categories:
       - search
 
-  beamlit-search:
+  blaxel-search:
     path: servers/
-    smitheryPath: smithery_files/beamlit-search.yaml
+    smitheryPath: smithery_files/blaxel-search.yaml
     dockerfile: /
-    displayName: Beamlit Search
-    url: https://app.beamlit.com
-    icon: https://app.beamlit.com/logo_short.png
+    displayName: blaxel Search
+    url: https://app.blaxel.ai
+    icon: https://app.blaxel.ai/logo_short.png
     description: Search the web for information
     longDescription: Search the web for information
     hiddenSecrets:
@@ -246,6 +246,8 @@ repositories:
     branch: smithery/config-p18v
     url: https://core.telegram.org/bots#how-do-i-create-a-bot
     icon: https://telegram.org/img/t_logo.svg
+    disabled: true
+    comingSoon: true
     description: Enables communication with users through Telegram
     longDescription: This server provides tools to interact with users via a Telegram bot, including asking questions, sending notifications, sharing files, and creating project archives.
     secrets:
