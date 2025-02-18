@@ -198,7 +198,7 @@ repositories:
     path: servers/
     smitheryPath: smithery_files/blaxel-search.yaml
     dockerfile: /
-    displayName: blaxel Search
+    displayName: Blaxel Search
     url: https://app.blaxel.ai
     icon: https://app.blaxel.ai/logo_short.png
     description: Search the web for information
