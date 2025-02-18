@@ -194,13 +194,13 @@ repositories:
     categories:
       - search
 
-  baxel-search:
+  blaxel-search:
     path: servers/
-    smitheryPath: smithery_files/baxel-search.yaml
+    smitheryPath: smithery_files/beamlit-search.yaml
     dockerfile: /
-    displayName: baxel Search
-    url: https://app.baxel.com
-    icon: https://app.baxel.com/logo_short.png
+    displayName: blaxel Search
+    url: https://app.blaxel.ai
+    icon: https://app.blaxel.ai/logo_short.png
     description: Search the web for information
     longDescription: Search the web for information
     hiddenSecrets:

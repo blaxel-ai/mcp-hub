@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { call, list } from '../src/aws-ses';
 
-import { Call, DefineConfig, DefineSecret, StandardDecode } from './baxel';
+import { Call, DefineConfig, DefineSecret, StandardDecode } from './blaxel';
 
 
 let silent = true;
@@ -30,8 +30,8 @@ describe('AWS SES', async() => {
 
 	it('send_email', async () => {
 		let response = await Call(call, 'send_email', {
-			from: 'no-reply@baxel.com',
-			to: 'cdrappier@baxel.com',
+			from: 'no-reply@blaxel.ai',
+			to: 'cdrappier@blaxel.ai',
 			subject: 'Automated email from agent',
 			body: 'Hello Charles, you are the sender and the receiver',
 		})

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { call, list } from '../src/postgres';
 
-import { Call, DefineConfig, DefineSecret, StandardDecode } from './baxel';
+import { Call, DefineConfig, DefineSecret, StandardDecode } from './blaxel';
 
 
 let silent = true;

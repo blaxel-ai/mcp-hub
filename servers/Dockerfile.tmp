@@ -8,5 +8,5 @@ RUN pnpm run build
 
 RUN apk add --no-cache git
 RUN npm install -g pnpm
-RUN pnpm install https://github.com/baxel/supergateway
-ENTRYPOINT ["npx","-y","@baxel/supergateway","--port","80","--stdio"]
+RUN pnpm install https://github.com/beamlit/supergateway
+ENTRYPOINT ["npx","-y","@beamlit/supergateway","--port","80","--stdio"]

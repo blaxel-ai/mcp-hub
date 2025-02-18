@@ -24,7 +24,7 @@ export function buildUrl(baseUrl: string, params: Record<string, string | number
 	return url.toString();
 }
 
-const USER_AGENT = `mcp-baxel-github-server`;
+const USER_AGENT = `mcp-blaxel-github-server`;
 
 export async function githubRequest(url: string, secrets: Record<string, string>, options: RequestOptions = {}): Promise<unknown> {
 	const headers: Record<string, string> = {
