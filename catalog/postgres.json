@@ -1,0 +1,32 @@
+{
+  "name": "postgres",
+  "enterprise": false,
+  "coming_soon": false,
+  "displayName": "PostgreSQL",
+  "categories": [
+    "database"
+  ],
+  "integration": "postgres",
+  "description": "List tables and run queries in your PostgreSQL database",
+  "longDescription": "List tables and run queries in your PostgreSQL database",
+  "icon": "https://www.postgresql.org/media/img/about/press/elephant.png",
+  "url": "https://www.postgresql.org",
+  "form": {
+    "config": {},
+    "secrets": {
+      "postgresConnectionString": {
+        "description": "The connection string for the PostgreSQL database, including the host, port, and database name, e.g., 'postgresql://user:password@host:port/db-name'.",
+        "label": "Postgres Connection String",
+        "required": true
+      }
+    }
+  },
+  "entrypoint": {
+    "command": "node",
+    "args": [
+      "dist/index.js",
+      "$postgresConnectionString"
+    ],
+    "env": {}
+  }
+}

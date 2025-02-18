@@ -1,0 +1,54 @@
+{
+  "name": "qdrant",
+  "enterprise": false,
+  "coming_soon": false,
+  "displayName": "Qdrant",
+  "categories": [
+    "search"
+  ],
+  "integration": "qdrant",
+  "description": "Store and retrieve memories using Qdrant",
+  "longDescription": "Store and retrieve memories using Qdrant",
+  "icon": "https://avatars.githubusercontent.com/u/73504361?s=200\u0026v=4",
+  "url": "https://qdrant.tech/documentation/cloud/authentication/",
+  "form": {
+    "config": {
+      "collectionName": {
+        "description": "The name of the collection to store the memories.",
+        "label": "Collection Name",
+        "required": true
+      },
+      "embeddingModel": {
+        "description": "The embedding model to use.",
+        "label": "Embedding Model",
+        "required": true
+      },
+      "url": {
+        "description": "The URL of the Qdrant server.",
+        "label": "Url",
+        "required": true
+      }
+    },
+    "secrets": {
+      "apiKey": {
+        "description": "The API key for the Qdrant server.",
+        "label": "Api Key",
+        "required": true
+      }
+    }
+  },
+  "entrypoint": {
+    "command": "node",
+    "args": [
+      "dist/index.js",
+      "start",
+      "qdrant"
+    ],
+    "env": {
+      "API_KEY": "$apiKey",
+      "COLLECTION_NAME": "$collectionName",
+      "EMBEDDING_MODEL": "$embeddingModel",
+      "URL": "$url"
+    }
+  }
+}

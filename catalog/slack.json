@@ -1,0 +1,40 @@
+{
+  "name": "slack",
+  "enterprise": false,
+  "coming_soon": false,
+  "displayName": "Slack",
+  "categories": [
+    "communication"
+  ],
+  "integration": "slack",
+  "description": "Post and retrieve messages in Slack channels",
+  "longDescription": "Post and retrieve messages in Slack channels",
+  "icon": "https://a.slack-edge.com/fd21de4/marketing/img/nav/logo.svg",
+  "url": "https://api.slack.com/apps",
+  "form": {
+    "config": {
+      "teamId": {
+        "description": "The Slack Team ID for the workspace.",
+        "label": "Team Id",
+        "required": true
+      }
+    },
+    "secrets": {
+      "botToken": {
+        "description": "The Bot User OAuth Token for the Slack app.",
+        "label": "Bot Token",
+        "required": true
+      }
+    }
+  },
+  "entrypoint": {
+    "command": "node",
+    "args": [
+      "dist/index.js"
+    ],
+    "env": {
+      "SLACK_BOT_TOKEN": "$botToken",
+      "SLACK_TEAM_ID": "$teamId"
+    }
+  }
+}
