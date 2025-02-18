@@ -39,6 +39,7 @@ type Field struct {
 	Description string `json:"description"`
 	Label       string `json:"label"`
 	Required    bool   `json:"required"`
+	Default     string `json:"default,omitempty"`
 	Hidden      bool   `json:"hidden,omitempty"`
 }
 
@@ -110,6 +111,7 @@ func (c *Catalog) Load(name string, hub *hub.Repository, smithery *smithery.Smit
 			Label:       ToLabel(secret),
 			Required:    isRequired,
 			Hidden:      hidden[secret],
+			Default:     p.Default,
 		}
 	}
 
@@ -130,6 +132,7 @@ func (c *Catalog) Load(name string, hub *hub.Repository, smithery *smithery.Smit
 			Description: property.Description,
 			Label:       ToLabel(name),
 			Required:    isRequired,
+			Default:     property.Default,
 		}
 	}
 

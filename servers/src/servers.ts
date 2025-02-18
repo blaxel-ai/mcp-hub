@@ -11,6 +11,7 @@ import { infos as linearInfos, list as linearList, call as linearToolCall } from
 import { infos as postgresInfos, list as postgresList, call as postgresToolCall } from './postgres';
 import { infos as qdrantInfos, list as qdrantList, call as qdrantToolCall } from './qdrant';
 import { infos as slackInfos, list as slackList, call as slackToolCall } from './slack';
+import { infos as twilioInfos, list as twilioList, call as twilioToolCall } from './twilio';
 
 export const mcpServers: Record<string, Record<string, Function>> = {
 	'beamlit-search': {
@@ -77,5 +78,10 @@ export const mcpServers: Record<string, Record<string, Function>> = {
 		list: qdrantList,
 		call: qdrantToolCall,
 		infos: qdrantInfos,
+	},
+	twilio: {
+		list: twilioList,
+		call: twilioToolCall,
+		infos: twilioInfos,
 	},
 };

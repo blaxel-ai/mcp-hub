@@ -110,18 +110,14 @@ class AWSS3Client {
 				content: [
 					{
 						type: 'text',
-						text: JSON.stringify(
-							result.Contents?.map((f) => f.Key),
-							null,
-							2,
-						),
+						text: JSON.stringify(result.Contents?.map((f) => f.Key)),
 					},
 				],
 				isError: false,
 			};
 		} catch (error) {
 			return {
-				content: [{ type: 'text', text: JSON.stringify(error, null, 2) }],
+				content: [{ type: 'text', text: JSON.stringify(error) }],
 				isError: true,
 			};
 		}
@@ -153,12 +149,24 @@ class AWSS3Client {
 				'text/plain',
 				'text/html',
 				'text/css',
+				'text/csv',
 				'text/javascript',
+				'text/markdown',
+				'text/xml',
+				'text/yaml',
+				'text/calendar',
+				'text/x-python',
+				'text/x-java-source',
+				'text/x-c',
+				'text/x-script.ruby',
 				'application/json',
 				'application/xml',
 				'application/javascript',
 				'application/typescript',
 				'application/x-yaml',
+				'application/ld+json',
+				'application/graphql',
+				'application/x-httpd-php',
 			];
 
 			if (mimetype && textBasedTypes.includes(mimetype)) {
@@ -168,9 +176,11 @@ class AWSS3Client {
 						content: [
 							{
 								type: 'text',
-								text: textContent,
-								name: request.key,
-								mimeType: mimetype,
+								text: JSON.stringify({
+									text: textContent,
+									name: request.key,
+									mimeType: mimetype,
+								}),
 							},
 						],
 						isError: false,
@@ -185,10 +195,12 @@ class AWSS3Client {
 			return {
 				content: [
 					{
-						type: 'file',
-						name: request.key,
-						mimeType: mimetype,
-						blob: bodyBuffer.toString('base64'),
+						type: 'text',
+						text: JSON.stringify({
+							name: request.key,
+							mimeType: mimetype,
+							blob: bodyBuffer.toString('base64'),
+						}),
 					},
 				],
 				isError: false,
@@ -198,7 +210,7 @@ class AWSS3Client {
 				content: [
 					{
 						type: 'text',
-						text: JSON.stringify(error, null, 2),
+						text: JSON.stringify(error),
 					},
 				],
 				isError: true,
@@ -239,13 +251,9 @@ class AWSS3Client {
 				content: [
 					{
 						type: 'text',
-						text: JSON.stringify(
-							{
-								error: error instanceof Error ? error.message : String(error),
-							},
-							null,
-							2,
-						),
+						text: JSON.stringify({
+							error: error instanceof Error ? error.message : String(error),
+						}),
 					},
 				],
 				isError: true,
@@ -257,7 +265,7 @@ class AWSS3Client {
 export async function call(request: Request, config: Record<string, string>, secrets: Record<string, string>) {
 	try {
 		const awsS3Client = new AWSS3Client(config, secrets);
-		const requestBody: { name: string; arguments: any } = await request.json() as { name: string; arguments: any };
+		const requestBody: { name: string; arguments: any } = (await request.json()) as { name: string; arguments: any };
 		if (!requestBody.arguments) {
 			throw new Error('No arguments provided');
 		}

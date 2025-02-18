@@ -75,6 +75,11 @@ export const list = async () => {
 							description: 'The number of memories to return (default 10)',
 							default: 10,
 						},
+						scoreThreshold: {
+							type: 'number',
+							description: 'The score threshold for the memories to return (default 0.5)',
+							default: 0.5,
+						},
 					},
 					required: ['query'],
 				},
@@ -85,7 +90,7 @@ export const list = async () => {
 
 export async function call(request: Request, config: Record<string, string>, secrets: Record<string, string>) {
 	try {
-		const body: { name: string; arguments: Record<string, string> } = await request.json();
+		const body: { name: string; arguments: Record<string, any> } = await request.json();
 
 		const { name, arguments: args } = body;
 		const qdrantConnector = new QdrantConnector({
@@ -111,14 +116,14 @@ export async function call(request: Request, config: Record<string, string>, sec
 				const embedding = await embeddings.embed(query);
 				await qdrantConnector.storeMemory(embedding as number[], query);
 				return {
-					content: [{ type: 'text', text: `Remember: ${query}` }],
+					content: [{ type: 'text', text: `Remembered` }],
 					isError: false,
 				};
 			}
 			case 'qdrant_find_memories': {
-				const { limit = '10' } = args;
+				const { limit = 10, scoreThreshold = 0.5 } = args;
 				const embedding = await embeddings.embed(query);
-				const memories = await qdrantConnector.findMemory(embedding as number[], parseInt(limit));
+				const memories = await qdrantConnector.findMemory(embedding as number[], limit, scoreThreshold);
 				return {
 					content: memories.points.map((point: any) => ({
 						type: 'text',

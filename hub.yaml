@@ -193,7 +193,7 @@ repositories:
       - apiKey
     categories:
       - search
-  
+
   beamlit-search:
     path: servers/
     smitheryPath: smithery_files/beamlit-search.yaml
@@ -223,6 +223,36 @@ repositories:
     categories:
       - search
 
+  twilio:
+    path: servers/
+    smitheryPath: smithery_files/twilio.yaml
+    dockerfile: /
+    displayName: Twilio
+    url: https://console.twilio.com/dashboard
+    icon: https://avatars.githubusercontent.com/u/109142?s=200&v=4
+    description: Send SMS using Twilio.
+    longDescription: Integration to send SMS messages using the Twilio API.
+    secrets:
+      - authToken
+    categories:
+      - communication
+      - sms
+
+  telegram:
+    repository: https://github.com/smithery-ai/mcp-communicator-telegram
+    smitheryPath: smithery.yaml
+    dockerfile: /
+    displayName: Telegram
+    branch: smithery/config-p18v
+    url: https://core.telegram.org/bots#how-do-i-create-a-bot
+    icon: https://telegram.org/img/t_logo.svg
+    description: Enables communication with users through Telegram
+    longDescription: This server provides tools to interact with users via a Telegram bot, including asking questions, sending notifications, sharing files, and creating project archives.
+    secrets:
+      - telegramToken
+    categories:
+      - communication
+
   gdocs:
     repository: https://github.com/smithery-ai/reference-servers.git
     smitheryPath: src/gdocs/smithery.yaml
@@ -243,15 +273,31 @@ repositories:
     smitheryPath: src/gcalendar/smithery.yaml
     dockerfile: src/gcalendar/Dockerfile
     branch: main
-    disabled: true
     displayName: Google Calendar
     url: https://console.cloud.google.com/apis/credentials
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Google_Calendar_icon_%282020%29.svg/1024px-Google_Calendar_icon_%282020%29.svg.png
     description: Google Calendar integration
     longDescription: Google Calendar integration
+    disabled: true
     comingSoon: true
     categories:
       - calendar
-   
-  
-    
+
+  # Fix gitlab, search query is failing instant because of items[0].fork and items.[0].owner
+  gitlab:
+    repository: https://github.com/smithery-ai/reference-servers.git
+    smitheryPath: src/gitlab/smithery.yaml
+    dockerfile: src/gitlab/Dockerfile
+    branch: main
+    displayName: Gitlab
+    url: https://gitlab.com/-/user_settings/personal_access_tokens?page=1
+    icon: https://gitlab.com/uploads/-/system/group/avatar/6543/logo-extra-whitespace.png?width=48
+    description: Search repos, files and issues, and commit in Gitlab
+    longDescription: Search repos, files and issues, and commit in Gitlab
+    disabled: true
+    comingSoon: true
+    secrets:
+      - gitlabPersonalAccessToken
+    categories:
+      - code
+      - git

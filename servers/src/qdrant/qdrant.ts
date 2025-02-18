@@ -16,14 +16,14 @@ export class QdrantConnector {
 		});
 	}
 
-	async createCollection() {
+	async createCollection(embeddings: number[]) {
 		try {
 			const response = await this.client.getCollections();
 			if (!response.collections.find((collection: any) => collection.name === this.config.collectionName)) {
 				await this.client.createCollection(this.config.collectionName, {
 					vectors: {
 						default: {
-							size: 1536,
+							size: embeddings.length,
 							distance: 'Cosine',
 						},
 					},
@@ -39,7 +39,7 @@ export class QdrantConnector {
 
 	async storeMemory(embeddings: number[], information: string) {
 		try {
-			await this.createCollection();
+			await this.createCollection(embeddings);
 			return await this.client.upsert(this.config.collectionName, {
 				wait: true,
 				points: [
@@ -60,14 +60,14 @@ export class QdrantConnector {
 		}
 	}
 
-	async findMemory(query: number[], limit: number = 10) {
+	async findMemory(query: number[], limit: number = 10, scoreThreshold: number = 0.5) {
 		try {
-			await this.createCollection();
 			return await this.client.query(this.config.collectionName, {
 				query,
 				using: 'default',
 				with_payload: true,
 				limit,
+				score_threshold: scoreThreshold,
 			});
 		} catch (error) {
 			if (error instanceof Error && 'status' in error) {
