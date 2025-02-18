@@ -20,24 +20,24 @@ go install github.com/beamlit/mcp-hub@latest
 ### Import all MCPs from config
 
 ```bash
-mcp-hub import --config hub.yaml
+mcp-hub import --config hub
 ```
 
 ### Import a specific MCP
 
 ```bash
-mcp-hub import --config hub.yaml --mcp <mcp-name>
+mcp-hub import --config hub --mcp <mcp-name>
 ```
 
 ### Push images to registry
 
 ```bash
-mcp-hub import --config hub.yaml --push
+mcp-hub import --config hub --push
 ```
 
 ## Configuration
 
-Create a `hub.yaml` file to define your MCPs. Example configuration:
+Create a `hub` file to define your MCPs. Example configuration:
 
 ```yaml
 repositories:
@@ -58,7 +58,7 @@ repositories:
       - gtasks-mcp
       - gtasks-mcp-smithery
       - gtasks-mcp-smithery-reference-servers
-  
+
   brave-search:
     repository: https://github.com/smithery-ai/reference-servers.git
     smitheryPath: src/brave-search/smithery.yaml

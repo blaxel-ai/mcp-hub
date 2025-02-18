@@ -1,0 +1,13 @@
+repository: https://github.com/smithery-ai/reference-servers.git
+smitheryPath: src/gcalendar/smithery.yaml
+dockerfile: src/gcalendar/Dockerfile
+branch: main
+displayName: Google Calendar
+url: https://console.cloud.google.com/apis/credentials
+icon: https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Google_Calendar_icon_%282020%29.svg/1024px-Google_Calendar_icon_%282020%29.svg.png
+description: Google Calendar integration
+longDescription: Google Calendar integration
+disabled: true
+comingSoon: true
+categories:
+  - calendar

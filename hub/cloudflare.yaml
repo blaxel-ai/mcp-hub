@@ -1,0 +1,33 @@
+path: servers/
+dockerfile: /
+displayName: Cloudflare
+url: https://dash.cloudflare.com/profile/api-tokens
+icon: https://qualified-production.s3.us-east-1.amazonaws.com/uploads/4898d5ad5603fcf8e0607d31b7be4a7a7d58c5679929464fa38a3b1562ae7cb0.png
+description: Manage your Cloudflare resources (incl. KV, D1, R2, Workers)
+longDescription: Manage your Cloudflare resources (incl. KV, D1, R2, Workers)
+secrets:
+  - apiToken
+categories:
+  - analytics
+  - storage
+  - database
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - apiToken
+        - accountId
+      properties:
+        apiToken:
+          type: string
+          description: The API token for the Cloudflare server.
+        accountId:
+          type: string
+          description: The account ID for the Cloudflare server.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      config=>({command:'node',args:['dist/index.js', 'start', 'cloudflare'],env:{API_TOKEN:config.apiToken,ACCOUNT_ID:config.accountId}})

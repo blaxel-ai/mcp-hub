@@ -1,0 +1,13 @@
+repository: https://github.com/smithery-ai/mcp-communicator-telegram
+smitheryPath: smithery.yaml
+dockerfile: /
+displayName: Telegram
+branch: smithery/config-p18v
+url: https://core.telegram.org/bots#how-do-i-create-a-bot
+icon: https://telegram.org/img/t_logo.svg
+description: Enables communication with users through Telegram
+longDescription: This server provides tools to interact with users via a Telegram bot, including asking questions, sending notifications, sharing files, and creating project archives.
+secrets:
+  - telegramToken
+categories:
+  - communication

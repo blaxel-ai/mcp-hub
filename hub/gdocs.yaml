@@ -1,0 +1,13 @@
+repository: https://github.com/smithery-ai/reference-servers.git
+smitheryPath: src/gdocs/smithery.yaml
+dockerfile: src/gdocs/Dockerfile
+branch: main
+disabled: true
+displayName: Google Docs
+url: https://console.cloud.google.com/apis/credentials
+icon: https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Google_Docs_2020_Logo.svg/872px-Google_Docs_2020_Logo.svg.png
+description: Google Docs integration
+longDescription: Google Docs integration
+comingSoon: true
+categories:
+  - documents

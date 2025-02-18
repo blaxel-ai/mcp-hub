@@ -1,4 +1,4 @@
-import { call as braveCall, list as braveList } from '../brave';
+import { call as braveCall, list as braveList } from '../brave-search';
 import { ListToolsResponse, ToolResponse } from '../types';
 
 export const infos = async () => {
@@ -28,12 +28,11 @@ export async function list(): Promise<ListToolsResponse> {
 	return { tools };
 }
 
-export async function call(
-	request: Request,
-	config: Record<string, string>,
-	secrets: Record<string, string>,
-): Promise<ToolResponse> {
-	const body: { name: string; arguments: Record<string, string> } = await request.json() as { name: string; arguments: Record<string, string> };
+export async function call(request: Request, config: Record<string, string>, secrets: Record<string, string>): Promise<ToolResponse> {
+	const body: { name: string; arguments: Record<string, string> } = (await request.json()) as {
+		name: string;
+		arguments: Record<string, string>;
+	};
 	body.name = body.name.replace('beamlit_', 'brave_');
 	const rewriteSecrets = {
 		apiKey: process.env.API_KEY || '',

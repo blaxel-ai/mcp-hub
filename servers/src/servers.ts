@@ -1,7 +1,7 @@
 import { infos as awsS3Infos, list as awsS3List, call as awsS3ToolCall } from './aws-s3';
 import { infos as awsSESInfos, list as awsSESLList, call as awsSESToolCall } from './aws-ses';
 import { infos as beamlitSearchInfos, list as beamlitSearchList, call as beamlitSearchToolCall } from './beamlit-search';
-import { infos as braveInfos, list as braveList, call as braveToolCall } from './brave';
+import { infos as braveInfos, list as braveList, call as braveToolCall } from './brave-search';
 import { infos as cloudflareInfos, list as cloudflareList, call as cloudflareToolCall } from './cloudflare';
 import { infos as dalleInfos, list as dalleList, call as dalleToolCall } from './dall-e';
 import { infos as githubInfos, list as githubList, call as githubToolCall } from './github';

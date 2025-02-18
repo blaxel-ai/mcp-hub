@@ -2,23 +2,57 @@ name: MCP hub Build and Push
 on:
   push:
     branches:
-      - main
+      - develop
   workflow_dispatch:
     inputs:
       mcp:
-        description: 'MCP to import'
+        description: "MCP to import"
 env:
   REGISTRY: ghcr.io
 jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      servers: ${{ steps.retrieve-servers.outputs.servers }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - run: apt update && apt install tree jq -y
+        shell: bash
+      - name: Retrieve hub servers
+        id: retrieve-servers
+        shell: bash
+        run: |
+          cd hub
+          if [[ ! -z "${{ inputs.mcp }}" ]]; then
+            echo "servers=[\"${{ inputs.mcp }}\"]" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          servers=$(tree -J -L 1 | jq -c '.[0].contents | map(.name | rtrimstr(".yaml"))')
+          echo "servers=${servers}" >> $GITHUB_OUTPUT
   publish:
     runs-on: ubuntu-latest
+    environment: |-
+      ${{
+        github.ref_name == 'main' && 'prod'
+      || github.ref_name == 'develop' && 'dev'
+      || 'dev'
+      }}
+    needs:
+      - generate-matrix
+    strategy:
+      matrix:
+        server: ${{ fromJson(needs.generate-matrix.outputs.servers )}}
     permissions:
       contents: read
       packages: write
       id-token: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+      - name: Echo server
+        run: |
+          echo "Server: ${{ matrix.server }}"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -33,14 +67,10 @@ jobs:
         uses: actions/setup-go@v5
         with:
           # Semantic version range syntax or exact version of Go
-          go-version: '1.23.3'
+          go-version: "1.23.3"
       - name: Install dependencies
         run: go get .
       - name: Validate hub
-        run: go run main.go validate -c hub.yaml
+        run: go run main.go validate -c hub -m ${{ matrix.server }}
       - name: Build and push
-        if: inputs.mcp == ''
-        run: go run main.go import -c hub.yaml -p -r ${{ env.REGISTRY }}/${{ github.repository }}
-      - name: Build and push
-        if: inputs.mcp != ''
-        run: go run main.go import -c hub.yaml -p -r ${{ env.REGISTRY }}/${{ github.repository }} -m ${{ inputs.mcp }}
+        run: go run main.go import -c hub -p -r ${{ env.REGISTRY }}/${{ github.repository }} -m ${{ matrix.server }} -t "${{ github.sha }}"

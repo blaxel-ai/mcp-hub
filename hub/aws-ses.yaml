@@ -1,0 +1,40 @@
+path: servers/
+dockerfile: /
+displayName: AWS SES
+url: https://aws.amazon.com/ses
+icon: https://a.b.cdn.console.awsstatic.com/a/v1/2QIS3M6GW3A6OS7WHLYZ26DOKTQ3ZGRI22PA57GP4C7Y7ANK5XDQ/icon/f2b32bda85a5a4a613eb47fb01c57ce3-2b4a0b6e3c7d785e7e0d22f5d540dce9.svg
+description: Send emails using AWS SES
+longDescription: Send emails using AWS SES
+secrets:
+  - accessKeyId
+  - secretAccessKey
+  - sessionToken
+categories:
+  - email
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - region
+        - accessKeyId
+        - secretAccessKey
+      properties:
+        region:
+          type: string
+          description: The region for the AWS S3 server.
+        accessKeyId:
+          type: string
+          description: The access key ID for the AWS S3 server.
+        secretAccessKey:
+          type: string
+          description: The secret access key for the AWS S3 server.
+        sessionToken:
+          type: string
+          description: The session token for the AWS S3 server.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      config=>({command:'node',args:['dist/index.js', 'start', 'aws-ses'],env:{REGION:config.region,ACCESS_KEY_ID:config.accessKeyId,SECRET_ACCESS_KEY:config.secretAccessKey,SESSION_TOKEN:config.sessionToken}})
