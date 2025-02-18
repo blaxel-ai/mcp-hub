@@ -196,7 +196,7 @@ repositories:
 
   blaxel-search:
     path: servers/
-    smitheryPath: smithery_files/beamlit-search.yaml
+    smitheryPath: smithery_files/blaxel-search.yaml
     dockerfile: /
     displayName: blaxel Search
     url: https://app.blaxel.ai
