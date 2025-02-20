@@ -1,6 +1,6 @@
 import { infos as awsS3Infos, list as awsS3List, call as awsS3ToolCall } from './aws-s3';
 import { infos as awsSESInfos, list as awsSESLList, call as awsSESToolCall } from './aws-ses';
-import { infos as beamlitSearchInfos, list as beamlitSearchList, call as beamlitSearchToolCall } from './beamlit-search';
+import { infos as blaxelSearchInfos, list as blaxelSearchList, call as blaxelSearchToolCall } from './blaxel-search';
 import { infos as braveInfos, list as braveList, call as braveToolCall } from './brave';
 import { infos as cloudflareInfos, list as cloudflareList, call as cloudflareToolCall } from './cloudflare';
 import { infos as dalleInfos, list as dalleList, call as dalleToolCall } from './dall-e';
@@ -14,10 +14,10 @@ import { infos as slackInfos, list as slackList, call as slackToolCall } from '.
 import { infos as twilioInfos, list as twilioList, call as twilioToolCall } from './twilio';
 
 export const mcpServers: Record<string, Record<string, Function>> = {
-	'beamlit-search': {
-		list: beamlitSearchList,
-		call: beamlitSearchToolCall,
-		infos: beamlitSearchInfos,
+	'blaxel-search': {
+		list: blaxelSearchList,
+		call: blaxelSearchToolCall,
+		infos: blaxelSearchInfos,
 	},
 	'brave-search': {
 		list: braveList,

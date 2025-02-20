@@ -3,13 +3,13 @@ import { ListToolsResponse, ToolResponse } from '../types';
 
 export const infos = async () => {
 	return {
-		name: 'beamlit-search',
-		displayName: 'Beamlit Search',
+		name: 'blaxel-search',
+		displayName: 'blaxel Search',
 		categories: ['search'],
-		integration: 'beamlit-search',
+		integration: 'blaxel-search',
 		description: 'Search the web for information',
-		icon: 'https://app.beamlit.com/logo_short.png',
-		url: 'https://app.beamlit.com',
+		icon: 'https://app.blaxel.ai/logo_short.png',
+		url: 'https://app.blaxel.ai',
 		form: {
 			config: {},
 			secrets: {},
@@ -22,7 +22,7 @@ export async function list(): Promise<ListToolsResponse> {
 	const tools = tmp.tools.map((tool) => {
 		return {
 			...tool,
-			name: `beamlit_${tool.name.replace('brave_', '')}`,
+			name: `blaxel_${tool.name.replace('brave_', '')}`,
 		};
 	});
 	return { tools };
@@ -34,7 +34,7 @@ export async function call(
 	secrets: Record<string, string>,
 ): Promise<ToolResponse> {
 	const body: { name: string; arguments: Record<string, string> } = await request.json() as { name: string; arguments: Record<string, string> };
-	body.name = body.name.replace('beamlit_', 'brave_');
+	body.name = body.name.replace('blaxel_', 'brave_');
 	const rewriteSecrets = {
 		apiKey: process.env.API_KEY || '',
 	};

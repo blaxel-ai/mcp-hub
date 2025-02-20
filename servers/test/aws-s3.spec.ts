@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { call, list } from '../src/aws-s3';
 
-import { Call, DefineConfig, DefineSecret, StandardDecode } from './beamlit';
+import { Call, DefineConfig, DefineSecret, StandardDecode } from './blaxel';
 
 let silent = true;
 
@@ -35,7 +35,7 @@ describe('AWS S3', async () => {
 
 	it('list_files', async () => {
 		let response = await Call(call, 'list_files', {
-			bucket: 'cli-beamlit-test',
+			bucket: 'cli-blaxel-test',
 			prefix: '',
 		});
 		let value = StandardDecode(response);
@@ -44,7 +44,7 @@ describe('AWS S3', async () => {
 
 	it('upload_file', async () => {
 		let response = await Call(call, 'upload_file', {
-			bucket: 'cli-beamlit-test',
+			bucket: 'cli-blaxel-test',
 			key: 'hello.txt',
 			data: 'Hello, world!',
 		});
@@ -54,7 +54,7 @@ describe('AWS S3', async () => {
 
 	it('retrieve_file', async () => {
 		let response = await Call(call, 'retrieve_file', {
-			bucket: 'cli-beamlit-test',
+			bucket: 'cli-blaxel-test',
 			key: 'hello.txt',
 		});
 		let value = StandardDecode(response);

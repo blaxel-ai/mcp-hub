@@ -30,8 +30,8 @@ describe('AWS SES', async() => {
 
 	it('send_email', async () => {
 		let response = await Call(call, 'send_email', {
-			from: 'no-reply@beamlit.com',
-			to: 'cdrappier@beamlit.com',
+			from: 'no-reply@blaxel.ai',
+			to: 'cdrappier@blaxel.ai',
 			subject: 'Automated email from agent',
 			body: 'Hello Charles, you are the sender and the receiver',
 		})
