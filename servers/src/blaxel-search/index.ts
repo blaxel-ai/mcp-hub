@@ -12,7 +12,15 @@ export const infos = async () => {
 		url: 'https://app.blaxel.ai',
 		form: {
 			config: {},
-			secrets: {},
+			secrets: {
+				apiKey: {
+					type: 'string',
+					description: 'The API key for the blaxel search',
+					label: 'Blaxel API key',
+					required: true,
+					hidden: true,
+				},
+			},
 		},
 	};
 };
@@ -36,7 +44,7 @@ export async function call(
 	const body: { name: string; arguments: Record<string, string> } = await request.json() as { name: string; arguments: Record<string, string> };
 	body.name = body.name.replace('blaxel_', 'brave_');
 	const rewriteSecrets = {
-		apiKey: process.env.API_KEY || '',
+		apiKey: secrets.apiKey,
 	};
 	const call = await braveCall(request, config, rewriteSecrets, body);
 	return call;
