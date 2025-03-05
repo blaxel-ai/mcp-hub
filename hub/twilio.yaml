@@ -1,0 +1,36 @@
+path: servers/
+dockerfile: /
+displayName: Twilio
+url: https://console.twilio.com/dashboard
+icon: https://avatars.githubusercontent.com/u/109142?s=200&v=4
+description: Send SMS using Twilio.
+longDescription: Integration to send SMS messages using the Twilio API.
+secrets:
+  - authToken
+categories:
+  - communication
+  - sms
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - fromNumber
+        - accountSid
+        - authToken
+      properties:
+        fromNumber:
+          type: string
+          description: Twilio phone number to send messages from.
+        accountSid:
+          type: string
+          description: Twilio account SID.
+        authToken:
+          type: string
+          description: Twilio auth token.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      config=>({command:'node',args:['dist/index.js', 'start', 'twilio'],env:{FROM_NUMBER:config.fromNumber,ACCOUNT_SID:config.accountSid,AUTH_TOKEN:config.authToken}})

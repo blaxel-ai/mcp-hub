@@ -1,0 +1,13 @@
+repository: https://github.com/smithery-ai/reference-servers.git
+smitheryPath: src/postgres/smithery.yaml
+dockerfile: src/postgres/Dockerfile
+branch: main
+displayName: PostgreSQL
+url: https://www.postgresql.org
+icon: https://www.postgresql.org/media/img/about/press/elephant.png
+description: List tables and run queries in your PostgreSQL database
+longDescription: List tables and run queries in your PostgreSQL database
+secrets:
+  - postgresConnectionString
+categories:
+  - database

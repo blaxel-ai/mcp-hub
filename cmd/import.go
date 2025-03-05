@@ -39,7 +39,7 @@ var importCmd = &cobra.Command{
 }
 
 func init() {
-	importCmd.Flags().StringVarP(&configPath, "config", "c", "", "The path to the config file")
+	importCmd.Flags().StringVarP(&configPath, "config", "c", "", "The path to the config files")
 	importCmd.Flags().BoolVarP(&push, "push", "p", false, "Push the images to the registry")
 	importCmd.Flags().StringVarP(&registry, "registry", "r", "ghcr.io/beamlit/hub", "The registry to push the images to")
 	importCmd.Flags().StringVarP(&mcp, "mcp", "m", "", "The MCP to import, if not provided, all MCPs will be imported")
@@ -50,8 +50,7 @@ func init() {
 
 func runImport(cmd *cobra.Command, args []string) {
 	if configPath == "" {
-		cmd.Help()
-		return
+		configPath = "hub"
 	}
 
 	hub := hub.Hub{}
@@ -74,6 +73,7 @@ func runImport(cmd *cobra.Command, args []string) {
 
 func processRepository(name string, repository *hub.Repository) error {
 	var repoPath string
+	imageName := fmt.Sprintf("%s:%s", strings.ToLower(name), tag)
 	if repository.Path != "" {
 		repoPath = repository.Path
 	} else {
@@ -83,7 +83,7 @@ func processRepository(name string, repository *hub.Repository) error {
 
 	if repository.Disabled {
 		c := catalog.Catalog{}
-		handleError("load catalog", c.Load(name, repository, &smithery.SmitheryConfig{}))
+		handleError("load catalog", c.Load(name, repository, imageName, &smithery.SmitheryConfig{}))
 		handleError("save catalog", c.Save())
 		return nil
 	}
@@ -94,21 +94,34 @@ func processRepository(name string, repository *hub.Repository) error {
 		}
 	}
 
-	cfg, err := smithery.Parse(filepath.Join(repoPath, repository.SmitheryPath), repository.Overriders)
-	if err != nil {
-		return fmt.Errorf("parse smithery file: %w", err)
+	var cfg *smithery.SmitheryConfig
+
+	if repository.Smithery != nil {
+		cfg = repository.Smithery
+		parsedCommand, err := smithery.ExecuteCommandFunction(cfg.StartCommand.CommandFunction, cfg.StartCommand.ConfigSchema.Properties)
+		if err != nil {
+			return fmt.Errorf("execute command function: %w", err)
+		}
+		parsedCommand.Type = cfg.StartCommand.Type
+		cfg.ParsedCommand = parsedCommand
+	} else {
+		tmpCfg, err := smithery.Parse(filepath.Join(repoPath, repository.SmitheryPath))
+		if err != nil {
+			return fmt.Errorf("parse smithery file: %w", err)
+		}
+		cfg = &tmpCfg
 	}
 
 	if !skipBuild {
-		imageName := fmt.Sprintf("%s/%s:%s", strings.ToLower(registry), strings.ToLower(name), tag)
 		deps := manageDeps(repository)
-		if err := buildAndPushImage(&cfg, repoPath, strings.TrimSuffix(repository.Dockerfile, "/Dockerfile"), imageName, deps); err != nil {
+		buildTo := fmt.Sprintf("%s/%s", strings.ToLower(registry), imageName)
+		if err := buildAndPushImage(cfg, repoPath, strings.TrimSuffix(repository.Dockerfile, "/Dockerfile"), buildTo, deps); err != nil {
 			return fmt.Errorf("build and push image: %w", err)
 		}
 	}
 
 	c := catalog.Catalog{}
-	handleError("load catalog", c.Load(name, repository, &cfg))
+	handleError("load catalog", c.Load(name, repository, imageName, cfg))
 	handleError("save catalog", c.Save())
 	return nil
 }

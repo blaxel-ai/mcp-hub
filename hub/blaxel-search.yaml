@@ -1,0 +1,28 @@
+path: servers/
+smitheryPath: smithery_files/beamlit-search.yaml
+dockerfile: /
+displayName: Beamlit Search
+url: https://app.beamlit.com
+icon: https://app.beamlit.com/logo_short.png
+description: Search the web for information
+longDescription: Search the web for information
+hiddenSecrets:
+  - apiKey
+categories:
+  - search
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - apiKey
+      properties:
+        apiKey:
+          type: string
+          description: The refresh token for the Blaxel server.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      config=>({command:'node',args:['dist/index.js', 'start', 'blaxel-search'],env:{API_KEY:config.apiKey}})
