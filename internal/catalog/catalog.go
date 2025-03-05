@@ -29,6 +29,7 @@ type Artifact struct {
 	Icon            string     `json:"icon"`
 	URL             string     `json:"url"`
 	Form            Form       `json:"form"`
+	HiddenSecrets   []string   `json:"hiddenSecrets"`
 	Entrypoint      Entrypoint `json:"entrypoint"`
 }
 
@@ -75,7 +76,7 @@ func (c *Catalog) SaveArtifact(artifact Artifact) error {
 	username := os.Getenv("BL_ADMIN_USERNAME")
 	password := os.Getenv("BL_ADMIN_PASSWORD")
 
-	url := fmt.Sprintf("%s/admin/store/functions/%s", apiURL, artifact.Name)
+	url := fmt.Sprintf("%s/admin/store/mcp/%s", apiURL, artifact.Name)
 	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return err
@@ -205,9 +206,10 @@ func (c *Catalog) Load(name string, hub *hub.Repository, imageName string, smith
 			Args:    smithery.ParsedCommand.Args,
 			Env:     smithery.ParsedCommand.Env,
 		},
-		Enterprise:  hub.Enterprise,
-		ComingSoon:  hub.ComingSoon,
-		Integration: hub.Integration,
+		Enterprise:    hub.Enterprise,
+		ComingSoon:    hub.ComingSoon,
+		Integration:   hub.Integration,
+		HiddenSecrets: hub.HiddenSecrets,
 	}
 	c.AddArtifact(artifact)
 	return nil
