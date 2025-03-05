@@ -67,6 +67,7 @@ func runImport(cmd *cobra.Command, args []string) {
 
 		if err := processRepository(name, repository); err != nil {
 			log.Printf("Failed to process repository %s: %v", name, err)
+			os.Exit(1)
 		}
 	}
 }
@@ -137,6 +138,7 @@ func buildAndPushImage(cfg *smithery.SmitheryConfig, repoPath, smitheryDir, imag
 		buildContext = *cfg.Build.DockerBuildPath
 	}
 
+	fmt.Println("Building image", imageName, "with dockerfile", filepath.Join(smitheryDir, dockerfileDir), "in directory", filepath.Join(repoPath, smitheryDir), "with context", buildContext)
 	if err := docker.BuildImage(context.Background(), imageName, filepath.Join(smitheryDir, dockerfileDir),
 		filepath.Join(repoPath, smitheryDir), buildContext); err != nil {
 		return fmt.Errorf("build image: %w", err)

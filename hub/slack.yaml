@@ -1,6 +1,5 @@
-repository: https://github.com/smithery-ai/reference-servers.git
-dockerfile: src/slack/Dockerfile
-branch: main
+path: servers/
+dockerfile: /
 displayName: Slack
 url: https://api.slack.com/apps
 icon: https://a.slack-edge.com/fd21de4/marketing/img/nav/logo.svg

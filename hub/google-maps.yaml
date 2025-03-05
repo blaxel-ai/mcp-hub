@@ -1,6 +1,5 @@
-repository: https://github.com/smithery-ai/reference-servers.git
-dockerfile: src/google-maps/Dockerfile
-branch: main
+path: servers/
+dockerfile: /
 displayName: Google Maps
 url: https://console.cloud.google.com/apis/credentials
 icon: https://www.google.com/favicon.ico
