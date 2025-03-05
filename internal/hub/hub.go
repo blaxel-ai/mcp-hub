@@ -80,7 +80,6 @@ func (h *Hub) Read(path string) error {
 		name := strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))
 		h.Repositories[name] = &repo
 	}
-	fmt.Printf("Repositories: %v\n", h.Repositories)
 	return nil
 }
 
