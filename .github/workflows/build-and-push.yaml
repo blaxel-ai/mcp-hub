@@ -18,8 +18,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - run: apt update && apt install tree jq -y
-        shell: bash
       - name: Retrieve hub servers
         id: retrieve-servers
         shell: bash
