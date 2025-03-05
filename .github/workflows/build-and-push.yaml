@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - develop
+      - main
   workflow_dispatch:
     inputs:
       mcp:
@@ -71,6 +72,6 @@ jobs:
       - name: Install dependencies
         run: go get .
       - name: Validate hub
-        run: go run main.go validate -c hub -m ${{ matrix.server }}
+        run: go run main.go validate -m ${{ matrix.server }}
       - name: Build and push
-        run: go run main.go import -c hub -p -r ${{ env.REGISTRY }}/${{ github.repository }} -m ${{ matrix.server }} -t "${{ github.sha }}"
+        run: go run main.go import -p -r ${{ env.REGISTRY }}/${{ github.repository }} -m ${{ matrix.server }} -t "${{ github.sha }}"

@@ -39,7 +39,7 @@ var importCmd = &cobra.Command{
 }
 
 func init() {
-	importCmd.Flags().StringVarP(&configPath, "config", "c", "", "The path to the config file")
+	importCmd.Flags().StringVarP(&configPath, "config", "c", "", "The path to the config files")
 	importCmd.Flags().BoolVarP(&push, "push", "p", false, "Push the images to the registry")
 	importCmd.Flags().StringVarP(&registry, "registry", "r", "ghcr.io/beamlit/hub", "The registry to push the images to")
 	importCmd.Flags().StringVarP(&mcp, "mcp", "m", "", "The MCP to import, if not provided, all MCPs will be imported")
@@ -50,8 +50,7 @@ func init() {
 
 func runImport(cmd *cobra.Command, args []string) {
 	if configPath == "" {
-		cmd.Help()
-		return
+		configPath = "hub"
 	}
 
 	hub := hub.Hub{}

@@ -63,10 +63,11 @@ export async function call(
 	request: Request,
 	config: Record<string, string>,
 	secrets: Record<string, string>,
-	forceBody: { name: string; arguments: Record<string, string> } | null = null,
+	forceBody: { name: string; arguments: Record<string, string> } | null = null
 ): Promise<ToolResponse> {
 	try {
-		const body: { name: string; arguments: Record<string, string> } = forceBody || (await request.json()) as { name: string; arguments: Record<string, string> };
+		const body: { name: string; arguments: Record<string, string> } =
+			forceBody || ((await request.json()) as { name: string; arguments: Record<string, string> });
 		const { name, arguments: args } = body;
 
 		if (!args) {

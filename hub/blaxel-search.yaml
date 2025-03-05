@@ -21,8 +21,8 @@ smithery:
       properties:
         apiKey:
           type: string
-          description: The refresh token for the Beamlit server.
+          description: The refresh token for the Blaxel server.
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config=>({command:'node',args:['dist/index.js', 'start', 'beamlit-search'],env:{BRAVE_API_KEY:config.apiKey}})
+      config=>({command:'node',args:['dist/index.js', 'start', 'blaxel-search'],env:{API_KEY:config.apiKey}})
