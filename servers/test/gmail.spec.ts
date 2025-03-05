@@ -29,7 +29,7 @@ describe('Gmail', async() => {
 
 	it('send_email', async () => {
 		let response = await Call(call, 'send_email', {
-      "to": "cdrappier@beamlit.com",
+      "to": "cdrappier@blaxel.ai",
       "subject": "Voici une œuvre d'art féline",
       "body": "Bonjour,\n\nJe vous envoie une image artistique d'un chat que j'ai générée. J'espère qu'elle vous plaira !\n\nVoici le lien vers l'image : https://oaidalleapiprodscus.blob.core.windows.net/private/org-R54BJY18pbqSztZg68sSM5gV/sandbox/img-qI7TyzXFEHtoOA6v50cZkVSY.png\n\nCordialement,\n\nVotre assistant"
 		})

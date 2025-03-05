@@ -41,13 +41,13 @@ describe('Github', async () => {
 		expect(listFunc.every((func) => tools.some((tool) => tool.name === func))).toBe(true);
 	});
 	it('list_issues', async () => {
-		let response = await Call(call, 'list_issues', { owner: 'beamlit', repo: 'controlplane' });
+		let response = await Call(call, 'list_issues', { owner: 'blaxel', repo: 'controlplane' });
 		let value = StandardDecode(response);
 		expect(value).toBeDefined();
 		expect(value).instanceOf(Array);
 	});
 	it('search_repositories', async () => {
-		let response = await Call(call, 'search_repositories', { query: 'beamlit/controlplane' });
+		let response = await Call(call, 'search_repositories', { query: 'blaxel/controlplane' });
 		let value = StandardDecode(response);
 		expect(value.total_count).toEqual(1);
 	});

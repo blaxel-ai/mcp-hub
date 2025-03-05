@@ -51,8 +51,8 @@ class GmailClient {
 
 	constructor(config: Record<string, string>, secrets: Record<string, string>) {
 		this.refreshToken = secrets.refreshToken;
-		this.clientId = process.env.CLIENT_ID || '';
-		this.clientSecret = process.env.CLIENT_SECRET || '';
+		this.clientId = secrets.clientId;
+		this.clientSecret = secrets.clientSecret;
 	}
 
 	private async login() {
@@ -188,6 +188,18 @@ export async function infos() {
 			},
 			config: {},
 			secrets: {
+				clientId: {
+					description: 'Google API client ID',
+					label: 'Google API client ID',
+					required: true,
+					hidden: true,
+				},
+				clientSecret: {
+					description: 'Google API client secret',
+					label: 'Google API client secret',
+					required: true,
+					hidden: true,
+				},
 				refreshToken: {
 					description: 'Google API refresh token',
 					label: 'Google API refresh token',

@@ -13,7 +13,7 @@ export const payload: ((previousResult: Record<string, any>) => {
   //     name: "kv_put",
   //     arguments: {
   //       namespaceId: namespaceId,
-  //       key: "beamlit",
+  //       key: "blaxel",
   //       value: "test",
   //     },
   //   };
@@ -23,7 +23,7 @@ export const payload: ((previousResult: Record<string, any>) => {
   //     name: "kv_get",
   //     arguments: {
   //       namespaceId: namespaceId,
-  //       key: "beamlit",
+  //       key: "blaxel",
   //     },
   //   };
   // },
@@ -32,7 +32,7 @@ export const payload: ((previousResult: Record<string, any>) => {
   //     name: "kv_delete",
   //     arguments: {
   //       namespaceId: namespaceId,
-  //       key: "beamlit",
+  //       key: "blaxel",
   //     },
   //   };
   // },
