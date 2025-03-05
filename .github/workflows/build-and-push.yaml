@@ -37,6 +37,10 @@ jobs:
       || github.ref_name == 'develop' && 'dev'
       || 'dev'
       }}
+    env:
+      BL_API_URL: ${{ vars.BL_API_URL }}
+      BL_ADMIN_USERNAME: ${{ secrets.BL_ADMIN_USERNAME }}
+      BL_ADMIN_PASSWORD: ${{ secrets.BL_ADMIN_PASSWORD }}
     needs:
       - generate-matrix
     strategy:
