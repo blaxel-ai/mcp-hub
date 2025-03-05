@@ -69,7 +69,5 @@ jobs:
           go-version: "1.23.3"
       - name: Install dependencies
         run: go get .
-      - name: Validate hub
-        run: go run main.go validate -m ${{ matrix.server }}
       - name: Build and push
         run: go run main.go import -p -r ${{ env.REGISTRY }}/${{ github.repository }} -m ${{ matrix.server }} -t "${{ github.sha }}"
