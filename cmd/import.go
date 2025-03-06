@@ -113,16 +113,16 @@ func processRepository(name string, repository *hub.Repository) error {
 		cfg = &tmpCfg
 	}
 
+	buildTo := fmt.Sprintf("%s/%s", strings.ToLower(registry), imageName)
 	if !skipBuild {
 		deps := manageDeps(repository)
-		buildTo := fmt.Sprintf("%s/%s", strings.ToLower(registry), imageName)
 		if err := buildAndPushImage(cfg, repoPath, strings.TrimSuffix(repository.Dockerfile, "/Dockerfile"), buildTo, deps); err != nil {
 			return fmt.Errorf("build and push image: %w", err)
 		}
 	}
 
 	c := catalog.Catalog{}
-	handleError("load catalog", c.Load(name, repository, imageName, cfg))
+	handleError("load catalog", c.Load(name, repository, buildTo, cfg))
 	handleError("save catalog", c.Save())
 	return nil
 }
