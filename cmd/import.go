@@ -29,6 +29,7 @@ var (
 	mcp        string
 	skipBuild  bool
 	tag        string
+	debug      bool
 )
 
 var importCmd = &cobra.Command{
@@ -45,6 +46,7 @@ func init() {
 	importCmd.Flags().StringVarP(&mcp, "mcp", "m", "", "The MCP to import, if not provided, all MCPs will be imported")
 	importCmd.Flags().BoolVarP(&skipBuild, "skip-build", "s", false, "Skip building the image")
 	importCmd.Flags().StringVarP(&tag, "tag", "t", "latest", "The tag to use for the image")
+	importCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug mode, will not save the catalog")
 	rootCmd.AddCommand(importCmd)
 }
 
@@ -85,7 +87,9 @@ func processRepository(name string, repository *hub.Repository) error {
 	if repository.Disabled {
 		c := catalog.Catalog{}
 		handleError("load catalog", c.Load(name, repository, imageName, &smithery.SmitheryConfig{}))
-		handleError("save catalog", c.Save())
+		if !debug {
+			handleError("save catalog", c.Save())
+		}
 		return nil
 	}
 
@@ -116,37 +120,40 @@ func processRepository(name string, repository *hub.Repository) error {
 	buildTo := fmt.Sprintf("%s/%s", strings.ToLower(registry), imageName)
 	if !skipBuild {
 		deps := manageDeps(repository)
-		if err := buildAndPushImage(cfg, repoPath, strings.TrimSuffix(repository.Dockerfile, "/Dockerfile"), buildTo, deps); err != nil {
+		if err := buildAndPushImage(cfg, name, repoPath, strings.TrimSuffix(repository.Dockerfile, "/Dockerfile"), buildTo, deps); err != nil {
 			return fmt.Errorf("build and push image: %w", err)
 		}
 	}
 
 	c := catalog.Catalog{}
 	handleError("load catalog", c.Load(name, repository, buildTo, cfg))
-	handleError("save catalog", c.Save())
+	if !debug {
+		handleError("save catalog", c.Save())
+	}
 	return nil
 }
 
-func buildAndPushImage(cfg *smithery.SmitheryConfig, repoPath, smitheryDir, imageName string, deps []string) error {
-	dockerfilePath := filepath.Join(repoPath, smitheryDir, dockerfileDir)
-	if err := docker.Inject(context.Background(), dockerfilePath, cfg.ParsedCommand.Entrypoint(), deps); err != nil {
+func buildAndPushImage(cfg *smithery.SmitheryConfig, name string, repoPath string, smitheryDir string, imageName string, deps []string) error {
+	dockerfilePath, err := docker.Inject(
+		context.Background(),
+		name,
+		repoPath,
+		smitheryDir,
+		dockerfileDir,
+		cfg.ParsedCommand.Entrypoint(),
+		deps,
+	)
+	if err != nil {
 		return fmt.Errorf("inject command: %w", err)
 	}
 
-	buildContext := "."
-	if cfg.Build != nil && cfg.Build.DockerBuildPath != nil {
-		buildContext = *cfg.Build.DockerBuildPath
-	}
-
-	fmt.Println("Building image", imageName, "with dockerfile", filepath.Join(smitheryDir, dockerfileDir), "in directory", filepath.Join(repoPath, smitheryDir), "with context", buildContext)
-	if err := docker.BuildImage(context.Background(), imageName, filepath.Join(smitheryDir, dockerfileDir),
-		filepath.Join(repoPath, smitheryDir), buildContext); err != nil {
+	if err := docker.BuildImage(context.Background(), imageName, dockerfilePath); err != nil {
 		return fmt.Errorf("build image: %w", err)
 	}
 
-	if err := os.Remove(fmt.Sprintf("%s.tmp", dockerfilePath)); err != nil {
-		return fmt.Errorf("remove tmp dockerfile: %w", err)
-	}
+	// if err := os.Remove(fmt.Sprintf("%s.tmp", dockerfilePath)); err != nil {
+	// 	return fmt.Errorf("remove tmp dockerfile: %w", err)
+	// }
 
 	if push {
 		if err := docker.PushImage(context.Background(), imageName); err != nil {
