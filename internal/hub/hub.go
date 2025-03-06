@@ -4,8 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
+	"strings"
 
+	"github.com/beamlit/mcp-hub/internal/smithery"
 	"gopkg.in/yaml.v2"
 )
 
@@ -24,6 +27,7 @@ type Repository struct {
 	Repository      string                   `yaml:"repository" mendatory:"false"`
 	Path            string                   `yaml:"path" mendatory:"false"`
 	SmitheryPath    string                   `yaml:"smitheryPath" mendatory:"false" default:"smithery.yaml"`
+	Smithery        *smithery.SmitheryConfig `yaml:"smithery" mendatory:"false"`
 	Dockerfile      string                   `yaml:"dockerfile" mendatory:"false" default:"Dockerfile"`
 	PackageManager  PackageManager           `yaml:"packageManager" mendatory:"false" default:"apk"`
 	DoNotShow       []string                 `yaml:"doNotShow" mendatory:"false"`
@@ -41,7 +45,6 @@ type Repository struct {
 	HiddenSecrets   []string                 `yaml:"hiddenSecrets" mendatory:"false"`
 	OAuth           *OAuth                   `yaml:"oauth" mendatory:"false"`
 	Integration     string                   `yaml:"integration" mendatory:"false"`
-	Overriders      []map[string]interface{} `yaml:"overriders"`
 	Tags            []string                 `yaml:"tags"`
 	Categories      []string                 `yaml:"categories"`
 }
@@ -52,12 +55,32 @@ type OAuth struct {
 }
 
 func (h *Hub) Read(path string) error {
-	yamlFile, err := os.ReadFile(path)
+	h.Repositories = make(map[string]*Repository)
+	files, err := os.ReadDir(path)
 	if err != nil {
 		return err
 	}
 
-	return yaml.Unmarshal(yamlFile, h)
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		yamlFile, err := os.ReadFile(filepath.Join(path, file.Name()))
+		if err != nil {
+			return err
+		}
+
+		var repo Repository
+		if err := yaml.Unmarshal(yamlFile, &repo); err != nil {
+			return err
+		}
+
+		// Use filename without extension as repository name
+		name := strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))
+		h.Repositories[name] = &repo
+	}
+	return nil
 }
 
 // ValidateWithDefaultValues validates the hub and applies default values to empty fields

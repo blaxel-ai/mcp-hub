@@ -8,7 +8,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func Parse(path string, overrider []map[string]interface{}) (SmitheryConfig, error) {
+func Parse(path string) (SmitheryConfig, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return SmitheryConfig{}, err
@@ -20,9 +20,6 @@ func Parse(path string, overrider []map[string]interface{}) (SmitheryConfig, err
 	err = yaml.NewDecoder(file).Decode(&smithery)
 	if err != nil {
 		return SmitheryConfig{}, err
-	}
-	if err := smithery.ApplyOverrides(overrider); err != nil {
-		return SmitheryConfig{}, fmt.Errorf("failed to apply overrides: %w", err)
 	}
 
 	parsedCommand, err := ExecuteCommandFunction(smithery.StartCommand.CommandFunction, smithery.StartCommand.ConfigSchema.Properties)

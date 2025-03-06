@@ -1,0 +1,27 @@
+path: servers/
+dockerfile: /
+displayName: Brave Search
+url: https://api-dashboard.search.brave.com/app/keys
+icon: https://cdn.search.brave.com/serp/v2/_app/immutable/assets/brave-logo-small.1fMdoHsa.svg
+description: Search the web using Brave's search engine.
+longDescription: Search the web using Brave's search engine.
+secrets:
+  - apiKey
+categories:
+  - search
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - apiKey
+      properties:
+        apiKey:
+          type: string
+          description: The refresh token for the Brave search server.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      config=>({command:'node',args:['dist/index.js', 'start', 'brave-search'],env:{BRAVE_API_KEY:config.apiKey}})

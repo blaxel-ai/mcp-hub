@@ -1,8 +1,10 @@
 package catalog
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"slices"
 
@@ -16,6 +18,7 @@ const (
 
 type Artifact struct {
 	Name            string     `json:"name"`
+	Image           string     `json:"image"`
 	Enterprise      bool       `json:"enterprise"`
 	ComingSoon      bool       `json:"coming_soon"`
 	DisplayName     string     `json:"displayName"`
@@ -26,6 +29,7 @@ type Artifact struct {
 	Icon            string     `json:"icon"`
 	URL             string     `json:"url"`
 	Form            Form       `json:"form"`
+	HiddenSecrets   []string   `json:"hiddenSecrets"`
 	Entrypoint      Entrypoint `json:"entrypoint"`
 }
 
@@ -62,21 +66,56 @@ func (c *Catalog) AddArtifact(artifact Artifact) {
 	c.Artifacts = append(c.Artifacts, artifact)
 }
 
+func (c *Catalog) SaveArtifact(artifact Artifact) error {
+	jsonData, err := json.MarshalIndent(artifact, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	apiURL := os.Getenv("BL_API_URL")
+	username := os.Getenv("BL_ADMIN_USERNAME")
+	password := os.Getenv("BL_ADMIN_PASSWORD")
+
+	url := fmt.Sprintf("%s/admin/store/mcp/%s", apiURL, artifact.Name)
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	req.SetBasicAuth(username, password)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("failed to save artifact: HTTP %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
 func (c *Catalog) Save() error {
 	for _, artifact := range c.Artifacts {
-		json, err := json.MarshalIndent(artifact, "", "  ")
+		err := c.SaveArtifact(artifact)
 		if err != nil {
+			fmt.Printf("error saving artifact %s: %s\n", artifact.Name, err)
 			return err
 		}
-		os.WriteFile(fmt.Sprintf("%s/%s.json", CatalogDir, artifact.Name), json, 0644)
+		fmt.Printf("saved artifact %s\n", artifact.Name)
 	}
 	return nil
 }
 
-func (c *Catalog) Load(name string, hub *hub.Repository, smithery *smithery.SmitheryConfig) error {
+func (c *Catalog) Load(name string, hub *hub.Repository, imageName string, smithery *smithery.SmitheryConfig) error {
 	if hub.Disabled {
 		c.AddArtifact(Artifact{
 			Name:            name,
+			Image:           imageName,
 			DisplayName:     hub.DisplayName,
 			Description:     hub.Description,
 			LongDescription: hub.LongDescription,
@@ -150,6 +189,7 @@ func (c *Catalog) Load(name string, hub *hub.Repository, smithery *smithery.Smit
 
 	artifact := Artifact{
 		Name:            name,
+		Image:           imageName,
 		DisplayName:     hub.DisplayName,
 		Description:     hub.Description,
 		LongDescription: hub.LongDescription,
@@ -166,9 +206,10 @@ func (c *Catalog) Load(name string, hub *hub.Repository, smithery *smithery.Smit
 			Args:    smithery.ParsedCommand.Args,
 			Env:     smithery.ParsedCommand.Env,
 		},
-		Enterprise:  hub.Enterprise,
-		ComingSoon:  hub.ComingSoon,
-		Integration: hub.Integration,
+		Enterprise:    hub.Enterprise,
+		ComingSoon:    hub.ComingSoon,
+		Integration:   hub.Integration,
+		HiddenSecrets: hub.HiddenSecrets,
 	}
 	c.AddArtifact(artifact)
 	return nil
