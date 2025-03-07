@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@blaxel/sdk':
-        specifier: ^0.0.64
-        version: 0.0.64(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-provider-node@3.749.0)(@browserbasehq/sdk@2.3.0)(@browserbasehq/stagehand@1.12.0(@playwright/test@1.50.1)(deepmerge@4.3.1)(dotenv@16.4.7)(openai@4.85.1(ws@8.18.0)(zod@3.24.2))(zod@3.24.2))(@ibm-cloud/watsonx-ai@1.5.0(@langchain/core@0.3.40(openai@4.85.1(ws@8.18.0)(zod@3.24.2))))(@smithy/util-utf8@2.3.0)(fast-xml-parser@4.4.1)(ibm-cloud-sdk-core@5.1.2)(jsonwebtoken@9.0.2)(lodash@4.17.21)(openai@4.85.1(ws@8.18.0)(zod@3.24.2))(playwright@1.50.1)(react@19.0.0)
+        specifier: ^0.0.70
+        version: 0.0.70(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-provider-node@3.749.0)(@browserbasehq/sdk@2.3.0)(@browserbasehq/stagehand@1.12.0(@playwright/test@1.50.1)(deepmerge@4.3.1)(dotenv@16.4.7)(openai@4.85.1(ws@8.18.0)(zod@3.24.2))(zod@3.24.2))(@ibm-cloud/watsonx-ai@1.5.0(@langchain/core@0.3.40(openai@4.85.1(ws@8.18.0)(zod@3.24.2))))(@smithy/util-utf8@2.3.0)(fast-xml-parser@4.4.1)(ibm-cloud-sdk-core@5.1.2)(jsonwebtoken@9.0.2)(lodash@4.17.21)(openai@4.85.1(ws@8.18.0)(zod@3.24.2))(playwright@1.50.1)(react@19.0.0)
       ws:
         specifier: ^8.16.0
         version: 8.18.0
@@ -346,8 +346,8 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  '@blaxel/sdk@0.0.64':
-    resolution: {integrity: sha512-sit7E/gnZwwEuGOWtCe1AHCMV4WryyfT1CEGqR+3FQD2hd6umgYgxrZ2q6X8nnfDxX8DpburEs+KnRxTmZGnZQ==}
+  '@blaxel/sdk@0.0.70':
+    resolution: {integrity: sha512-kd/CoX+xNSANyeLgRv2rGL8DOv0gaf1bXD1MNuUsEgrXAvxvFzXtphXCo93GrucKw6+fGZWBAU3yOSurbHMUEg==}
     engines: {node: '>=18'}
 
   '@browserbasehq/sdk@2.3.0':
@@ -3932,7 +3932,7 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@blaxel/sdk@0.0.64(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-provider-node@3.749.0)(@browserbasehq/sdk@2.3.0)(@browserbasehq/stagehand@1.12.0(@playwright/test@1.50.1)(deepmerge@4.3.1)(dotenv@16.4.7)(openai@4.85.1(ws@8.18.0)(zod@3.24.2))(zod@3.24.2))(@ibm-cloud/watsonx-ai@1.5.0(@langchain/core@0.3.40(openai@4.85.1(ws@8.18.0)(zod@3.24.2))))(@smithy/util-utf8@2.3.0)(fast-xml-parser@4.4.1)(ibm-cloud-sdk-core@5.1.2)(jsonwebtoken@9.0.2)(lodash@4.17.21)(openai@4.85.1(ws@8.18.0)(zod@3.24.2))(playwright@1.50.1)(react@19.0.0)':
+  '@blaxel/sdk@0.0.70(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-provider-node@3.749.0)(@browserbasehq/sdk@2.3.0)(@browserbasehq/stagehand@1.12.0(@playwright/test@1.50.1)(deepmerge@4.3.1)(dotenv@16.4.7)(openai@4.85.1(ws@8.18.0)(zod@3.24.2))(zod@3.24.2))(@ibm-cloud/watsonx-ai@1.5.0(@langchain/core@0.3.40(openai@4.85.1(ws@8.18.0)(zod@3.24.2))))(@smithy/util-utf8@2.3.0)(fast-xml-parser@4.4.1)(ibm-cloud-sdk-core@5.1.2)(jsonwebtoken@9.0.2)(lodash@4.17.21)(openai@4.85.1(ws@8.18.0)(zod@3.24.2))(playwright@1.50.1)(react@19.0.0)':
     dependencies:
       '@fastify/cors': 10.0.2
       '@fastify/websocket': 11.0.2

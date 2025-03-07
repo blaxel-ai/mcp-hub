@@ -1,0 +1,13 @@
+repository: https://github.com/hanweg/mcp-discord
+smitheryPath: smithery.yaml
+dockerfile: "@mcp-hub"
+displayName: Discord
+branch: main
+url: https://discord.com/developers/applications
+icon: https://avatars.githubusercontent.com/u/1965106?s=200&v=4
+description: Discord bot for server and message management
+longDescription: A MCP hub for Discord bots that provides comprehensive functionality including server information (get server info, list members), message management (send/read messages, add/remove reactions, moderate content), channel management (create/delete channels), role management (add/remove roles), and webhook management (create/list/modify/delete webhooks, send webhook messages).
+secrets:
+  - discordToken
+categories:
+  - chat

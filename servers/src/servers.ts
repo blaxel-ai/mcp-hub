@@ -8,7 +8,6 @@ import { infos as githubInfos, list as githubList, call as githubToolCall } from
 import { infos as gmailInfos, list as gmailList, call as gmailToolCall } from './gmail';
 import { infos as gmapInfos, list as gmapList, call as gmapToolCall } from './google-maps';
 import { infos as linearInfos, list as linearList, call as linearToolCall } from './linear';
-import { infos as postgresInfos, list as postgresList, call as postgresToolCall } from './postgres';
 import { infos as qdrantInfos, list as qdrantList, call as qdrantToolCall } from './qdrant';
 import { infos as slackInfos, list as slackList, call as slackToolCall } from './slack';
 import { infos as twilioInfos, list as twilioList, call as twilioToolCall } from './twilio';
@@ -48,11 +47,6 @@ export const mcpServers: Record<string, Record<string, Function>> = {
 		list: cloudflareList,
 		call: cloudflareToolCall,
 		infos: cloudflareInfos,
-	},
-	postgres: {
-		list: postgresList,
-		call: postgresToolCall,
-		infos: postgresInfos,
 	},
 	'aws-s3': {
 		list: awsS3List,

@@ -93,7 +93,6 @@ class AWSS3Client {
 			credentials: {
 				accessKeyId: secrets.accessKeyId,
 				secretAccessKey: secrets.secretAccessKey,
-				sessionToken: secrets.sessionToken,
 			},
 		});
 	}
@@ -333,11 +332,6 @@ export async function infos() {
 					description: 'AWS secret access key',
 					label: 'AWS secret access key',
 					required: true,
-				},
-				sessionToken: {
-					description: 'AWS session token',
-					label: 'AWS session token',
-					required: false,
 				},
 			},
 		},
