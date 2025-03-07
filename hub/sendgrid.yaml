@@ -1,0 +1,13 @@
+repository: https://github.com/Garoth/sendgrid-mcp.git
+smitheryPath: smithery.yaml
+dockerfile: "@mcp-hub"
+displayName: Sendgrid
+branch: main
+url: https://app.sendgrid.com/settings/api_keys
+icon: https://avatars.githubusercontent.com/u/181234?s=200&v=4
+description: "Manage your Sendgrid account: manage contacts and templates, send emails and more."
+longDescription: SendGrid is a cloud-based email delivery platform providing transactional and marketing email services, with APIs for integration, analytics, and scalability
+secrets:
+  - sendgridApiKey
+categories:
+  - email

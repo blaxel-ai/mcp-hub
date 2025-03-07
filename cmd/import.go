@@ -56,7 +56,6 @@ func runImport(cmd *cobra.Command, args []string) {
 		if mcp != "" && mcp != name {
 			continue
 		}
-
 		_, err := processRepository(name, repository)
 		if err != nil {
 			log.Printf("Failed to process repository %s: %v", name, err)

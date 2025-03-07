@@ -53,6 +53,10 @@ func runStart(cmd *cobra.Command, args []string) {
 	handleError("validate config file", hub.ValidateWithDefaultValues())
 
 	repository := hub.Repositories[mcp]
+	if repository == nil {
+		log.Printf("Repository %s not found", mcp)
+		os.Exit(1)
+	}
 	c, err := processRepository(mcp, repository)
 	if err != nil {
 		log.Printf("Failed to process repository %s: %v", mcp, err)
