@@ -22,16 +22,6 @@ const (
 	dockerfileDir = "Dockerfile"
 )
 
-var (
-	configPath string
-	push       bool
-	registry   string
-	mcp        string
-	skipBuild  bool
-	tag        string
-	debug      bool
-)
-
 var importCmd = &cobra.Command{
 	Use:   "import",
 	Short: "Import MCPs from a config file",
@@ -67,14 +57,15 @@ func runImport(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		if err := processRepository(name, repository); err != nil {
+		_, err := processRepository(name, repository)
+		if err != nil {
 			log.Printf("Failed to process repository %s: %v", name, err)
 			os.Exit(1)
 		}
 	}
 }
 
-func processRepository(name string, repository *hub.Repository) error {
+func processRepository(name string, repository *hub.Repository) (*catalog.Catalog, error) {
 	var repoPath string
 	imageName := fmt.Sprintf("%s:%s", strings.ToLower(name), tag)
 	if repository.Path != "" {
@@ -90,12 +81,12 @@ func processRepository(name string, repository *hub.Repository) error {
 		if !debug {
 			handleError("save catalog", c.Save())
 		}
-		return nil
+		return &c, nil
 	}
 
 	if repository.Path == "" {
 		if _, err := git.CloneRepository(repoPath, repository.Branch, repository.Repository); err != nil {
-			return fmt.Errorf("clone repository: %w", err)
+			return nil, fmt.Errorf("clone repository: %w", err)
 		}
 	}
 
@@ -105,14 +96,14 @@ func processRepository(name string, repository *hub.Repository) error {
 		cfg = repository.Smithery
 		parsedCommand, err := smithery.ExecuteCommandFunction(cfg.StartCommand.CommandFunction, cfg.StartCommand.ConfigSchema.Properties)
 		if err != nil {
-			return fmt.Errorf("execute command function: %w", err)
+			return nil, fmt.Errorf("execute command function: %w", err)
 		}
 		parsedCommand.Type = cfg.StartCommand.Type
 		cfg.ParsedCommand = parsedCommand
 	} else {
 		tmpCfg, err := smithery.Parse(filepath.Join(repoPath, repository.SmitheryPath))
 		if err != nil {
-			return fmt.Errorf("parse smithery file: %w", err)
+			return nil, fmt.Errorf("parse smithery file: %w", err)
 		}
 		cfg = &tmpCfg
 	}
@@ -121,7 +112,7 @@ func processRepository(name string, repository *hub.Repository) error {
 	if !skipBuild {
 		deps := manageDeps(repository)
 		if err := buildAndPushImage(cfg, name, repoPath, strings.TrimSuffix(repository.Dockerfile, "/Dockerfile"), buildTo, deps); err != nil {
-			return fmt.Errorf("build and push image: %w", err)
+			return nil, fmt.Errorf("build and push image: %w", err)
 		}
 	}
 
@@ -130,7 +121,7 @@ func processRepository(name string, repository *hub.Repository) error {
 	if !debug {
 		handleError("save catalog", c.Save())
 	}
-	return nil
+	return &c, nil
 }
 
 func buildAndPushImage(cfg *smithery.SmitheryConfig, name string, repoPath string, smitheryDir string, imageName string, deps []string) error {

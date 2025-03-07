@@ -3,6 +3,19 @@
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS uv
 # Install the project into /app
 WORKDIR /app
+
+# Install Node.js and npm
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    git \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm install -g pnpm \
+    && pnpm install https://github.com/beamlit/supergateway
+
 # Enable bytecode compilation
 ENV UV_COMPILE_BYTECODE=1
 # Copy from the cache instead of linking since it's a mounted volume
@@ -24,16 +37,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 ENV DISCORD_TOKEN=your_bot_token
 # when running the container, add --db-path and a bind mount to the host's db file
 
-# Install Node.js and npm
-RUN apt-get update && apt-get install -y \
-    curl \
-    gnupg \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs git \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install pnpm
-RUN npm install -g pnpm
-RUN pnpm install https://github.com/beamlit/supergateway
 ENTRYPOINT ["npx","-y","@blaxel/supergateway","--port","80","--stdio"]
