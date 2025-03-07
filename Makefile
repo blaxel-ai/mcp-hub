@@ -14,7 +14,8 @@ run:
 
 test:
 	cd hack/test_client \
-	&& cp src/configs/config.$(ARGS).ts src/config.ts
+	&& cp src/configs/config.$(ARGS).ts src/config.ts \
+	&& pnpm run test
 
 %:
 	@:
