@@ -12,6 +12,9 @@ run-github-mcp: build-mcps
 run:
 	go run main.go start -m $(ARGS) --debug
 
+catalog:
+	go run main.go catalog -m $(ARGS) --debug --skip-build
+
 test:
 	cd hack/test_client \
 	&& cp src/configs/config.$(ARGS).ts src/config.ts \

@@ -3,13 +3,13 @@ export const payload: ((previousResult: Record<string, any>) => {
   arguments: Record<string, any>;
 })[] = [
   () => ({
-    name: "list_members",
+    name: "ask_user",
     arguments: {
-      server_id: "1347566164166971423",
+      question: "What is the meaning of life?",
     },
   }),
 ];
 
-export const description = "Discord description";
-export const name = "discord";
+export const description = "Telegram description";
+export const name = "telegram";
 export const url = "http://localhost:1400";
