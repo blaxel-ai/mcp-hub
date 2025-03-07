@@ -8,7 +8,6 @@ longDescription: Create, read and update objects in your S3 storage
 secrets:
   - accessKeyId
   - secretAccessKey
-  - sessionToken
 categories:
   - storage
 smithery:
@@ -31,10 +30,7 @@ smithery:
         secretAccessKey:
           type: string
           description: The secret access key for the AWS S3 server.
-        sessionToken:
-          type: string
-          description: The session token for the AWS S3 server.
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config=>({command:'node',args:['dist/index.js', 'start', 'aws-s3'],env:{REGION:config.region,ACCESS_KEY_ID:config.accessKeyId,SECRET_ACCESS_KEY:config.secretAccessKey,SESSION_TOKEN:config.sessionToken}})
+      config=>({command:'node',args:['dist/index.js', 'start', 'aws-s3'],env:{REGION:config.region,ACCESS_KEY_ID:config.accessKeyId,SECRET_ACCESS_KEY:config.secretAccessKey}})
