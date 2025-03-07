@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	tmpDir        = "tmp"
-	githubPrefix  = "https://github.com/"
-	dockerfileDir = "Dockerfile"
+	tmpDir       = "tmp"
+	githubPrefix = "https://github.com/"
+	dockerfile   = "Dockerfile"
 )
 
 var importCmd = &cobra.Command{
@@ -110,7 +110,7 @@ func processRepository(name string, repository *hub.Repository) (*catalog.Catalo
 	buildTo := fmt.Sprintf("%s/%s", strings.ToLower(registry), imageName)
 	if !skipBuild {
 		deps := manageDeps(repository)
-		if err := buildAndPushImage(cfg, name, repoPath, strings.TrimSuffix(repository.Dockerfile, "/Dockerfile"), buildTo, deps); err != nil {
+		if err := buildAndPushImage(cfg, name, repository.SmitheryPath, repoPath, strings.TrimSuffix(repository.Dockerfile, "/Dockerfile"), buildTo, deps); err != nil {
 			return nil, fmt.Errorf("build and push image: %w", err)
 		}
 	}
@@ -123,13 +123,13 @@ func processRepository(name string, repository *hub.Repository) (*catalog.Catalo
 	return &c, nil
 }
 
-func buildAndPushImage(cfg *smithery.SmitheryConfig, name string, repoPath string, smitheryDir string, imageName string, deps []string) error {
+func buildAndPushImage(cfg *smithery.SmitheryConfig, name string, smitheryPath string, repoPath string, dockerfileDir string, imageName string, deps []string) error {
 	dockerfilePath, err := docker.Inject(
 		context.Background(),
 		name,
 		repoPath,
-		smitheryDir,
 		dockerfileDir,
+		dockerfile,
 		cfg.ParsedCommand.Entrypoint(),
 		deps,
 	)
@@ -137,13 +137,14 @@ func buildAndPushImage(cfg *smithery.SmitheryConfig, name string, repoPath strin
 		return fmt.Errorf("inject command: %w", err)
 	}
 
-	if err := docker.BuildImage(context.Background(), imageName, dockerfilePath); err != nil {
+	tmpDockerfilePath, err := docker.BuildImage(context.Background(), imageName, smitheryPath, dockerfileDir, dockerfilePath)
+	if err != nil {
 		return fmt.Errorf("build image: %w", err)
 	}
 
-	// if err := os.Remove(fmt.Sprintf("%s.tmp", dockerfilePath)); err != nil {
-	// 	return fmt.Errorf("remove tmp dockerfile: %w", err)
-	// }
+	if err := os.Remove(tmpDockerfilePath); err != nil {
+		return fmt.Errorf("remove tmp dockerfile: %w", err)
+	}
 
 	if push {
 		if err := docker.PushImage(context.Background(), imageName); err != nil {
