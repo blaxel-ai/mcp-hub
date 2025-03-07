@@ -8,6 +8,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	configPath string
+	push       bool
+	registry   string
+	mcp        string
+	skipBuild  bool
+	tag        string
+	debug      bool
+)
+
 var rootCmd = &cobra.Command{
 	Use:   "mcp-hub-importer",
 	Short: "Import MCPs from a directory",

@@ -46,7 +46,6 @@ class AwsSesClient {
 			credentials: {
 				accessKeyId: secrets.accessKeyId,
 				secretAccessKey: secrets.secretAccessKey,
-				sessionToken: secrets.sessionToken,
 			},
 		});
 	}
@@ -87,7 +86,7 @@ class AwsSesClient {
 export async function call(request: Request, config: Record<string, string>, secrets: Record<string, string>) {
 	try {
 		const awsSesClient = new AwsSesClient(config, secrets);
-		const requestBody: { name: string; arguments: any } = await request.json() as { name: string; arguments: any };
+		const requestBody: { name: string; arguments: any } = (await request.json()) as { name: string; arguments: any };
 		if (!requestBody.arguments) {
 			throw new Error('No arguments provided');
 		}
@@ -152,11 +151,6 @@ export async function infos() {
 					description: 'AWS secret access key',
 					label: 'AWS secret access key',
 					required: true,
-				},
-				sessionToken: {
-					description: 'AWS session token',
-					label: 'AWS session token',
-					required: false,
 				},
 			},
 		},

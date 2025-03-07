@@ -11,12 +11,9 @@ describe('AWS S3', async () => {
 	// @ts-ignore
 	const secretAccessKey = import.meta.env.AWS_SECRET_ACCESS_KEY;
 	// @ts-ignore
-	const sessionToken = import.meta.env.AWS_SESSION_TOKEN;
-	// @ts-ignore
 	const region = import.meta.env.AWS_REGION;
 	DefineSecret('accessKeyId', accessKeyId);
 	DefineSecret('secretAccessKey', secretAccessKey);
-	DefineSecret('sessionToken', sessionToken);
 	DefineConfig('region', region);
 
 	it('listTools', async () => {

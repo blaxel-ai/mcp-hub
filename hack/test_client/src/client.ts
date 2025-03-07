@@ -3,14 +3,14 @@ import WebSocket from "ws";
 // @ts-ignore
 global.WebSocket = WebSocket;
 
-import { logger, newClient } from "@beamlit/sdk";
-import { LocalToolkit } from "@beamlit/sdk/functions/local.js";
-import { description, name, payload, url } from "./config.js";
+import { logger, newClient } from "@blaxel/sdk";
+import { LocalToolkit } from "@blaxel/sdk/functions/local";
+import { name, payload, url } from "./config";
 
 const main = async () => {
   const client = newClient();
   const toolkit = new LocalToolkit(client, name, url);
-  await toolkit.initialize(name, description);
+  await toolkit.initialize(name);
   const functions = await toolkit.getTools();
   for (const fn of functions) {
     let params: string[] = [];

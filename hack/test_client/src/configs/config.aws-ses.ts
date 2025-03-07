@@ -3,6 +3,6 @@ export const payload: ((previousResult: Record<string, any>) => {
   arguments: Record<string, any>;
 })[] = [];
 
-export const description = "Qdrant description";
-export const name = "qdrant";
+export const description = "AWS SES description";
+export const name = "aws-ses";
 export const url = "http://localhost:1400";
