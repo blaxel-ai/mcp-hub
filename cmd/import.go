@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -87,6 +89,16 @@ func processRepository(name string, repository *hub.Repository) (*catalog.Catalo
 		if _, err := git.CloneRepository(repoPath, repository.Branch, repository.Repository); err != nil {
 			return nil, fmt.Errorf("clone repository: %w", err)
 		}
+
+		if err := handleSourceFiles(repoPath); err != nil {
+			return nil, fmt.Errorf("handle source files: %w", err)
+		}
+
+		// Modify package.json after cloning
+		packageJsonPath := filepath.Join(repoPath, "package.json")
+		if err := updatePackageJson(packageJsonPath); err != nil {
+			return nil, fmt.Errorf("update package.json: %w", err)
+		}
 	}
 
 	var cfg *smithery.SmitheryConfig
@@ -124,6 +136,7 @@ func processRepository(name string, repository *hub.Repository) (*catalog.Catalo
 }
 
 func buildAndPushImage(cfg *smithery.SmitheryConfig, name string, smitheryPath string, repoPath string, dockerfileDir string, imageName string, deps []string) error {
+	// Handle src directory and file copying
 	dockerfilePath, err := docker.Inject(
 		context.Background(),
 		name,
@@ -166,6 +179,9 @@ func manageDeps(repository *hub.Repository) []string {
 	deps := []string{
 		"npm install -g pnpm",
 		"pnpm install https://github.com/beamlit/supergateway",
+		"pnpm install ws",
+		"pnpm install -D @types/ws",
+		"pnpm install uuid",
 	}
 	switch repository.PackageManager {
 	case hub.PackageManagerAPK:
@@ -182,4 +198,108 @@ func manageDeps(repository *hub.Repository) []string {
 		log.Fatalf("Unsupported package manager: %s", repository.PackageManager)
 		return []string{}
 	}
+}
+
+func updatePackageJson(path string) error {
+	// Read the existing package.json
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("read package.json: %w", err)
+	}
+
+	var pkg map[string]interface{}
+	if err := json.Unmarshal(content, &pkg); err != nil {
+		return fmt.Errorf("parse package.json: %w", err)
+	}
+
+	// Update scripts
+	scripts, ok := pkg["scripts"].(map[string]interface{})
+	if !ok {
+		scripts = make(map[string]interface{})
+		pkg["scripts"] = scripts
+	}
+	scripts["build"] = json.RawMessage(`"tsc && node -e \"require('fs').chmodSync('build/loader.js', '755')\""`)
+
+	// Write back to file
+	updatedContent, err := json.MarshalIndent(pkg, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal package.json: %w", err)
+	}
+
+	if err := os.WriteFile(path, updatedContent, 0644); err != nil {
+		return fmt.Errorf("write package.json: %w", err)
+	}
+
+	return nil
+}
+
+func handleSourceFiles(repoPath string) error {
+	// Create or ensure src directory exists
+	srcPath := filepath.Join(repoPath, "src")
+	if err := os.MkdirAll(srcPath, 0755); err != nil {
+		return fmt.Errorf("create src directory: %w", err)
+	}
+
+	// Check if index.js exists in root and needs to be moved
+	rootIndexPath := filepath.Join(repoPath, "index.ts")
+	if _, err := os.Stat(rootIndexPath); err == nil {
+		// Move index.js to src directory
+		if err := moveFile(rootIndexPath, filepath.Join(srcPath, "index.ts")); err != nil {
+			return fmt.Errorf("move index.ts to src: %w", err)
+		}
+	}
+
+	// Copy files from internal/copy_files to src
+	copyFilesDir := "internal/copy_files"
+	entries, err := os.ReadDir(copyFilesDir)
+	if err != nil {
+		return fmt.Errorf("read copy_files directory: %w", err)
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		srcFile := filepath.Join(copyFilesDir, entry.Name())
+		dstFile := filepath.Join(srcPath, entry.Name())
+		if err := copyFile(srcFile, dstFile); err != nil {
+			return fmt.Errorf("copy %s: %w", entry.Name(), err)
+		}
+	}
+
+	return nil
+}
+
+func moveFile(src, dst string) error {
+	if err := copyFile(src, dst); err != nil {
+		return err
+	}
+	return os.Remove(src)
+}
+
+func copyFile(src, dst string) error {
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+
+	destFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, sourceFile)
+	if err != nil {
+		return err
+	}
+
+	// Copy file permissions
+	sourceInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	return os.Chmod(dst, sourceInfo.Mode())
 }
