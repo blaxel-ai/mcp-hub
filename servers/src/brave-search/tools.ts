@@ -1,6 +1,6 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { ToolResponse } from '../types';
-import { isBraveLocalSearchArgs, isBraveWebSearchArgs, performLocalSearch, performWebSearch } from './brave';
+import { ToolResponse } from '../types.js';
+import { isBraveLocalSearchArgs, isBraveWebSearchArgs, performLocalSearch, performWebSearch } from './brave.js';
 
 export const WEB_SEARCH_TOOL: Tool = {
 	name: 'brave_web_search',

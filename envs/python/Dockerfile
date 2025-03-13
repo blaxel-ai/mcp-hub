@@ -1,1 +1,1 @@
-RUN uv pip install 'uvicorn[standard]'
+# RUN uv pip install 'uvicorn[standard]'

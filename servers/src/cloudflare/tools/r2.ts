@@ -1,6 +1,6 @@
 // Add R2 tool definitions
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { ToolHandlers } from '../utils/types';
+import { ToolHandlers } from '../utils/types.js';
 
 const R2_LIST_BUCKETS_TOOL: Tool = {
 	name: 'r2_list_buckets',
@@ -342,8 +342,8 @@ export const R2_HANDLERS: ToolHandlers = {
 		};
 	},
 
-	r2_get_object: async (request, accountId, apiToken) => {
-		const { bucket, key } = request.arguments as { bucket: string; key: string };
+	r2_get_object: async (request: { name: string; arguments: Record<string, any> }, accountId: string, apiToken: string) => {
+		const { bucket, key } = request.arguments;
 		const content = await handleR2GetObject(accountId, apiToken, bucket, key);
 		return {
 			content: [{ type: 'text', text: content }],

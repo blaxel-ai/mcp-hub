@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { Twilio } from 'twilio';
+import pkg from 'twilio';
+const { Twilio } = pkg;
 
 // Type definitions for tool arguments
 interface SendSmsArgs {

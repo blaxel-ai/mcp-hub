@@ -1,5 +1,5 @@
-import { list } from './list';
-import { call } from './tools';
+import { list } from './list.js';
+import { call } from './tools.js';
 
 const infos = async () => {
 	return {

@@ -3,22 +3,22 @@ import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import {
-	GitHubAuthenticationError,
-	GitHubConflictError,
-	GitHubError,
-	GitHubPermissionError,
-	GitHubRateLimitError,
-	GitHubResourceNotFoundError,
-	GitHubValidationError,
-	isGitHubError,
-} from './common/errors';
-import * as branches from './operations/branches';
-import * as commits from './operations/commits';
-import * as files from './operations/files';
-import * as issues from './operations/issues';
-import * as pulls from './operations/pulls';
-import * as repository from './operations/repository';
-import * as search from './operations/search';
+  GitHubAuthenticationError,
+  GitHubConflictError,
+  GitHubError,
+  GitHubPermissionError,
+  GitHubRateLimitError,
+  GitHubResourceNotFoundError,
+  GitHubValidationError,
+  isGitHubError,
+} from './common/errors.js';
+import * as branches from './operations/branches.js';
+import * as commits from './operations/commits.js';
+import * as files from './operations/files.js';
+import * as issues from './operations/issues.js';
+import * as pulls from './operations/pulls.js';
+import * as repository from './operations/repository.js';
+import * as search from './operations/search.js';
 
 function formatGitHubError(error: GitHubError): string {
 	let message = `GitHub API Error: ${error.message}`;

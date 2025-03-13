@@ -26,10 +26,11 @@ const (
 type Repository struct {
 	Repository      string                   `yaml:"repository" mandatory:"false"`
 	Path            string                   `yaml:"path" mandatory:"false"`
-	SmitheryPath    string                   `yaml:"smitheryPath" mandatory:"false" default:"smithery.yaml"`
+	BasePath        string                   `yaml:"basePath" mandatory:"false" default:""`
+	SrcPath         string                   `yaml:"srcPath" mandatory:"false" default:"src"`
+	DistPath        string                   `yaml:"distPath" mandatory:"false" default:"dist"`
 	Smithery        *smithery.SmitheryConfig `yaml:"smithery" mandatory:"false"`
 	Language        string                   `yaml:"language" mandatory:"false" default:"typescript"`
-	Dockerfile      string                   `yaml:"dockerfile" mandatory:"false" default:"Dockerfile"`
 	PackageManager  PackageManager           `yaml:"packageManager" mandatory:"false" default:"apk"`
 	DoNotShow       []string                 `yaml:"doNotShow" mandatory:"false"`
 	HasNPM          bool                     `yaml:"hasNPM" mandatory:"false" default:"true"`

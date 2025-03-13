@@ -1,6 +1,6 @@
 repository: https://github.com/hanweg/mcp-discord
 smitheryPath: smithery.yaml
-dockerfile: "@mcp-hub"
+language: python
 displayName: Discord
 branch: main
 url: https://discord.com/developers/applications

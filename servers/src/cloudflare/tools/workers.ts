@@ -1,5 +1,5 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { ToolHandlers } from '../utils/types';
+import { ToolHandlers } from '../utils/types.js';
 
 interface CloudflareWorkerListResponse {
 	result: Array<{
@@ -185,7 +185,7 @@ const WORKER_DELETE_TOOL: Tool = {
 };
 export const WORKER_TOOLS = [WORKER_LIST_TOOL, WORKER_GET_TOOL, WORKER_PUT_TOOL, WORKER_DELETE_TOOL];
 
-export async function handleWorkerList(accountId: string, apiToken: string) {
+export async function handleWorkerList(accountId: string, apiToken: string): Promise<any> {
 	const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts`;
 
 	const response = await fetch(url, {
@@ -197,8 +197,7 @@ export async function handleWorkerList(accountId: string, apiToken: string) {
 		throw new Error(`Failed to list workers: ${error}`);
 	}
 
-	const data = (await response.json()) as CloudflareWorkerListResponse; // Add type assertion here
-
+	const data = await response.json();
 	return data.result;
 }
 
@@ -361,7 +360,7 @@ export async function handleWorkerDelete(accountId: string, apiToken: string, na
 }
 
 export const WORKERS_HANDLERS: ToolHandlers = {
-	worker_list: async (request, accountId, apiToken) => {
+	worker_list: async (request: { name: string; arguments: Record<string, any> }, accountId: string, apiToken: string) => {
 		const results = await handleWorkerList(accountId, apiToken);
 		return {
 			content: [
@@ -373,8 +372,8 @@ export const WORKERS_HANDLERS: ToolHandlers = {
 		};
 	},
 
-	worker_get: async (request, accountId, apiToken) => {
-		const { name } = request;
+	worker_get: async (request: { name: string; arguments: Record<string, any> }, accountId: string, apiToken: string) => {
+		const { name } = request.arguments;
 		const script = await handleWorkerGet(accountId, apiToken, name);
 		return {
 			content: [
@@ -386,18 +385,8 @@ export const WORKERS_HANDLERS: ToolHandlers = {
 		};
 	},
 
-	worker_put: async (request, accountId, apiToken) => {
-		const { name, script, bindings, compatibility_date, compatibility_flags, migrations, skip_workers_dev, no_observability } =
-			request.arguments as {
-				name: string;
-				script: string;
-				bindings?: WorkerMetadataBinding[];
-				compatibility_date?: string;
-				compatibility_flags?: string[];
-				migrations?: CfDurableObjectMigrations;
-				skip_workers_dev: boolean;
-				no_observability: boolean;
-			};
+	worker_put: async (request: { name: string; arguments: Record<string, any> }, accountId: string, apiToken: string) => {
+		const { name, script, bindings, compatibility_date, compatibility_flags, migrations, skip_workers_dev, no_observability } = request.arguments;
 		await handleWorkerPut(
 			accountId,
 			apiToken,
@@ -420,8 +409,8 @@ export const WORKERS_HANDLERS: ToolHandlers = {
 		};
 	},
 
-	worker_delete: async (request, accountId, apiToken) => {
-		const { name } = request;
+	worker_delete: async (request: { name: string; arguments: Record<string, any> }, accountId: string, apiToken: string) => {
+		const { name } = request.arguments;
 		await handleWorkerDelete(accountId, apiToken, name);
 		return {
 			content: [

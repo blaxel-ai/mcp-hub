@@ -1,5 +1,5 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { ToolHandlers } from '../utils/types';
+import { ToolHandlers } from '../utils/types.js';
 
 interface CloudflareListResponse {
 	result: Array<{

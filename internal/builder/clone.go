@@ -1,4 +1,4 @@
-package build
+package builder
 
 import (
 	"fmt"
@@ -47,7 +47,7 @@ func (b *Build) CloneRepository(name string, repository *hub.Repository) (*catal
 		parsedCommand.Type = cfg.StartCommand.Type
 		cfg.ParsedCommand = parsedCommand
 	} else {
-		tmpCfg, err := smithery.Parse(filepath.Join(repoPath, repository.SmitheryPath))
+		tmpCfg, err := smithery.Parse(filepath.Join(repoPath, repository.BasePath+"/smithery.yaml"))
 		if err != nil {
 			return nil, fmt.Errorf("parse smithery file: %w", err)
 		}

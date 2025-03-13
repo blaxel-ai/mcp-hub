@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/beamlit/mcp-hub/internal/build"
+	"github.com/beamlit/mcp-hub/internal/builder"
 	"github.com/beamlit/mcp-hub/internal/errors"
 	"github.com/beamlit/mcp-hub/internal/hub"
 	"github.com/spf13/cobra"
@@ -18,26 +18,21 @@ var importCmd = &cobra.Command{
 }
 
 func init() {
-	importCmd.Flags().StringVarP(&configPath, "config", "c", "", "The path to the config files")
+	importCmd.Flags().StringVarP(&configPath, "config", "c", "hub", "The path to the config files")
 	importCmd.Flags().BoolVarP(&push, "push", "p", false, "Push the images to the registry")
 	importCmd.Flags().StringVarP(&registry, "registry", "r", "ghcr.io/beamlit/hub", "The registry to push the images to")
 	importCmd.Flags().StringVarP(&mcp, "mcp", "m", "", "The MCP to import, if not provided, all MCPs will be imported")
-	importCmd.Flags().BoolVarP(&skipBuild, "skip-build", "s", false, "Skip building the image")
 	importCmd.Flags().StringVarP(&tag, "tag", "t", "latest", "The tag to use for the image")
 	importCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug mode, will not save the catalog")
 	rootCmd.AddCommand(importCmd)
 }
 
 func runImport(cmd *cobra.Command, args []string) {
-	if configPath == "" {
-		configPath = "hub"
-	}
-
 	hub := hub.Hub{}
 	errors.HandleError("read config file", hub.Read(configPath))
 	errors.HandleError("validate config file", hub.ValidateWithDefaultValues())
 
-	buildInstance := build.NewBuild(tag, debug)
+	buildInstance := builder.NewBuild(tag, debug)
 	// defer buildInstance.Clean()
 
 	for name, repository := range hub.Repositories {
@@ -49,10 +44,17 @@ func runImport(cmd *cobra.Command, args []string) {
 			log.Printf("Failed to process repository %s: %v", name, err)
 			os.Exit(1)
 		}
-		err = buildInstance.BuildAndPushImage(name, repository)
+		err = buildInstance.Build(name, repository)
 		if err != nil {
-			log.Printf("Failed to build and push image for repository %s: %v", name, err)
+			log.Printf("Failed to build image for repository %s: %v", name, err)
 			os.Exit(1)
+		}
+		if push {
+			err = buildInstance.Push(name, repository)
+			if err != nil {
+				log.Printf("Failed to push image for repository %s: %v", name, err)
+				os.Exit(1)
+			}
 		}
 	}
 }

@@ -1,8 +1,8 @@
-import { ANALYTICS_HANDLERS, ANALYTICS_TOOLS } from './tools/analytics';
-import { D1_HANDLERS, D1_TOOLS } from './tools/d1';
-import { KV_HANDLERS, KV_TOOLS } from './tools/kv';
-import { R2_HANDLERS, R2_TOOLS } from './tools/r2';
-import { WORKER_TOOLS, WORKERS_HANDLERS } from './tools/workers';
+import { ANALYTICS_HANDLERS, ANALYTICS_TOOLS } from './tools/analytics.js';
+import { D1_HANDLERS, D1_TOOLS } from './tools/d1.js';
+import { KV_HANDLERS, KV_TOOLS } from './tools/kv.js';
+import { R2_HANDLERS, R2_TOOLS } from './tools/r2.js';
+import { WORKER_TOOLS, WORKERS_HANDLERS } from './tools/workers.js';
 
 // Types for Cloudflare responses
 

@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/beamlit/mcp-hub/internal/build"
+	"github.com/beamlit/mcp-hub/internal/builder"
 	"github.com/beamlit/mcp-hub/internal/errors"
 	"github.com/beamlit/mcp-hub/internal/hub"
 	"github.com/joho/godotenv"
@@ -21,13 +21,9 @@ var catalogCmd = &cobra.Command{
 }
 
 func init() {
-	catalogCmd.Flags().StringVarP(&configPath, "config", "c", "", "The path to the config files")
-	catalogCmd.Flags().BoolVarP(&push, "push", "p", false, "Push the images to the registry")
-	catalogCmd.Flags().StringVarP(&registry, "registry", "r", "ghcr.io/beamlit/hub", "The registry to push the images to")
+	catalogCmd.Flags().StringVarP(&configPath, "config", "c", "hub", "The path to the config files")
 	catalogCmd.Flags().StringVarP(&mcp, "mcp", "m", "", "The MCP to import, if not provided")
-	catalogCmd.Flags().BoolVarP(&skipBuild, "skip-build", "s", true, "Skip building the image")
 	catalogCmd.Flags().StringVarP(&tag, "tag", "t", "latest", "The tag to use for the image")
-	catalogCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug mode, will not save the catalog")
 	rootCmd.AddCommand(catalogCmd)
 }
 
@@ -37,24 +33,17 @@ func runCatalog(cmd *cobra.Command, args []string) {
 		log.Printf("Warning: No .env file found or error loading it: %v", err)
 	}
 
-	if configPath == "" {
-		configPath = "hub"
-	}
 	if mcp == "" {
 		log.Printf("MCP is required")
 		os.Exit(1)
 	}
-
-	// We set debug to true to avoid saving the catalog in control plane
-	debug = true
-	skipBuild = true
 
 	hub := hub.Hub{}
 	errors.HandleError("read config file", hub.Read(configPath))
 	errors.HandleError("validate config file", hub.ValidateWithDefaultValues())
 
 	repository := hub.Repositories[mcp]
-	buildInstance := build.NewBuild(tag, debug)
+	buildInstance := builder.NewBuild(tag, true)
 	defer buildInstance.Clean()
 	c, err := buildInstance.CloneRepository(mcp, repository)
 	if err != nil {

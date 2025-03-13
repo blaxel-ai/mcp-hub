@@ -1,5 +1,5 @@
-import { Embeddings } from './embeddings';
-import { QdrantConnector } from './qdrant';
+import { Embeddings } from './embeddings.js';
+import { QdrantConnector } from './qdrant.js';
 
 export const infos = async () => {
 	return {

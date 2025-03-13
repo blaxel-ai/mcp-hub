@@ -1,10 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { program } from 'commander';
-import { mcpServers } from './servers';
-import { transformInZodSchema } from './utils';
-import { MCPServer } from "./types";
-
+import { mcpServers } from './servers.js';
+import { MCPServer } from "./types.js";
+import { transformInZodSchema } from './utils.js';
 program
   .version('1.0.0')
   .command('start <name>')
@@ -23,7 +22,7 @@ program
 	});
 
 	const tools = await mcpServer.list()
-	
+
 	for (const tool of tools.tools) {
 		const zodSchema = transformInZodSchema(tool.inputSchema.properties);
 		server.tool(tool.name, tool.description, zodSchema, async (argsSchema) => {
@@ -74,4 +73,4 @@ function transformKeyInEnVarName(key: string) {
 	return key.replace(/([A-Z])/g, '_$1').toUpperCase();
 }
 
-program.parse(process.argv);
+program.parse(process.argv[2].split(' '));

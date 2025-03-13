@@ -1,4 +1,4 @@
-package build
+package builder
 
 type Build struct {
 	tag   string
