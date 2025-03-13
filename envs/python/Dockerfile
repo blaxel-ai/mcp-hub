@@ -1,0 +1,1 @@
+RUN uv pip install 'uvicorn[standard]'

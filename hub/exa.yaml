@@ -1,4 +1,5 @@
 repository: https://github.com/exa-labs/exa-mcp-server
+language: typescript
 smitheryPath: smithery.yaml
 dockerfile: /
 displayName: Exa

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -30,12 +29,5 @@ func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
-	}
-}
-
-// handleError is a helper function for consistent error handling across commands
-func handleError(operation string, err error) {
-	if err != nil {
-		log.Fatalf("Failed to %s: %v", operation, err)
 	}
 }

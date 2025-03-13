@@ -7,7 +7,9 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/beamlit/mcp-hub/internal/build"
 	"github.com/beamlit/mcp-hub/internal/catalog"
+	"github.com/beamlit/mcp-hub/internal/errors"
 	"github.com/beamlit/mcp-hub/internal/hub"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
@@ -49,15 +51,18 @@ func runStart(cmd *cobra.Command, args []string) {
 	debug = true
 
 	hub := hub.Hub{}
-	handleError("read config file", hub.Read(configPath))
-	handleError("validate config file", hub.ValidateWithDefaultValues())
+	errors.HandleError("read config file", hub.Read(configPath))
+	errors.HandleError("validate config file", hub.ValidateWithDefaultValues())
 
 	repository := hub.Repositories[mcp]
 	if repository == nil {
 		log.Printf("Repository %s not found", mcp)
 		os.Exit(1)
 	}
-	c, err := processRepository(mcp, repository)
+	buildInstance := build.NewBuild(tag, debug)
+	defer buildInstance.Clean()
+
+	c, err := buildInstance.CloneRepository(mcp, repository)
 	if err != nil {
 		log.Printf("Failed to process repository %s: %v", mcp, err)
 		os.Exit(1)
