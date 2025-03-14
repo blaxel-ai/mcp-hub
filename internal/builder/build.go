@@ -21,6 +21,11 @@ func (b *Build) Build(name string, repository *hub.Repository) error {
 		if err != nil {
 			return fmt.Errorf("prepare typescript: %w", err)
 		}
+	case "python":
+		err := b.preparePython(name, repository)
+		if err != nil {
+			return fmt.Errorf("prepare python: %w", err)
+		}
 	default:
 		return fmt.Errorf("unsupported language: %s", repository.Language)
 	}
@@ -38,6 +43,36 @@ func (b *Build) Build(name string, repository *hub.Repository) error {
 		return fmt.Errorf("build image: %w", err)
 	}
 
+	return nil
+}
+
+func (b *Build) preparePython(name string, repository *hub.Repository) error {
+	srcPath := repository.Path
+	if repository.SrcPath != "" {
+		srcPath = filepath.Join(repository.Path, repository.SrcPath)
+	}
+	err := files.CopyFile("envs/python/Dockerfile", filepath.Join(repository.Path, "Dockerfile"))
+	if err != nil {
+		return fmt.Errorf("copy dockerfile: %w", err)
+	}
+	err = files.CopyFile("envs/python/transport.py", filepath.Join(srcPath, "transport.py"))
+	if err != nil {
+		return fmt.Errorf("copy transport.py: %w", err)
+	}
+	err = files.AddLineToStartOfFile(
+		filepath.Join(srcPath, "__init__.py"),
+		"from .transport import websocket_server",
+	)
+	if err != nil {
+		return fmt.Errorf("add line to start of file: %w", err)
+	}
+	err = files.CreateFileIfNotExists(
+		filepath.Join(srcPath, "__main__.py"),
+		"from . import main\n\nif __name__ == '__main__':\n    main()",
+	)
+	if err != nil {
+		return fmt.Errorf("create file: %w", err)
+	}
 	return nil
 }
 

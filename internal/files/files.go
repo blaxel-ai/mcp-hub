@@ -13,6 +13,22 @@ func MoveFile(src, dst string) error {
 	return os.Remove(src)
 }
 
+func AddLineToStartOfFile(file, line string) error {
+	content, err := os.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	content = append([]byte(line+"\n\n"), content...)
+	return os.WriteFile(file, content, 0644)
+}
+
+func CreateFileIfNotExists(file string, content string) error {
+	if _, err := os.Stat(file); os.IsNotExist(err) {
+		return os.WriteFile(file, []byte(content), 0644)
+	}
+	return nil
+}
+
 func CopyFile(src, dst string) error {
 	sourceFile, err := os.Open(src)
 	if err != nil {
