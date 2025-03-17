@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-export class GdriveClient {
+export class GoogleDriveClient {
 	private refreshToken: string;
 	private accessToken?: string;
 	private clientId: string;

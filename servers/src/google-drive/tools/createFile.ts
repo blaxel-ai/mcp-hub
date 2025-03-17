@@ -1,8 +1,8 @@
-import { GdriveClient } from '../client.js';
+import { GoogleDriveClient } from '../client.js';
 import { createFileTool } from '../types.js';
 
 export async function createFile(
-	gdriveClient: GdriveClient,
+	googleDriveClient: GoogleDriveClient,
 	name: string,
 	content: string,
 	mimeType: string = 'text/plain',
@@ -11,7 +11,7 @@ export async function createFile(
 	if (!name || !content) {
 		throw new Error('File name and content are required');
 	}
-	return await gdriveClient.createFile(name, content, mimeType, folderId);
+	return await googleDriveClient.createFile(name, content, mimeType, folderId);
 }
 
 export { createFileTool };

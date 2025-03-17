@@ -6,6 +6,7 @@ import { infos as cloudflareInfos, list as cloudflareList, call as cloudflareToo
 import { infos as dalleInfos, list as dalleList, call as dalleToolCall } from './dall-e';
 import { infos as githubInfos, list as githubList, call as githubToolCall } from './github';
 import { infos as gmailInfos, list as gmailList, call as gmailToolCall } from './gmail';
+import { infos as googleDriveInfos, list as googleDriveList, call as googleDriveToolCall } from './google-drive';
 import { infos as gmapInfos, list as gmapList, call as gmapToolCall } from './google-maps';
 import { infos as linearInfos, list as linearList, call as linearToolCall } from './linear';
 import { infos as qdrantInfos, list as qdrantList, call as qdrantToolCall } from './qdrant';
@@ -42,6 +43,11 @@ export const mcpServers: Record<string, Record<string, Function>> = {
 		list: gmailList,
 		call: gmailToolCall,
 		infos: gmailInfos,
+	},
+	'google-drive': {
+		list: googleDriveList,
+		call: googleDriveToolCall,
+		infos: googleDriveInfos,
 	},
 	cloudflare: {
 		list: cloudflareList,
