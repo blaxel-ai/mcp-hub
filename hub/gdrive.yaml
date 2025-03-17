@@ -1,0 +1,44 @@
+path: servers/
+dockerfile: /
+displayName: Google Drive
+url: https://console.cloud.google.com/apis/credentials
+icon: data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyNC4yLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4wIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiDQoJIHZpZXdCb3g9IjAgMCAzMDAgMjgwIiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDAgMCAzMDAgMjgwIiB4bWw6c3BhY2U9InByZXNlcnZlIj4NCjxnPg0KCTxwb2x5Z29uIGZpbGw9Im5vbmUiIHBvaW50cz0iMTEwLjg2LDE3My41NiAxNTAsMTczLjU2IDE4OS4xNCwxNzMuNTYgMTUwLDEwNS4xOCAJIi8+DQoJPHBvbHlnb24gZmlsbD0ibm9uZSIgcG9pbnRzPSIxMTAuODYsMTczLjU2IDExMC44NiwxNzMuNTYgMTUwLDEwNS4xOCAxODkuMTQsMTczLjU2IDE4OS4xNCwxNzMuNTYgMTUwLDEwNS4xOCAJIi8+DQoJPHBhdGggZmlsbD0iIzFDODE0MCIgZD0iTTE4My40NSw0Ni43NGMtMi44LTEuNDQtNS45My0yLjI0LTkuMTktMi4yNEgxNTBoLTI0LjI2Yy0zLjI2LDAtNi4zOSwwLjc5LTkuMTksMi4yNEwxNTAsMTA1LjE4DQoJCUwxODMuNDUsNDYuNzR6Ii8+DQoJPHBhdGggZmlsbD0iI0Y5QkMxNSIgZD0iTTE4OS4xNCwxNzMuNTZoNjguMDZjLTAuMDEtMy40My0wLjkxLTYuODYtMi42OC05Ljk0TDE5MS42NCw1NC41NmMtMS45Ni0zLjQtNC44My02LjA4LTguMTktNy44Mg0KCQlMMTUwLDEwNS4xOEwxODkuMTQsMTczLjU2eiIvPg0KCTxwYXRoIGZpbGw9IiNFQTQ1MzUiIGQ9Ik0xODkuMTQsMTczLjU2bDM0LjAxLDU5LjQyYzMuMTktMS43Niw1LjktNC4zOCw3Ljc1LTcuNjdsMjMuNjktNDEuNzhjMS43NS0zLjA5LDIuNjItNi41MywyLjYtOS45N0gxODkuMTQNCgkJeiIvPg0KCTxwYXRoIGZpbGw9IiM1NTdFQkYiIGQ9Ik0xODkuMTQsMTczLjU2SDE1MGgtMzkuMTRsMCwwbC0zNC4wMSw1OS40MmMyLjkyLDEuNjEsNi4yNCwyLjUxLDkuNjksMi41MUgxNTBoNjMuNDYNCgkJYzMuNDUsMCw2Ljc3LTAuOSw5LjY5LTIuNTFMMTg5LjE0LDE3My41NkwxODkuMTQsMTczLjU2eiIvPg0KCTxwYXRoIGZpbGw9IiMzOTY4QjIiIGQ9Ik00Mi44LDE3My41NmMtMC4wMSwzLjQ0LDAuODYsNi44OCwyLjYsOS45N2wyMy42OSw0MS43OGMxLjg2LDMuMjksNC41Nyw1LjkxLDcuNzUsNy42N2wzNC4wMS01OS40Mkg0Mi44eiINCgkJLz4NCgk8cGF0aCBmaWxsPSIjMzZBODUyIiBkPSJNMTUwLDEwNS4xOGwtMzMuNDUtNTguNDRjLTMuMzcsMS43NC02LjIzLDQuNDEtOC4xOSw3LjgyTDQ1LjQ4LDE2My42MmMtMS43OCwzLjA4LTIuNjcsNi41MS0yLjY4LDkuOTQNCgkJaDY4LjA2TDE1MCwxMDUuMTh6Ii8+DQo8L2c+DQo8L3N2Zz4NCg==
+description: Create, read and update files in your Google Drive
+longDescription: Create, read and update files in your Google Drive
+oauth:
+  type: google
+  scopes:
+    - https://www.googleapis.com/auth/drive.file
+secrets:
+  - refreshToken
+doNotShow:
+  - refreshToken
+hiddenSecrets:
+  - clientId
+  - clientSecret
+categories:
+  - storage
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - refreshToken
+        - clientId
+        - clientSecret
+      properties:
+        refreshToken:
+          type: string
+          description: The refresh token for the Google Drive server.
+        clientId:
+          type: string
+          description: The client ID for the Google Drive server.
+        clientSecret:
+          type: string
+          description: The client secret for the Google Drive server.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      config=>({command:'node',args:['dist/index.js', 'start', 'gdrive'],env:{REFRESH_TOKEN:config.refreshToken,CLIENT_ID:config.clientId,CLIENT_SECRET:config.clientSecret}})
