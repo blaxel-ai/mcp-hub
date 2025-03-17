@@ -78,7 +78,7 @@ class GmailClient {
 			throw new Error(`Failed to refresh token: ${JSON.stringify(error)}`);
 		}
 
-		const data: { access_token: string; id_token: string } = await response.json() as { access_token: string; id_token: string };
+		const data: { access_token: string; id_token: string } = (await response.json()) as { access_token: string; id_token: string };
 		this.accessToken = data.access_token;
 
 		const decoded = this.decodeJWT(data.id_token);
@@ -99,7 +99,7 @@ class GmailClient {
 			atob(base64)
 				.split('')
 				.map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-				.join(''),
+				.join('')
 		);
 
 		return JSON.parse(jsonPayload);
@@ -108,9 +108,8 @@ class GmailClient {
 	async sendEmail(request: SendEmailArgs): Promise<any> {
 		await this.login();
 		const message = [`From: "${this.from}" <${this.from}>`, `To: ${request.to}`, `Subject: ${request.subject}`, '', request.body].join(
-			'\n',
+			'\n'
 		);
-		console.log(message);
 
 		const encoder = new TextEncoder();
 		const bytes = encoder.encode(message);
@@ -138,7 +137,7 @@ class GmailClient {
 export async function call(request: Request, config: Record<string, string>, secrets: Record<string, string>) {
 	try {
 		const gmailClient = new GmailClient(config, secrets);
-		const requestBody: { name: string; arguments: any } = await request.json() as { name: string; arguments: any };
+		const requestBody: { name: string; arguments: any } = (await request.json()) as { name: string; arguments: any };
 		if (!requestBody.arguments) {
 			throw new Error('No arguments provided');
 		}

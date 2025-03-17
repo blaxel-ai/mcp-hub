@@ -62,7 +62,6 @@ class DallEClient {
 
 	async generateImage(request: GenerateImageArgs): Promise<any> {
 		try {
-			console.log(request);
 			const result = await this.client.images.generate({
 				model: this.IMAGE_MODEL,
 				prompt: request.prompt,
@@ -85,7 +84,7 @@ class DallEClient {
 export async function call(request: Request, config: Record<string, string>, secrets: Record<string, string>) {
 	try {
 		const dallEClient = new DallEClient(config, secrets);
-		const requestBody: { name: string; arguments: any } = await request.json() as { name: string; arguments: any };
+		const requestBody: { name: string; arguments: any } = (await request.json()) as { name: string; arguments: any };
 		if (!requestBody.arguments) {
 			throw new Error('No arguments provided');
 		}

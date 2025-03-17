@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-import { GdriveClient } from './client.js';
+import { GoogleDriveClient } from './client.js';
 import { createFile, createFileTool, listFiles, listFilesTool, readFile, readFileTool, updateFile, updateFileTool } from './tools/index.js';
 
 export async function call(request: Request, config: Record<string, string>, secrets: Record<string, string>) {
 	try {
-		const gdriveClient = new GdriveClient(config, secrets);
+		const googleDriveClient = new GoogleDriveClient(config, secrets);
 		const requestBody: { name: string; arguments: any } = (await request.json()) as { name: string; arguments: any };
 		if (!requestBody.arguments) {
 			throw new Error('No arguments provided');
@@ -12,19 +12,19 @@ export async function call(request: Request, config: Record<string, string>, sec
 
 		switch (requestBody.name) {
 			case 'list_files': {
-				return await listFiles(gdriveClient);
+				return await listFiles(googleDriveClient);
 			}
 			case 'read_file': {
 				const { fileId } = requestBody.arguments;
-				return await readFile(gdriveClient, fileId);
+				return await readFile(googleDriveClient, fileId);
 			}
 			case 'create_file': {
 				const { name, content, mimeType = 'text/plain', folderId } = requestBody.arguments;
-				return await createFile(gdriveClient, name, content, mimeType, folderId);
+				return await createFile(googleDriveClient, name, content, mimeType, folderId);
 			}
 			case 'update_file': {
 				const { fileId, content, name } = requestBody.arguments;
-				return await updateFile(gdriveClient, fileId, content, name);
+				return await updateFile(googleDriveClient, fileId, content, name);
 			}
 			default:
 				throw new Error(`Unknown tool: ${requestBody.name}`);
@@ -51,7 +51,7 @@ export async function list() {
 
 export async function infos() {
 	return {
-		name: 'gdrive',
+		name: 'google-drive',
 		form: {
 			oauth: {
 				type: 'google',
