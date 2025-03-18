@@ -5,6 +5,7 @@ global.WebSocket = WebSocket;
 
 import { logger, newClient } from "@blaxel/sdk";
 import { LocalToolkit } from "@blaxel/sdk/functions/local";
+import { exit } from "process";
 import { name, payload, url } from "./config";
 
 const main = async () => {
@@ -46,6 +47,7 @@ const main = async () => {
       console.log(`Error: ${params.name}`, error);
     }
   }
+  exit(0);
 };
 
 main();
