@@ -28,7 +28,7 @@ const main = async () => {
     const tool = functions.find((f) => f.name === params.name);
     if (!tool) {
       logger.error(`Tool with name ${params.name} not found`);
-      return;
+      exit(1);
     }
     try {
       const result = await tool.invoke(params.arguments);
