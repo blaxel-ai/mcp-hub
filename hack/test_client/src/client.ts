@@ -5,6 +5,7 @@ global.WebSocket = WebSocket;
 
 import { logger, newClient } from "@blaxel/sdk";
 import { LocalToolkit } from "@blaxel/sdk/functions/local";
+import { exit } from "process";
 import { name, payload, url } from "./config";
 
 const main = async () => {
@@ -27,10 +28,12 @@ const main = async () => {
     const tool = functions.find((f) => f.name === params.name);
     if (!tool) {
       logger.error(`Tool with name ${params.name} not found`);
-      return;
+      exit(1);
     }
     try {
       const result = await tool.invoke(params.arguments);
+      console.log(result);
+
       const parsedResult = JSON.parse(result);
       if (parsedResult.length > 0 && parsedResult[0].text) {
         try {
@@ -46,6 +49,7 @@ const main = async () => {
       console.log(`Error: ${params.name}`, error);
     }
   }
+  exit(0);
 };
 
 main();

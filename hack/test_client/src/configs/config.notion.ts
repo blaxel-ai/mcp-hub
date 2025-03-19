@@ -18,6 +18,6 @@ export const payload: ((previousResult: Record<string, any>) => {
   }),
 ];
 
-export const description = "Discord description";
-export const name = "discord";
+export const description = "Notion description";
+export const name = "notion";
 export const url = "http://localhost:1400";
