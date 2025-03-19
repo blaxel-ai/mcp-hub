@@ -32,6 +32,8 @@ const main = async () => {
     }
     try {
       const result = await tool.invoke(params.arguments);
+      console.log(result);
+
       const parsedResult = JSON.parse(result);
       if (parsedResult.length > 0 && parsedResult[0].text) {
         try {
