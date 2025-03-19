@@ -1,0 +1,22 @@
+repository: https://github.com/smithery-ai/shopify-mcp-server-main-1
+branch: smithery/config-17cc
+smitheryPath: smithery.yaml
+dockerfile: /
+displayName: Shopify
+url: https://shopify.com
+icon: https://avatars.githubusercontent.com/u/8085?s=200&v=4
+description: Connect your Shopify store to manage products, orders, and customer interactions.
+longDescription: |
+  The Shopify hub allows seamless integration with your Shopify e-commerce platform, enabling you to:
+  - Manage products, collections, and inventory
+  - Process orders and track fulfillment
+  - Respond to customer inquiries and support requests
+  - Access sales metrics and store analytics
+  - Customize and automate store operations
+
+  This hub provides a bridge between your Shopify store and AI capabilities, helping you streamline
+  e-commerce operations and enhance customer experiences.
+secrets:
+  - shopifyAccessToken
+categories:
+  - marketplace
