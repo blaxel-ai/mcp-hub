@@ -1,27 +1,12 @@
-path: servers/
+repository: https://github.com/exa-labs/exa-mcp-server
+smitheryPath: smithery.yaml
 dockerfile: /
 displayName: Blaxel Search
 url: https://app.blaxel.ai
 icon: https://app.blaxel.ai/logo_short.png
-description: Search the web for information
-longDescription: Search the web for information
+description: Search the web for information (powered by Exa)
+longDescription: Search the web for information (powered by Exa)
 hiddenSecrets:
-  - apiKey
+  - exaApiKey
 categories:
   - search
-smithery:
-  startCommand:
-    type: stdio
-    configSchema:
-      # JSON Schema defining the configuration options for the MCP.
-      type: object
-      required:
-        - apiKey
-      properties:
-        apiKey:
-          type: string
-          description: The refresh token for the Blaxel server.
-    commandFunction:
-      # A function that produces the CLI command to start the MCP on stdio.
-      |-
-      config=>({command:'node',args:['dist/index.js', 'start', 'blaxel-search'],env:{API_KEY:config.apiKey}})
