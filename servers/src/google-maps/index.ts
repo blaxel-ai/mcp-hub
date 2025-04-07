@@ -127,7 +127,7 @@ interface DirectionsResponse extends GoogleMapsResponse {
 }
 
 function getApiKey(secrets: Record<string, string>): string {
-	const apiKey = secrets.apikey || secrets.apiKey;
+	const apiKey = secrets.googleMapsApiKey;
 	if (!apiKey) {
 		throw new Error('GOOGLE_MAPS_API_KEY environment variable is not set');
 	}
@@ -719,9 +719,9 @@ export async function infos() {
 		form: {
 			config: {},
 			secrets: {
-				apiKey: {
-					description: 'API Key',
-					label: 'API Key',
+				googleMapsApiKey: {
+					description: 'Google Maps API Key',
+					label: 'Google Maps API Key',
 					required: true,
 				},
 			},

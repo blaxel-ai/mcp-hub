@@ -13,7 +13,7 @@ const infos = async () => {
 		form: {
 			config: {},
 			secrets: {
-				apiKey: {
+				braveApiKey: {
 					description: 'API Key',
 					label: 'API Key',
 					required: true,
