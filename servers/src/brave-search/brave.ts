@@ -65,7 +65,7 @@ export async function performWebSearch(query: string, count: number, secrets: Re
 		headers: {
 			Accept: 'application/json',
 			'Accept-Encoding': 'gzip',
-			'X-Subscription-Token': secrets.apiKey,
+			'X-Subscription-Token': secrets.braveApiKey,
 		},
 	});
 
@@ -97,7 +97,7 @@ export async function performLocalSearch(query: string, count: number, secrets: 
 		headers: {
 			Accept: 'application/json',
 			'Accept-Encoding': 'gzip',
-			'X-Subscription-Token': secrets.apiKey,
+			'X-Subscription-Token': secrets.braveApiKey,
 		},
 	});
 
@@ -125,7 +125,7 @@ export async function getPoisData(ids: string[], secrets: Record<string, string>
 		headers: {
 			Accept: 'application/json',
 			'Accept-Encoding': 'gzip',
-			'X-Subscription-Token': secrets.apiKey,
+			'X-Subscription-Token': secrets.braveApiKey,
 		},
 	});
 
@@ -144,7 +144,7 @@ export async function getDescriptionsData(ids: string[], secrets: Record<string,
 		headers: {
 			Accept: 'application/json',
 			'Accept-Encoding': 'gzip',
-			'X-Subscription-Token': secrets.apiKey,
+			'X-Subscription-Token': secrets.braveApiKey,
 		},
 	});
 

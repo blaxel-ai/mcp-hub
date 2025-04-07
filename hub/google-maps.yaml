@@ -6,7 +6,7 @@ icon: https://www.google.com/favicon.ico
 description: Search for addresses, locations and directions
 longDescription: Search for addresses, locations and directions
 secrets:
-  - apiKey
+  - googleMapsApiKey
 categories:
   - maps
 smithery:
@@ -16,12 +16,12 @@ smithery:
       # JSON Schema defining the configuration options for the MCP.
       type: object
       required:
-        - apiKey
+        - googleMapsApiKey
       properties:
-        apiKey:
+        googleMapsApiKey:
           type: string
           description: The API key for the Google Maps server.
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config=>({command:'node',args:['dist/index.js', 'start', 'google-maps'],env:{GOOGLE_MAPS_API_KEY:config.apiKey}})
+      config=>({command:'node',args:['dist/index.js', 'start', 'google-maps'],env:{GOOGLE_MAPS_API_KEY:config.googleMapsApiKey}})

@@ -28,6 +28,12 @@ export const infos = async () => {
 					type: 'model-embedding',
 					required: true,
 				},
+				embeddingModelType: {
+					description: 'Embedding Model Type',
+					label: 'Embedding Model Type',
+					type: 'string',
+					required: true,
+				},
 				blBaseUrl: {
 					description: 'Blaxel Base URL',
 					label: 'Blaxel Base URL',
