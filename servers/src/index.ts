@@ -1,9 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { program } from 'commander';
-import { mcpServers } from './servers.js';
-import { MCPServer } from "./types.js";
-import { transformInZodSchema } from './utils.js';
+import { mcpServers } from './servers';
+import { MCPServer } from "./types";
+import { transformInZodSchema } from './utils';
+
 program
   .version('1.0.0')
   .command('start <name>')
@@ -28,6 +29,9 @@ program
 		server.tool(tool.name, tool.description, zodSchema, async (argsSchema) => {
 			const config: Record<string, string> = {};
 			const secrets: Record<string, string> = {};
+
+			console.log(process.env);
+
 			if (mcpServer.infos) {
 				const infos = await mcpServer.infos()
 				if (!infos) {
@@ -39,9 +43,12 @@ program
 				}
 
 				for (const key in infos.form.config) {
+					transformKeyInEnVarName(key)
 					config[key] = process.env[transformKeyInEnVarName(key)] || '';
 				}
 				for (const key in infos.form.secrets) {
+					console.log(transformKeyInEnVarName(key));
+
 					secrets[key] = process.env[transformKeyInEnVarName(key)] || '';
 				}
 			}

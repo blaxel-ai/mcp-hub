@@ -3,13 +3,13 @@ export const payload: ((previousResult: Record<string, any>) => {
   arguments: Record<string, any>;
 })[] = [
   () => ({
-    name: "slack_list_channels",
+    name: "execute_query",
     arguments: {
-      limit: 10,
+      query: "SELECT 1",
     },
   }),
 ];
 
-export const description = "Github description";
-export const name = "github";
+export const description = "Snowflake description";
+export const name = "snowflake";
 export const url = "http://localhost:1400";

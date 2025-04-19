@@ -43,6 +43,11 @@ export const mcpServers: Record<string, Record<string, Function>> = {
 		call: gmailToolCall,
 		infos: gmailInfos,
 	},
+	'google-drive': {
+		list: googleDriveList,
+		call: googleDriveToolCall,
+		infos: googleDriveInfos,
+	},
 	cloudflare: {
 		list: cloudflareList,
 		call: cloudflareToolCall,

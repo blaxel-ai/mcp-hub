@@ -3,13 +3,11 @@ export const payload: ((previousResult: Record<string, any>) => {
   arguments: Record<string, any>;
 })[] = [
   () => ({
-    name: "slack_list_channels",
-    arguments: {
-      limit: 10,
-    },
+    name: "get-shop",
+    arguments: {},
   }),
 ];
 
-export const description = "Github description";
-export const name = "github";
+export const description = "Shopify description";
+export const name = "shopify";
 export const url = "http://localhost:1400";

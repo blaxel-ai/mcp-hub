@@ -5,7 +5,7 @@ icon: https://cdn.search.brave.com/serp/v2/_app/immutable/assets/brave-logo-smal
 description: Search the web using Brave's search engine.
 longDescription: Search the web using Brave's search engine.
 secrets:
-  - apiKey
+  - braveApiKey
 categories:
   - search
 smithery:
@@ -15,12 +15,12 @@ smithery:
       # JSON Schema defining the configuration options for the MCP.
       type: object
       required:
-        - apiKey
+        - braveApiKey
       properties:
-        apiKey:
+        braveApiKey:
           type: string
           description: The refresh token for the Brave search server.
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config=>({command:'node',args:['dist/index.js', 'start', 'brave-search'],env:{BRAVE_API_KEY:config.apiKey}})
+      config=>({command:'node',args:['dist/index.js', 'start', 'brave-search'],env:{BRAVE_API_KEY:config.braveApiKey}})

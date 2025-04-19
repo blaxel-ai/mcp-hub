@@ -323,7 +323,7 @@ class SlackClient {
 }
 
 export async function call(request: Request, config: Record<string, string>, secrets: Record<string, string>) {
-	const slackClient = new SlackClient(secrets.bot_token, config.team_id);
+	const slackClient = new SlackClient(secrets.botToken, config.teamId);
 	try {
 		const requestBody: { name: string; arguments: any } = (await request.json()) as { name: string; arguments: any };
 		if (!requestBody.arguments) {
@@ -465,14 +465,14 @@ export async function infos() {
 		url: 'https://api.slack.com/apps',
 		form: {
 			config: {
-				teamId: {
+				slackTeamId: {
 					description: 'Team ID',
 					label: 'Team ID',
 					required: true,
 				},
 			},
 			secrets: {
-				botToken: {
+				slackBotToken: {
 					description: 'Bot Token',
 					label: 'Bot Token',
 					required: true,

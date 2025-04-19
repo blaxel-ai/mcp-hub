@@ -55,7 +55,7 @@ export async function infos() {
 		form: {
 			config: {},
 			secrets: {
-				personalAccessToken: {
+				githubPersonalAccessToken: {
 					description: 'Personal Access Token',
 					label: 'Personal Access Token',
 					required: true,

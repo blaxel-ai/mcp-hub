@@ -34,8 +34,8 @@ export async function githubRequest(url: string, secrets: Record<string, string>
 		...options.headers,
 	};
 
-	if (secrets.personalAccessToken) {
-		headers['Authorization'] = `Bearer ${secrets.personalAccessToken}`;
+	if (secrets.githubPersonalAccessToken) {
+		headers['Authorization'] = `Bearer ${secrets.githubPersonalAccessToken}`;
 	}
 
 	const response = await fetch(url, {
