@@ -20,4 +20,4 @@ export const payload: ((previousResult: Record<string, any>) => {
 
 export const description = "Notion description";
 export const name = "notion";
-export const url = "http://localhost:1400";
+export const url = "http://localhost:8080";

@@ -31,4 +31,4 @@ export const payload: ((previousResult: Record<string, any>) => {
 
 export const description = "AWS S3 description";
 export const name = "aws";
-export const url = "http://localhost:1400";
+export const url = "http://localhost:8080";

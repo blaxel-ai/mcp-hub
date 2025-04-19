@@ -12,4 +12,4 @@ export const payload: ((previousResult: Record<string, any>) => {
 
 export const description = "Telegram description";
 export const name = "telegram";
-export const url = "http://localhost:1400";
+export const url = "http://localhost:8080";

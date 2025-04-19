@@ -1,9 +1,7 @@
-repository: https://github.com/smithery-ai/mcp-notion-server-1
-smitheryPath: smithery.yaml
-dockerfile: "@mcp-hub"
+repository: https://github.com/suekou/mcp-notion-server.git
 displayName: Notion
-branch: smithery/config-3ljf
 url: https://www.notion.so/profile/integrations
+distPath: build
 icon: data:image/svg+xml;base64,PHN2ZyBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGZpbGwtcnVsZT0iZXZlbm9kZCIgaGVpZ2h0PSIyNTAwIiBpbWFnZS1yZW5kZXJpbmc9Im9wdGltaXplUXVhbGl0eSIgc2hhcGUtcmVuZGVyaW5nPSJnZW9tZXRyaWNQcmVjaXNpb24iIHRleHQtcmVuZGVyaW5nPSJnZW9tZXRyaWNQcmVjaXNpb24iIHZpZXdCb3g9IjAgLTEgMTI3MSAxMzI0IiB3aWR0aD0iMjQwMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNDU0IDI3QzI0NyA0MyA3MSA1NyA2MyA1OCA0MCA2MyAxOSA3OCA5IDk5bC05IDE4IDEgNDM0IDEgNDM0IDEzIDI3YzggMTUgNTggODUgMTEzIDE1NiAxMDkgMTQyIDExNyAxNDkgMTU4IDE1NCAxMiAxIDEwMy0zIDIwMC05IDk4LTYgMjU2LTE2IDM1MC0yMSA0MDMtMjUgMzgyLTIzIDQwNi00MyAyOS0yNCAyNiAxNiAyOC01MTIgMS00NDcgMC00NzctNy00OTAtNy0xNi0yMS0yNi0yMDUtMTU1QzkzNSA1IDkyNiAxIDg3MSAwYy0yMy0xLTIxMSAxMi00MTcgMjd6IiBmaWxsPSIjZmZmIi8+PHBhdGggZD0iTTQ1NCAyN0MyNDcgNDMgNzEgNTcgNjMgNTggNDAgNjMgMTkgNzggOSA5OWwtOSAxOCAxIDQzNCAxIDQzNCAxMyAyN2M4IDE1IDU4IDg1IDExMyAxNTYgMTA5IDE0MiAxMTcgMTQ5IDE1OCAxNTQgMTIgMSAxMDMtMyAyMDAtOSA5OC02IDI1Ni0xNiAzNTAtMjEgNDAzLTI1IDM4Mi0yMyA0MDYtNDMgMjktMjQgMjYgMTYgMjgtNTEyIDEtNDQ3IDAtNDc3LTctNDkwLTctMTYtMjEtMjYtMjA1LTE1NUM5MzUgNSA5MjYgMSA4NzEgMGMtMjMtMS0yMTEgMTItNDE3IDI3em00NjUgNTdjMTggOCAxNDUgOTYgMTYzIDExMyA1IDUgNyAxMCA0IDEyLTUgNS03OTIgNTItODE1IDQ4LTEwLTEtMjUtNy0zNC0xMy0zNi0yNS0xMjUtOTgtMTI1LTEwMyAwLTE0LTMtMTQgMzQ3LTQwIDY3LTQgMTc4LTEyIDI0NS0xOCAxNDUtMTEgMTg4LTExIDIxNSAxem0yNTAgMjI2YzYgNiAxMSAxNyAxMyAyOCAxIDEwIDIgMTk2IDEgNDEyLTEgMzcwLTIgMzk0LTkgNDA0LTQgNy0xMiAxNC0xOSAxNi0xNyA3LTg0MSA1NC04NTggNDktOC0yLTE5LTktMjQtMTVsLTEwLTEwLTEtNDAwYy0xLTI4MSAwLTQwNSAzLTQxNiAyLTggOS0xOCAxNC0yMiA3LTUgNTYtOSAyMjQtMTkgMTE4LTYgMzAxLTE3IDQwNS0yNCAyNTAtMTUgMjQ5LTE1IDI2MS0zeiIvPjxwYXRoIGQ9Ik05NDggNDQ3Yy00NSAzLTg1IDctODkgMTAtMTQgNy0yMiAxOS0yNCAzMi0xIDEzIDMgMTUgNDggMjFsMTkgMnYxNzdjMCAxMDUtMSAxNzQtNCAxNzItMi0yLTYwLTkyLTEzMC0xOTgtNzAtMTA4LTEyOC0xOTYtMTI5LTE5Ni0xLTEtNDYgMS0xMDEgNS02NyA0LTEwNCA5LTExMSAxMy0xMiA2LTI2IDI4LTI2IDQyIDAgOSAxNiAxNCA0OSAxNGgxOHY1MDhsLTI5IDljLTIxIDYtMjkgMTAtMzMgMTktNiAxNC02IDI2IDEgMjYgMiAwIDQ5LTIgMTAzLTYgMTA2LTYgMTE4LTkgMTI5LTMxIDQtNiA3LTEzIDctMTYgMC0xLTE1LTYtMzItMTAtMTgtNC0zNi05LTQwLTktNy0yLTctMTUtNy0xOTNWNjQ3bDEyNiAxOTdjMTMyIDIwNyAxNDggMjMxIDE2OSAyNDEgMjUgMTMgODkgNCAxMjEtMTdsMTAtNiAxLTI4MiAxLTI4MyAyMi00YzI2LTUgMzgtMTcgMzgtMzggMC0xMy0xLTE0LTEzLTEzLTcgMC01MCAzLTk0IDV6Ii8+PC9zdmc+
 description: Your wiki, docs & projects. Together. All in one connected workspace.
 longDescription: Notion is a single space where you can think, write, and plan. Capture thoughts, manage projects, or even run an entire company — and do it exactly the way you want.
@@ -12,3 +10,19 @@ secrets:
 categories:
   - project-management
   - productivity
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - notionApiToken
+      properties:
+        notionApiToken:
+          type: string
+          description: The API token for accessing the Notion API.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      config => ({ command: 'node', args: ['build/index.js'], env: { NOTION_API_TOKEN: config.notionApiToken } })

@@ -6,7 +6,7 @@ global.WebSocket = WebSocket;
 import { logger, newClient } from "@blaxel/sdk";
 import { LocalToolkit } from "@blaxel/sdk/functions/local";
 import { exit } from "process";
-import { name, payload, url } from "./configs/"; // TODO: Update here like: /configs/config.exa
+import { name, payload, url } from "./configs/config.exa"; // TODO: Update here like: /configs/config.exa
 
 const main = async () => {
   const client = newClient();
