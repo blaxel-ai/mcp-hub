@@ -20,15 +20,15 @@ RUN npm run build
 FROM alpine:3 AS sys
 
 RUN set -xe; \
-    mkdir -p /target/etc; \
-    mkdir -p /blank; \
-    apk --no-cache add \
-      ca-certificates \
-      tzdata \
-    ; \
-    update-ca-certificates; \
-    ln -sf /usr/share/zoneinfo/Etc/UTC /target/etc/localtime; \
-    echo "Etc/UTC" > /target/etc/timezone;
+  mkdir -p /target/etc; \
+  mkdir -p /blank; \
+  apk --no-cache add \
+  ca-certificates \
+  tzdata \
+  ; \
+  update-ca-certificates; \
+  ln -sf /usr/share/zoneinfo/Etc/UTC /target/etc/localtime; \
+  echo "Etc/UTC" > /target/etc/timezone;
 
 ### RUNTIME IMAGE
 FROM scratch
