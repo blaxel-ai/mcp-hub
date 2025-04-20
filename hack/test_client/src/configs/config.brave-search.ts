@@ -14,4 +14,4 @@ export const payload: ((previousResult: Record<string, any>) => {
 
 export const description = "Brave search description";
 export const name = "brave-search";
-export const url = "http://localhost:1400";
+export const url = "http://localhost:8080";

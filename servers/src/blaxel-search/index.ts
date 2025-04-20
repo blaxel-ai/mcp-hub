@@ -1,5 +1,5 @@
-import { call as braveCall, list as braveList } from '../brave-search';
-import { ListToolsResponse, ToolResponse } from '../types';
+import { call as braveCall, list as braveList } from '../brave-search/index.js';
+import { ListToolsResponse, ToolResponse } from '../types.js';
 
 export const infos = async () => {
 	return {
@@ -19,7 +19,7 @@ export const infos = async () => {
 
 export async function list(): Promise<ListToolsResponse> {
 	const tmp = await braveList();
-	const tools = tmp.tools.map((tool) => {
+	const tools = tmp.tools.map((tool: any) => {
 		return {
 			...tool,
 			name: `blaxel_${tool.name.replace('brave_', '')}`,

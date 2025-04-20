@@ -1,5 +1,5 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { ToolHandlers } from '../utils/types';
+import { ToolHandlers } from '../utils/types.js';
 
 const ANALYTICS_GET_TOOL: Tool = {
 	name: 'analytics_get',

@@ -1,6 +1,6 @@
 repository: https://github.com/Garoth/sendgrid-mcp.git
 smitheryPath: smithery.yaml
-dockerfile: "@mcp-hub"
+distPath: build
 displayName: Sendgrid
 branch: main
 url: https://app.sendgrid.com/settings/api_keys

@@ -1,6 +1,6 @@
 // Add D1 tool definitions
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { ToolHandlers } from '../utils/types';
+import { ToolHandlers } from '../utils/types.js';
 
 const D1_LIST_DATABASES_TOOL: Tool = {
 	name: 'd1_list_databases',

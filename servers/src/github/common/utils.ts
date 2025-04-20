@@ -1,4 +1,4 @@
-import { createGitHubError } from './errors';
+import { createGitHubError } from './errors.js';
 
 type RequestOptions = {
 	method?: string;

@@ -80,4 +80,4 @@ function transformKeyInEnVarName(key: string) {
 	return key.replace(/([A-Z])/g, '_$1').toUpperCase();
 }
 
-program.parse(process.argv);
+program.parse(process.argv[2].split(' '));

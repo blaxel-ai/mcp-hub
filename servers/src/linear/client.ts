@@ -1,11 +1,11 @@
-import { AddCommentArgs } from "./addComment";
-import { CreateIssueArgs } from "./createIssue";
-import { GetIssueDetailsArgs } from "./getIssueDetails";
-import { GetUserIssuesArgs } from "./getUserIssues";
-import { ListTeamsArgs } from "./listTeams";
-import { ListUsersArgs } from "./listUsers";
-import { SearchIssuesArgs } from "./searchIssues";
-import { UpdateIssueArgs } from "./updateIssue";
+import { AddCommentArgs } from "./addComment.js";
+import { CreateIssueArgs } from "./createIssue.js";
+import { GetIssueDetailsArgs } from "./getIssueDetails.js";
+import { GetUserIssuesArgs } from "./getUserIssues.js";
+import { ListTeamsArgs } from "./listTeams.js";
+import { ListUsersArgs } from "./listUsers.js";
+import { SearchIssuesArgs } from "./searchIssues.js";
+import { UpdateIssueArgs } from "./updateIssue.js";
 export class LinearMCPClient {
   private baseUrl: string;
   private headers: Record<string, string>;

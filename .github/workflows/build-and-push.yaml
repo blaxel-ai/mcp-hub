@@ -41,6 +41,9 @@ jobs:
       BL_API_URL: ${{ vars.BL_API_URL }}
       BL_ADMIN_USERNAME: ${{ secrets.BL_ADMIN_USERNAME }}
       BL_ADMIN_PASSWORD: ${{ secrets.BL_ADMIN_PASSWORD }}
+      UKC_TOKEN: ${{ secrets.UKC_TOKEN }}
+      UKC_METRO: ${{ vars.UKC_METRO }}
+      BL_ENV: ${{ vars.BL_ENV }}
     needs:
       - generate-matrix
     strategy:
@@ -74,4 +77,6 @@ jobs:
       - name: Install dependencies
         run: go get .
       - name: Build and push
-        run: go run main.go import -p -r ${{ env.REGISTRY }}/${{ github.repository }} -m ${{ matrix.server }} -t "${{ github.sha }}"
+        run: |
+          echo "$PWD/bin" >> $GITHUB_PATH
+          go run main.go import --ukc -p -r ${{ env.REGISTRY }}/${{ github.repository }} -m ${{ matrix.server }} -t "${{ github.sha }}"

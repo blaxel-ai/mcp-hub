@@ -10,4 +10,4 @@ export const payload: ((previousResult: Record<string, any>) => {
 
 export const description = "Shopify description";
 export const name = "shopify";
-export const url = "http://localhost:1400";
+export const url = "http://localhost:8080";

@@ -1,8 +1,8 @@
 repository: https://github.com/exa-labs/exa-mcp-server
-smitheryPath: smithery.yaml
-dockerfile: /
+language: typescript
 displayName: Exa
 branch: main
+distPath: build
 url: https://dashboard.exa.ai/api-keys
 icon: https://avatars.githubusercontent.com/u/77906174?s=200&v=4
 description: Exa search engine

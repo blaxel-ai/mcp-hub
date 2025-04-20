@@ -12,4 +12,4 @@ export const payload: ((previousResult: Record<string, any>) => {
 
 export const description = "Blaxel Search description";
 export const name = "blaxel-search";
-export const url = "http://localhost:1400";
+export const url = "http://localhost:8080";

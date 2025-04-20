@@ -1,5 +1,4 @@
 path: servers/
-dockerfile: /
 displayName: Brave Search
 url: https://api-dashboard.search.brave.com/app/keys
 icon: https://cdn.search.brave.com/serp/v2/_app/immutable/assets/brave-logo-small.1fMdoHsa.svg

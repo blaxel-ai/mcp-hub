@@ -1,5 +1,4 @@
 path: servers/
-dockerfile: /
 displayName: AWS SES
 url: https://aws.amazon.com/ses
 icon: https://a.b.cdn.console.awsstatic.com/a/v1/2QIS3M6GW3A6OS7WHLYZ26DOKTQ3ZGRI22PA57GP4C7Y7ANK5XDQ/icon/f2b32bda85a5a4a613eb47fb01c57ce3-2b4a0b6e3c7d785e7e0d22f5d540dce9.svg

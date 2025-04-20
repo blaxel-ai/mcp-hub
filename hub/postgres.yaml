@@ -1,6 +1,7 @@
 repository: https://github.com/smithery-ai/reference-servers.git
-smitheryPath: src/postgres/smithery.yaml
-dockerfile: src/postgres/Dockerfile
+basePath: src/postgres
+distPath: src/postgres/dist
+srcPath: src/postgres
 branch: main
 displayName: PostgreSQL
 url: https://www.postgresql.org

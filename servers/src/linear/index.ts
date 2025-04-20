@@ -1,12 +1,12 @@
-import { AddCommentArgs, addCommentTool } from './addComment';
-import { LinearMCPClient } from './client';
-import { CreateIssueArgs, createIssueTool } from './createIssue';
-import { GetIssueDetailsArgs, getIssueDetailsTool } from './getIssueDetails';
-import { GetUserIssuesArgs, getUserIssuesTool } from './getUserIssues';
-import { ListTeamsArgs, listTeamsTool } from './listTeams';
-import { ListUsersArgs, listUsersTool } from './listUsers';
-import { SearchIssuesArgs, searchIssuesTool } from './searchIssues';
-import { UpdateIssueArgs, updateIssueTool } from './updateIssue';
+import { AddCommentArgs, addCommentTool } from './addComment.js';
+import { LinearMCPClient } from './client.js';
+import { CreateIssueArgs, createIssueTool } from './createIssue.js';
+import { GetIssueDetailsArgs, getIssueDetailsTool } from './getIssueDetails.js';
+import { GetUserIssuesArgs, getUserIssuesTool } from './getUserIssues.js';
+import { ListTeamsArgs, listTeamsTool } from './listTeams.js';
+import { ListUsersArgs, listUsersTool } from './listUsers.js';
+import { SearchIssuesArgs, searchIssuesTool } from './searchIssues.js';
+import { UpdateIssueArgs, updateIssueTool } from './updateIssue.js';
 
 export async function call(request: Request, config: Record<string, string>, secrets: Record<string, string>) {
 	try {
