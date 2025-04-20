@@ -74,9 +74,11 @@ jobs:
         with:
           # Semantic version range syntax or exact version of Go
           go-version: "1.23.3"
+      - name: Setup binary folder
+        run: |
+          echo "$PWD/bin" >> $GITHUB_PATH
       - name: Install dependencies
         run: go get .
       - name: Build and push
         run: |
-          echo "$PWD/bin" >> $GITHUB_PATH
-          go run main.go import --ukc -p -r ${{ env.REGISTRY }}/${{ github.repository }} -m ${{ matrix.server }} -t "${{ github.sha }}"
+          go run main.go import --ukc -r ${{ env.REGISTRY }}/${{ github.repository }} -m ${{ matrix.server }} -t "${{ github.sha }}"

@@ -45,6 +45,10 @@ func runImport(cmd *cobra.Command, args []string) {
 			log.Printf("Failed to process repository %s: %v", name, err)
 			os.Exit(1)
 		}
+		if repository.Disabled {
+			log.Printf("Skipping disabled repository %s for build and deploy", name)
+			continue
+		}
 		err = buildInstance.Build(name, repository)
 		if err != nil {
 			log.Printf("Failed to build image for repository %s: %v", name, err)

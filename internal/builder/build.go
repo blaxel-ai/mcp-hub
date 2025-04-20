@@ -15,9 +15,9 @@ import (
 
 func (b *Build) getImageName(name string) string {
 	if os.Getenv("BL_ENV") == "prod" {
-		return fmt.Sprintf("prod-%s:%s", strings.ToLower(name), b.tag)
+		return fmt.Sprintf("prod/%s:%s", strings.ToLower(name), b.tag)
 	} else {
-		return fmt.Sprintf("dev-%s:%s", strings.ToLower(name), b.tag)
+		return fmt.Sprintf("dev/%s:%s", strings.ToLower(name), b.tag)
 	}
 }
 

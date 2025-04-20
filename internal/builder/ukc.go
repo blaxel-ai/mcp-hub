@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/beamlit/mcp-hub/internal/hub"
 )
@@ -21,7 +20,7 @@ func (b *Build) BuildAndPushUKC(name string, repository *hub.Repository) error {
 	}
 
 	fmt.Println("Building image", imageName, "in directory", repository.Path)
-	destination := fmt.Sprintf("index.unikraft.io/blaxel/%s:%s", strings.ToLower(name), b.tag)
+	destination := fmt.Sprintf("index.unikraft.io/blaxel/%s", imageName)
 	cmd := exec.Command(
 		"kraft", "pkg",
 		"--arch", "x86_64",
