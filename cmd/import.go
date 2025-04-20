@@ -24,6 +24,7 @@ func init() {
 	importCmd.Flags().StringVarP(&mcp, "mcp", "m", "", "The MCP to import, if not provided, all MCPs will be imported")
 	importCmd.Flags().StringVarP(&tag, "tag", "t", "latest", "The tag to use for the image")
 	importCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug mode, will not save the catalog")
+	importCmd.Flags().BoolVarP(&ukc, "ukc", "u", false, "Enable UKC mode, push image to UKC")
 	rootCmd.AddCommand(importCmd)
 }
 
@@ -53,6 +54,13 @@ func runImport(cmd *cobra.Command, args []string) {
 			err = buildInstance.Push(name, repository)
 			if err != nil {
 				log.Printf("Failed to push image for repository %s: %v", name, err)
+				os.Exit(1)
+			}
+		}
+		if ukc {
+			err = buildInstance.BuildAndPushUKC(name, repository)
+			if err != nil {
+				log.Printf("Failed to build image for repository %s: %v", name, err)
 				os.Exit(1)
 			}
 		}

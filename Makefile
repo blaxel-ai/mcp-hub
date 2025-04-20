@@ -5,6 +5,9 @@ REGISTRY:= ghcr.io/beamlit/hub
 import:
 	go run main.go import -c hub -m $(ARGS) --debug
 
+import-ukc:
+	go run main.go import -c hub -m $(ARGS) --debug --ukc
+
 run:
 	go run main.go start -m $(ARGS) --debug
 

@@ -15,6 +15,7 @@ var (
 	skipBuild  bool
 	tag        string
 	debug      bool
+	ukc        bool
 )
 
 var rootCmd = &cobra.Command{
