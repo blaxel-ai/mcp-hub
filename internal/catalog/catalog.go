@@ -111,11 +111,11 @@ func (c *Catalog) Save() error {
 	return nil
 }
 
-func (c *Catalog) Load(name string, hub *hub.Repository, imageName string, smithery *smithery.SmitheryConfig) error {
+func (c *Catalog) Load(name string, hub *hub.Repository, registry string, imageName string, smithery *smithery.SmitheryConfig) error {
 	if hub.Disabled {
 		c.AddArtifact(Artifact{
 			Name:            name,
-			Image:           imageName,
+			Image:           fmt.Sprintf("%s/%s", registry, imageName),
 			DisplayName:     hub.DisplayName,
 			Description:     hub.Description,
 			LongDescription: hub.LongDescription,
