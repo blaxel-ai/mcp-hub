@@ -9,7 +9,7 @@ import (
 )
 
 func (b *Build) Push(name string, repository *hub.Repository) error {
-	imageName := b.getImageName(name)
+	imageName := GetImageName(name, b.tag)
 	if err := docker.PushImage(context.Background(), imageName); err != nil {
 		return fmt.Errorf("push image: %w", err)
 	}

@@ -9,7 +9,7 @@ import (
 )
 
 func (b *Build) BuildAndPushUKC(name string, repository *hub.Repository) error {
-	imageName := b.getImageName(name)
+	imageName := GetImageName(name, b.tag)
 
 	buildArgs := map[string]string{}
 	if repository.BasePath != "" {
