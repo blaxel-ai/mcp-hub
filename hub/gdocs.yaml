@@ -1,5 +1,4 @@
 repository: https://github.com/smithery-ai/reference-servers.git
-smitheryPath: src/gdocs/smithery.yaml
 dockerfile: src/gdocs/Dockerfile
 branch: main
 disabled: true

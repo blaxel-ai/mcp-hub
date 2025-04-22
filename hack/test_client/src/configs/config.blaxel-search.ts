@@ -3,7 +3,7 @@ export const payload: ((previousResult: Record<string, any>) => {
   arguments: Record<string, any>;
 })[] = [
   () => ({
-    name: "search",
+    name: "web_search",
     arguments: {
       query: "What is the capital of France?",
     },

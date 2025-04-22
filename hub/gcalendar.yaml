@@ -1,6 +1,4 @@
-repository: https://github.com/smithery-ai/reference-servers.git
-smitheryPath: src/gcalendar/smithery.yaml
-dockerfile: src/gcalendar/Dockerfile
+repository: https://github.com/modelcontextprotocol/servers.git
 branch: main
 displayName: Google Calendar
 url: https://console.cloud.google.com/apis/credentials

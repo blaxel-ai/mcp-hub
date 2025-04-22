@@ -1,5 +1,4 @@
 repository: https://github.com/cploujoux/mcp-snowflake-service
-smitheryPath: smithery.yaml
 displayName: Snowflake
 branch: main
 dockerfile: /
@@ -14,3 +13,39 @@ secrets:
 packageManager: apt
 categories:
   - database
+smithery:
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - snowflakeUser
+        - snowflakePassword
+        - snowflakeAccount
+        - snowflakeDatabase
+        - snowflakeWarehouse
+      properties:
+        snowflakeUser:
+          type: string
+          description: The username for authenticating to your Snowflake account
+        snowflakePassword:
+          type: string
+          description: The password associated with the Snowflake user for authentication
+        snowflakeAccount:
+          type: string
+          description: The unique identifier for your Snowflake account, typically in the format 'orgname-accountname'. This identifier is used in connection URLs and client applications to access your Snowflake instance.
+        snowflakeDatabase:
+          type: string
+          description: A logical grouping of schemas in Snowflake that contains your data objects. Each database belongs to a single Snowflake account and serves as a higher-level container for organizing related schemas and their objects.
+        snowflakeWarehouse:
+          type: string
+          description: The virtual warehouse in Snowflake that provides the compute resources (CPU, memory, and temporary storage) required for executing SQL queries and performing DML operations
+        snowflakeSchema:
+          type: string
+          description: A logical grouping of database objects (tables, views, functions, etc.) within a Snowflake database.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      config => ({command: '/usr/bin/python3', args: ['-m', 'blaxel.src.mcp_server_snowflake'], env: {SNOWFLAKE_USER: config.snowflakeUser, SNOWFLAKE_PASSWORD: config.snowflakePassword, SNOWFLAKE_ACCOUNT: config.snowflakeAccount, SNOWFLAKE_DATABASE: config.snowflakeDatabase, SNOWFLAKE_WAREHOUSE: config.snowflakeWarehouse, SNOWFLAKE_SCHEMA: config.snowflakeSchema}})

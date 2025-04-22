@@ -1,5 +1,4 @@
 repository: https://github.com/Garoth/sendgrid-mcp.git
-smitheryPath: smithery.yaml
 distPath: build
 displayName: Sendgrid
 branch: main
@@ -11,3 +10,19 @@ secrets:
   - sendgridApiKey
 categories:
   - email
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - sendgridApiKey
+      properties:
+        sendgridApiKey:
+          type: string
+          description: The API key for the SendGrid server.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      config=>({command:'node',args:['/blaxel/build/index.js'],env:{SENDGRID_API_KEY:config.sendgridApiKey}})

@@ -11,3 +11,23 @@ secrets:
   - exaApiKey
 categories:
   - search
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      properties:
+        exaApiKey:
+          type: string
+          description: The API key for accessing the Exa Search API.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      (config) => {
+        const env = {}
+        if (config.exaApiKey) {
+          env.EXA_API_KEY = config.exaApiKey
+        }
+        return { command: 'node', args: ['/blaxel/build/index.js'], env }
+      }

@@ -2,6 +2,7 @@ package builder
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -31,6 +32,11 @@ func (b *Build) CloneRepository(name string, repository *hub.Repository) (*catal
 	}
 
 	if repository.Path == "" {
+		if _, err := os.Stat(repoPath); err == nil {
+			if err := os.RemoveAll(repoPath); err != nil {
+				return nil, fmt.Errorf("remove existing directory: %w", err)
+			}
+		}
 		if _, err := git.CloneRepository(repoPath, repository.Branch, repository.Repository); err != nil {
 			return nil, fmt.Errorf("clone repository: %w", err)
 		}

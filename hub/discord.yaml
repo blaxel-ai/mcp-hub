@@ -1,5 +1,4 @@
 repository: https://github.com/hanweg/mcp-discord
-smitheryPath: smithery.yaml
 language: python
 srcPath: src/discord_mcp
 displayName: Discord
@@ -12,3 +11,19 @@ secrets:
   - discordToken
 categories:
   - chat
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - discordToken
+      properties:
+        discordToken:
+          type: string
+          description: The bot token for Discord integration.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      config => ({command: '/usr/bin/python3', args: ['-m', 'blaxel.src.discord_mcp'], env: {DISCORD_TOKEN: config.discordToken}})

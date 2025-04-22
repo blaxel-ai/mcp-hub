@@ -1,4 +1,4 @@
-repository: https://github.com/smithery-ai/reference-servers.git
+repository: https://github.com/modelcontextprotocol/servers
 basePath: src/postgres
 distPath: src/postgres/dist
 srcPath: src/postgres
@@ -12,3 +12,21 @@ secrets:
   - postgresConnectionString
 categories:
   - database
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - postgresConnectionString
+      properties:
+        postgresConnectionString:
+          type: string
+          description: The connection string for the PostgreSQL database, including the
+            host, port, and database name, e.g.,
+            'postgresql://user:password@host:port/db-name'.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      config => ({ command: 'node', args: ['/blaxel/build/index.js', config.postgresConnectionString] })
