@@ -8,8 +8,14 @@ on:
     inputs:
       mcp:
         description: "MCP to import"
+
+permissions:
+  contents: read
+  packages: write
+
 env:
   REGISTRY: ghcr.io
+
 jobs:
   generate-matrix:
     runs-on: ubuntu-latest
