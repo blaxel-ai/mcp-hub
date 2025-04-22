@@ -28,4 +28,4 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config=>({command:'node',args:['/blaxel/dist/loader.js', 'start', 'slack'],env:{SLACK_BOT_TOKEN:config.botToken,SLACK_TEAM_ID:config.teamId}})
+      config=>({command:'node',args:['/blaxel/build/loader.js', 'start', 'slack'],env:{SLACK_BOT_TOKEN:config.botToken,SLACK_TEAM_ID:config.teamId}})

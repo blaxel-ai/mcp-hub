@@ -33,4 +33,4 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config=>({command:'node',args:['/blaxel/dist/loader.js', 'start', 'twilio'],env:{FROM_NUMBER:config.fromNumber,ACCOUNT_SID:config.accountSid,AUTH_TOKEN:config.authToken}})
+      config=>({command:'node',args:['/blaxel/build/loader.js', 'start', 'twilio'],env:{FROM_NUMBER:config.fromNumber,ACCOUNT_SID:config.accountSid,AUTH_TOKEN:config.authToken}})

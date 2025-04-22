@@ -23,4 +23,4 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config=>({command:'node',args:['/blaxel/dist/loader.js', 'start', 'dall-e'],env:{API_KEY:config.apiKey}})
+      config=>({command:'node',args:['/blaxel/build/loader.js', 'start', 'dall-e'],env:{API_KEY:config.apiKey}})

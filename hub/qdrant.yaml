@@ -36,4 +36,4 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config=>({command:'node',args:['/blaxel/dist/loader.js', 'start', 'qdrant'],env:{API_KEY:config.apiKey,URL:config.url,COLLECTION_NAME:config.collectionName,EMBEDDING_MODEL:config.embeddingModel}})
+      config=>({command:'node',args:['/blaxel/build/loader.js', 'start', 'qdrant'],env:{API_KEY:config.apiKey,URL:config.url,COLLECTION_NAME:config.collectionName,EMBEDDING_MODEL:config.embeddingModel}})
