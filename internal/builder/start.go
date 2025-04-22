@@ -49,6 +49,7 @@ func (b *Build) dockerRun(mcp string, artifact catalog.Artifact, envKeys []strin
 	dockerRunCmd = append(dockerRunCmd, dockerCmd)
 
 	cmd := exec.Command("docker", dockerRunCmd...)
+	fmt.Println("dockerRunCmd", strings.Join(dockerRunCmd, " "))
 	// Connect command's stdout and stderr to our process stdout and stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

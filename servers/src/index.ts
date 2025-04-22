@@ -76,4 +76,14 @@ function transformKeyInEnVarName(key: string) {
 	return key.replace(/([A-Z])/g, '_$1').toUpperCase();
 }
 
-program.parse(process.argv[2].split(' '));
+
+if (process.argv.length > 2) {
+	// This is for MK2, don't ask me why
+	if (process.argv[2].startsWith("node") || process.argv[2].startsWith("/usr/bin/node")) {
+		program.parse(process.argv[2].split(" "))
+	} else {
+		program.parse(process.argv)
+	}
+} else {
+	console.log("No arguments provided, start with this command: node build/loader.js start <name>");
+}
