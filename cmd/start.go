@@ -69,4 +69,7 @@ func runStart(cmd *cobra.Command, args []string) {
 		log.Printf("Failed to start image for repository %s: %v", mcp, err)
 		os.Exit(1)
 	}
+	if !debug {
+		errors.HandleError("save catalog", c.Save())
+	}
 }

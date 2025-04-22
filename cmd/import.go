@@ -40,7 +40,7 @@ func runImport(cmd *cobra.Command, args []string) {
 		if mcp != "" && mcp != name {
 			continue
 		}
-		_, err := buildInstance.CloneRepository(name, repository)
+		c, err := buildInstance.CloneRepository(name, repository)
 		if err != nil {
 			log.Printf("Failed to process repository %s: %v", name, err)
 			os.Exit(1)
@@ -67,6 +67,9 @@ func runImport(cmd *cobra.Command, args []string) {
 				log.Printf("Failed to build image for repository %s: %v", name, err)
 				os.Exit(1)
 			}
+		}
+		if !debug {
+			errors.HandleError("save catalog", c.Save())
 		}
 	}
 }

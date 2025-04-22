@@ -23,6 +23,7 @@ func (b *Build) CloneRepository(name string, repository *hub.Repository) (*catal
 	}
 
 	if repository.Disabled {
+		fmt.Printf("Skipping disabled repository %s\n", name)
 		c := catalog.Catalog{}
 		errors.HandleError("load catalog", c.Load(name, repository, b.registry, imageName, &smithery.SmitheryConfig{}))
 		if !b.debug {
@@ -62,8 +63,5 @@ func (b *Build) CloneRepository(name string, repository *hub.Repository) (*catal
 
 	c := catalog.Catalog{}
 	errors.HandleError("load catalog", c.Load(name, repository, b.registry, imageName, cfg))
-	if !b.debug {
-		errors.HandleError("save catalog", c.Save())
-	}
 	return &c, nil
 }
