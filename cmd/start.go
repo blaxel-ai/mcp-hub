@@ -50,7 +50,7 @@ func runStart(cmd *cobra.Command, args []string) {
 		log.Printf("Repository %s not found", mcp)
 		os.Exit(1)
 	}
-	buildInstance := builder.NewBuild(tag, debug)
+	buildInstance := builder.NewBuild(tag, registry, debug)
 	defer buildInstance.Clean()
 
 	c, err := buildInstance.CloneRepository(mcp, repository)

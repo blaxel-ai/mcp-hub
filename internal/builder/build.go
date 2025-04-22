@@ -44,7 +44,7 @@ func (b *Build) Build(name string, repository *hub.Repository) error {
 	if repository.DistPath != "" {
 		buildArgs["DIST_PATH"] = repository.DistPath
 	}
-	err := docker.BuildImage(context.Background(), GetImageName(name, b.tag), repository.Path, buildArgs)
+	err := docker.BuildImage(context.Background(), b.registry, GetImageName(name, b.tag), repository.Path, buildArgs)
 	if err != nil {
 		return fmt.Errorf("build image: %w", err)
 	}

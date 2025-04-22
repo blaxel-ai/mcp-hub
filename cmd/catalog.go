@@ -43,7 +43,7 @@ func runCatalog(cmd *cobra.Command, args []string) {
 	errors.HandleError("validate config file", hub.ValidateWithDefaultValues())
 
 	repository := hub.Repositories[mcp]
-	buildInstance := builder.NewBuild(tag, true)
+	buildInstance := builder.NewBuild(tag, registry, true)
 	defer buildInstance.Clean()
 	c, err := buildInstance.CloneRepository(mcp, repository)
 	if err != nil {

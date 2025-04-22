@@ -33,7 +33,7 @@ func runImport(cmd *cobra.Command, args []string) {
 	errors.HandleError("read config file", hub.Read(configPath))
 	errors.HandleError("validate config file", hub.ValidateWithDefaultValues())
 
-	buildInstance := builder.NewBuild(tag, debug)
+	buildInstance := builder.NewBuild(tag, registry, debug)
 	// defer buildInstance.Clean()
 
 	for name, repository := range hub.Repositories {

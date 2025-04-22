@@ -7,12 +7,12 @@ import (
 	"os/exec"
 )
 
-func BuildImage(ctx context.Context, imageName string, repoPath string, buildArgs map[string]string) error {
+func BuildImage(ctx context.Context, registry string, imageName string, repoPath string, buildArgs map[string]string) error {
 	fmt.Println("Building image", imageName, "in directory", repoPath)
 	cmd := exec.Command(
 		"docker", "build",
 		"--platform", "linux/amd64",
-		"-t", imageName,
+		"-t", fmt.Sprintf("%s/%s", registry, imageName),
 		".",
 	)
 	for k, v := range buildArgs {
