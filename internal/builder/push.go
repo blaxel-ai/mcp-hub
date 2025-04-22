@@ -10,7 +10,7 @@ import (
 
 func (b *Build) Push(name string, repository *hub.Repository) error {
 	imageName := GetImageName(name, b.tag)
-	if err := docker.PushImage(context.Background(), imageName); err != nil {
+	if err := docker.PushImage(context.Background(), b.registry, imageName); err != nil {
 		return fmt.Errorf("push image: %w", err)
 	}
 	return nil
