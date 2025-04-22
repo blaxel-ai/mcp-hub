@@ -30,8 +30,6 @@ program
 			const config: Record<string, string> = {};
 			const secrets: Record<string, string> = {};
 
-			console.log(process.env);
-
 			if (mcpServer.infos) {
 				const infos = await mcpServer.infos()
 				if (!infos) {
@@ -47,8 +45,6 @@ program
 					config[key] = process.env[transformKeyInEnVarName(key)] || '';
 				}
 				for (const key in infos.form.secrets) {
-					console.log(transformKeyInEnVarName(key));
-
 					secrets[key] = process.env[transformKeyInEnVarName(key)] || '';
 				}
 			}
