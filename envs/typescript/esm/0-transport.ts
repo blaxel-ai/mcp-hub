@@ -11,7 +11,7 @@ const originalConnect = Server.prototype.connect;
 Server.prototype.connect = async function (transport: Transport) {
   // Use DebugTransport if DEBUG_TRANSPORT is set to 'true'
   console.error("Using WebSocketServerTransport instead of StdioServerTransport");
-  const port = parseInt(process.env.TRANSPORT_PORT ?? '8080', 10);
+  const port = parseInt(process.env.BL_SERVER_PORT ?? '8080', 10);
   const debugTransport = new WebSocketServerTransport(port);
   return originalConnect.call(this, debugTransport);
 };
@@ -89,8 +89,8 @@ export class WebSocketServerTransport implements Transport {
         this.clients.delete(cId);
         this.ondisconnection?.(cId);
       }
-    } 
-    
+    }
+
     for (const [id, client] of this.clients.entries()) {
       if (client.readyState !== WebSocket.OPEN) {
         deadClients.push(id);
