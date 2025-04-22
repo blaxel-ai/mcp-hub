@@ -6,6 +6,7 @@ import { infos as cloudflareInfos, list as cloudflareList, call as cloudflareToo
 import { infos as dalleInfos, list as dalleList, call as dalleToolCall } from './dall-e/index.js';
 import { infos as githubInfos, list as githubList, call as githubToolCall } from './github/index.js';
 import { infos as gmailInfos, list as gmailList, call as gmailToolCall } from './gmail/index.js';
+import { infos as googleDriveInfos, list as googleDriveList, call as googleDriveToolCall } from './google-drive/index.js';
 import { infos as gmapInfos, list as gmapList, call as gmapToolCall } from './google-maps/index.js';
 import { infos as linearInfos, list as linearList, call as linearToolCall } from './linear/index.js';
 import { infos as qdrantInfos, list as qdrantList, call as qdrantToolCall } from './qdrant/index.js';

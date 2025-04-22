@@ -2,6 +2,7 @@ repository: https://github.com/exa-labs/exa-mcp-server
 smitheryPath: smithery.yaml
 dockerfile: /
 displayName: Blaxel Search
+distPath: build
 url: https://app.blaxel.ai
 icon: https://app.blaxel.ai/logo_short.png
 description: Search the web for information (powered by Exa)

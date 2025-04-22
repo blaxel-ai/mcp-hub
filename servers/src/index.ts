@@ -1,9 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { program } from 'commander';
-import { mcpServers } from './servers';
-import { MCPServer } from "./types";
-import { transformInZodSchema } from './utils';
+import { mcpServers } from './servers.js';
+import { MCPServer } from "./types.js";
+import { transformInZodSchema } from './utils.js';
 
 program
   .version('1.0.0')
