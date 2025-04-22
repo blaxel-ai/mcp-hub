@@ -20,7 +20,7 @@ func (b *Build) BuildAndPushUKC(name string, repository *hub.Repository) error {
 	}
 
 	fmt.Println("Building image", imageName, "in directory", repository.Path)
-	destination := fmt.Sprintf("index.unikraft.io/blaxel/%s", imageName)
+	destination := fmt.Sprintf("index.unikraft.io/blaxel/mcp-hub/%s", imageName)
 	cmd := exec.Command(
 		"kraft", "pkg",
 		"--arch", "x86_64",
