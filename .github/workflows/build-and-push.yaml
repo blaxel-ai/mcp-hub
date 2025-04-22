@@ -81,4 +81,4 @@ jobs:
         run: go get .
       - name: Build and push
         run: |
-          go run main.go import --ukc -r ${{ env.REGISTRY }}/${{ github.repository }} -m ${{ matrix.server }} -t "${{ github.sha }}"
+          go run main.go import -p --ukc -r ${{ env.REGISTRY }}/${{ github.repository }} -m ${{ matrix.server }} -t "${{ github.sha }}"
