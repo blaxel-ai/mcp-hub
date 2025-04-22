@@ -13,9 +13,6 @@ permissions:
   contents: read
   packages: write
 
-env:
-  REGISTRY: ghcr.io
-
 jobs:
   generate-matrix:
     runs-on: ubuntu-latest
@@ -69,10 +66,10 @@ jobs:
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Log into registry ${{ env.REGISTRY }}
+      - name: Log into registry ghcr.io
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup Go 1.21.x
@@ -87,4 +84,4 @@ jobs:
         run: go get .
       - name: Build and push
         run: |
-          go run main.go import -p --ukc -r ${{ env.REGISTRY }}/${{ github.repository }} -m ${{ matrix.server }} -t "${{ github.sha }}"
+          go run main.go import -p --ukc -r ghcr.io/${{ github.repository }} -m ${{ matrix.server }} -t "${{ github.sha }}"

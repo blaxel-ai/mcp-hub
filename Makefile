@@ -1,6 +1,6 @@
 # This Makefile serves as a helper to run the MCP hub and the GitHub MCP server.
 ARGS:= $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-REGISTRY:= ghcr.io/beamlit/hub
+REGISTRY:= ghcr.io/beamlit
 
 import:
 	go run main.go import -c hub -m $(ARGS) --debug
