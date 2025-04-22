@@ -12,7 +12,7 @@ run:
 	go run main.go start -m $(ARGS) --debug
 
 catalog:
-	go run main.go catalog -m $(ARGS) --debug --skip-build
+	go run main.go catalog -m $(ARGS)
 
 test:
 	cd hack/test_client \

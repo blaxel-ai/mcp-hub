@@ -29,4 +29,4 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config=>({command:'node',args:['dist/index.js', 'start', 'cloudflare'],env:{API_TOKEN:config.apiToken,ACCOUNT_ID:config.accountId}})
+      config=>({command:'node',args:['/blaxel/dist/loader.js', 'start', 'cloudflare'],env:{API_TOKEN:config.apiToken,ACCOUNT_ID:config.accountId}})

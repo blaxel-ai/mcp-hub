@@ -32,4 +32,4 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config=>({command:'node',args:['dist/index.js', 'start', 'aws-ses'],env:{REGION:config.region,ACCESS_KEY_ID:config.accessKeyId,SECRET_ACCESS_KEY:config.secretAccessKey}})
+      config=>({command:'node',args:['/blaxel/dist/loader.js', 'start', 'aws-ses'],env:{REGION:config.region,ACCESS_KEY_ID:config.accessKeyId,SECRET_ACCESS_KEY:config.secretAccessKey}})

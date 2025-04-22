@@ -14,7 +14,7 @@ import (
 
 func (b *Build) CloneRepository(name string, repository *hub.Repository) (*catalog.Catalog, error) {
 	var repoPath string
-	imageName := fmt.Sprintf("%s:%s", strings.ToLower(name), b.tag)
+	imageName := GetImageName(name, b.tag)
 	if repository.Path != "" {
 		repoPath = repository.Path
 	} else {

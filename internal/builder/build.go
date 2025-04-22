@@ -13,11 +13,11 @@ import (
 	"github.com/beamlit/mcp-hub/internal/hub"
 )
 
-func (b *Build) getImageName(name string) string {
+func GetImageName(name string, tag string) string {
 	if os.Getenv("BL_ENV") == "prod" {
-		return fmt.Sprintf("prod/%s:%s", strings.ToLower(name), b.tag)
+		return fmt.Sprintf("prod/%s:%s", strings.ToLower(name), tag)
 	} else {
-		return fmt.Sprintf("dev/%s:%s", strings.ToLower(name), b.tag)
+		return fmt.Sprintf("dev/%s:%s", strings.ToLower(name), tag)
 	}
 }
 
@@ -44,7 +44,7 @@ func (b *Build) Build(name string, repository *hub.Repository) error {
 	if repository.DistPath != "" {
 		buildArgs["DIST_PATH"] = repository.DistPath
 	}
-	err := docker.BuildImage(context.Background(), b.getImageName(name), repository.Path, buildArgs)
+	err := docker.BuildImage(context.Background(), GetImageName(name, b.tag), repository.Path, buildArgs)
 	if err != nil {
 		return fmt.Errorf("build image: %w", err)
 	}
