@@ -189,7 +189,7 @@ func (c *Catalog) Load(name string, hub *hub.Repository, registry string, imageN
 
 	artifact := Artifact{
 		Name:            name,
-		Image:           imageName,
+		Image:           fmt.Sprintf("%s/%s", registry, imageName),
 		DisplayName:     hub.DisplayName,
 		Description:     hub.Description,
 		LongDescription: hub.LongDescription,

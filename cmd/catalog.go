@@ -24,6 +24,7 @@ func init() {
 	catalogCmd.Flags().StringVarP(&configPath, "config", "c", "hub", "The path to the config files")
 	catalogCmd.Flags().StringVarP(&mcp, "mcp", "m", "", "The MCP to import, if not provided")
 	catalogCmd.Flags().StringVarP(&tag, "tag", "t", "latest", "The tag to use for the image")
+	catalogCmd.Flags().StringVarP(&registry, "registry", "r", "ghcr.io/beamlit/mcp-hub", "The registry to use for the image")
 	rootCmd.AddCommand(catalogCmd)
 }
 
