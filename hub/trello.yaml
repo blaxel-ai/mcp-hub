@@ -1,6 +1,6 @@
 repository: https://github.com/delorenj/mcp-server-trello.git
-dockerfile: "@mcp-hub"
 displayName: Trello
+distPath: build
 url: https://developer.atlassian.com/cloud/trello/guides/rest-api/api-introduction/
 icon: https://avatars.githubusercontent.com/u/194843803?v=4
 description: Interract with Trello boards, lists and cards
@@ -34,4 +34,4 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      (config) => ({command:'node',args:['build/index.js'],env:{TRELLO_API_KEY:config.trelloApiKey,TRELLO_TOKEN:config.trelloToken,TRELLO_BOARD_ID:config.trelloBoardId}})
+      (config) => ({command:'node',args:['/blaxel/build/loader.js'],env:{TRELLO_API_KEY:config.trelloApiKey,TRELLO_TOKEN:config.trelloToken,TRELLO_BOARD_ID:config.trelloBoardId}})

@@ -9,6 +9,6 @@ export const payload: ((previousResult: Record<string, any>) => {
   })
 ];
 
-export const description = "AWS S3 description";
-export const name = "aws";
-export const url = "http://localhost:1400";
+export const description = "Trello description";
+export const name = "trello";
+export const url = "http://localhost:8080";
