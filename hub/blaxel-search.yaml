@@ -27,5 +27,5 @@ smithery:
         if (config.exaApiKey) {
           env.EXA_API_KEY = config.exaApiKey
         }
-        return { command: 'node', args: ['/blaxel/build/index.js'], env }
+        return { command: 'node', args: ['/blaxel/build/loader.js'], env }
       }

@@ -27,4 +27,4 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config => ({ command: 'node', args: ['/blaxel/build/index.js'], env: { TELEGRAM_TOKEN: config.telegramToken, CHAT_ID: config.chatId } })
+      config => ({ command: 'node', args: ['/blaxel/build/loader.js'], env: { TELEGRAM_TOKEN: config.telegramToken, CHAT_ID: config.chatId } })

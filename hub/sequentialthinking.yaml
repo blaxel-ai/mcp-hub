@@ -19,4 +19,4 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config => ({ command: 'node', args: ['/blaxel/build/index.js'] })
+      config => ({ command: 'node', args: ['/blaxel/build/loader.js'] })
