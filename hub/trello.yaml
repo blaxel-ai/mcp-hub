@@ -1,0 +1,37 @@
+repository: https://github.com/delorenj/mcp-server-trello.git
+dockerfile: "@mcp-hub"
+displayName: Trello
+url: https://developer.atlassian.com/cloud/trello/guides/rest-api/api-introduction/
+icon: https://avatars.githubusercontent.com/u/194843803?v=4
+description: Interract with Trello boards, lists and cards
+longDescription: A TypeScript implementation of a Model Context Protocol (MCP) server for Trello integration, providing tools for AI assistants to interact with Trello boards, lists, and cards.
+secrets:
+  - trelloApiKey
+  - trelloToken
+categories:
+  - productivity
+  - project-management
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - trelloApiKey
+        - trelloToken
+        - trelloBoardId
+      properties:
+        trelloApiKey:
+          type: string
+          description: The API key for the Trello server.
+        trelloToken:
+          type: string
+          description: The token for authenticating with Trello.
+        trelloBoardId:
+          type: string
+          description: The ID of the Trello board to interact with.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      (config) => ({command:'node',args:['build/index.js'],env:{TRELLO_API_KEY:config.trelloApiKey,TRELLO_TOKEN:config.trelloToken,TRELLO_BOARD_ID:config.trelloBoardId}})
