@@ -3,6 +3,7 @@ export interface EmbeddingsConfig {
 	modelType: string;
 	clientCredentials: string;
 	baseUrl: string;
+	runUrl: string;
 	workspace: string;
 }
 
@@ -26,23 +27,26 @@ export class Embeddings {
 		if (!clientCreds) {
 			throw new Error('BL_CLIENT_CREDENTIALS is not set');
 		}
-		const token = await fetch(`${this.config.baseUrl}/oauth/token`, {
+		const requestToken = new Request(`${this.config.baseUrl}/oauth/token`, {
 			method: 'POST',
+			body: JSON.stringify({
+				grant_type: 'client_credentials',
+			}),
 			headers: {
 				'Content-Type': 'application/json',
 				Authorization: `Basic ${clientCreds}`,
 			},
-			body: JSON.stringify({
-				grant_type: 'client_credentials',
-			}),
 		});
+		const token = await fetch(requestToken);
 		type TokenResponse = {
 			access_token: string;
 			token_type: string;
 			expires_in: number;
 		};
-		const tokenBody = (await token.json()) as TokenResponse;
-		const request = new Request(`${this.config.baseUrl}/${this.config.workspace}/models/${model}/v1/embeddings`, {
+		const tokenTmp = await token.json();
+		const tokenBody = tokenTmp as TokenResponse;
+		const url = `${this.config.runUrl}/${this.config.workspace}/models/${model}/v1/embeddings`;
+		const request = new Request(url, {
 			method: 'POST',
 			body: JSON.stringify({
 				input: query,
@@ -54,7 +58,7 @@ export class Embeddings {
 		});
 		const response = await fetch(request);
 		if (response.status >= 400) {
-			throw new Error(`Failed to embed query: ${response.statusText}`);
+			throw new Error(`Failed to embed query for url: ${url} with status: ${response.statusText}`);
 		}
 		const body = (await response.json()) as { data: [{ embedding: number[] }] };
 		return body.data[0].embedding;

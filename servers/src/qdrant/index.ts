@@ -34,11 +34,6 @@ export const infos = async () => {
 					type: 'string',
 					required: true,
 				},
-				blBaseUrl: {
-					description: 'Blaxel Base URL',
-					label: 'Blaxel Base URL',
-					required: true,
-				},
 				blWorkspace: {
 					description: 'Blaxel Workspace',
 					label: 'Blaxel Workspace',
@@ -129,11 +124,14 @@ export async function call(request: Request, config: Record<string, string>, sec
 			throw new Error('Query is required');
 		}
 
+		const baseUrl = process.env.BL_ENV == 'dev' ? 'https://api.blaxel.dev/v0' : 'https://api.blaxel.ai/v0';
+		const runUrl = process.env.BL_ENV == 'dev' ? 'https://run.blaxel.dev' : 'https://run.blaxel.ai';
 		const embeddings = new Embeddings({
 			model: config.embeddingModel,
 			modelType: config.embeddingModelType || 'openai',
 			clientCredentials: secrets.blClientCredentials,
-			baseUrl: config.blBaseUrl,
+			baseUrl,
+			runUrl,
 			workspace: config.blWorkspace,
 		});
 		switch (name) {

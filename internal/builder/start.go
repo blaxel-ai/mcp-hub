@@ -40,6 +40,11 @@ func (b *Build) dockerRun(mcp string, artifact catalog.Artifact, envKeys []strin
 	for _, key := range envKeys {
 		dockerRunCmd = append(dockerRunCmd, "-e", fmt.Sprintf("%s=%s", key, os.Getenv(key)))
 	}
+	for _, value := range os.Environ() {
+		if strings.Contains(value, "BL_") {
+			dockerRunCmd = append(dockerRunCmd, "-e", value)
+		}
+	}
 	dockerRunCmd = append(dockerRunCmd, artifact.Image)
 
 	dockerCmd := artifact.Entrypoint.Command

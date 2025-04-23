@@ -12,6 +12,7 @@ Server.prototype.connect = async function (transport: Transport) {
   // Use DebugTransport if DEBUG_TRANSPORT is set to 'true'
   console.error("Using WebSocketServerTransport instead of StdioServerTransport");
   const port = parseInt(process.env.BL_SERVER_PORT ?? '8080', 10);
+  console.log(`Websocket server started on port ${port}`);
   const debugTransport = new WebSocketServerTransport(port);
   return originalConnect.call(this, debugTransport);
 };
