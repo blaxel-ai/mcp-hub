@@ -84,4 +84,4 @@ jobs:
         run: go get .
       - name: Build and push
         run: |
-          go run main.go import -p --ukc -r ghcr.io/${{ github.repository }} -m ${{ matrix.server }} -t "${{ github.sha }}"
+          go run main.go import -p --ukc -r ghcr.io/${{ github.repository }} -m ${{ matrix.server }} -t "${{ github.job }}"
