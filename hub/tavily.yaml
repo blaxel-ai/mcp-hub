@@ -1,0 +1,28 @@
+repository: https://github.com/tavily-ai/tavily-mcp.git
+dockerfile: "@mcp-hub"
+displayName: Tavily
+branch: main
+url: https://app.tavily.com/home
+icon: https://avatars.githubusercontent.com/u/170207473?s=200&v=4
+description: Tavily Search API is a search engine optimized for LLMs and RAG, aimed at efficient, quick and persistent search results
+longDescription: Tavily Search API is a search engine optimized for LLMs and RAG, aimed at efficient, quick and persistent search results
+secrets:
+  - tavilyApiKey
+categories:
+  - search
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - tavilyApiKey
+      properties:
+        tavilyApiKey:
+          type: string
+          description: The API key for the Tavily MCP server.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      config => ({ command: 'node', args: ['build/index.js'], env: { TAVILY_API_KEY: config.tavilyApiKey } })
