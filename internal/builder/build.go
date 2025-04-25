@@ -79,6 +79,27 @@ func (b *Build) preparePython(name string, repository *hub.Repository) error {
 	if err != nil {
 		return fmt.Errorf("create file: %w", err)
 	}
+
+	// Replace ${ENTRYPOINT} with specific Python entrypoint in Dockerfile
+	dockerfilePath := filepath.Join(repository.Path, "Dockerfile")
+	dockerfileContent, err := os.ReadFile(dockerfilePath)
+	if err != nil {
+		return fmt.Errorf("read dockerfile: %w", err)
+	}
+
+	if repository.Entrypoint == "" {
+		return fmt.Errorf("entrypoint is not set, required for python")
+	}
+	newContent := strings.ReplaceAll(
+		string(dockerfileContent),
+		"${ENTRYPOINT}",
+		fmt.Sprintf("\"%s\"", strings.Join(strings.Split(repository.Entrypoint, " "), "\", \"")),
+	)
+
+	err = os.WriteFile(dockerfilePath, []byte(newContent), 0644)
+	if err != nil {
+		return fmt.Errorf("write dockerfile: %w", err)
+	}
 	return nil
 }
 

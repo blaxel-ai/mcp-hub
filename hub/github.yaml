@@ -1,5 +1,4 @@
 path: servers/
-dockerfile: /
 branch: main
 displayName: GitHub
 url: https://github.com/settings/personal-access-tokens

@@ -3,6 +3,7 @@ language: python
 srcPath: src/discord_mcp
 displayName: Discord
 branch: main
+entrypoint: uv run mcp-discord
 url: https://discord.com/developers/applications
 icon: https://avatars.githubusercontent.com/u/1965106?s=200&v=4
 description: Discord bot for server and message management

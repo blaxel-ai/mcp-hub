@@ -1,3 +1,4 @@
+.DS_Store
 # Logs
 .unikraft
 logs
@@ -11,6 +12,10 @@ hack/test_client/src/config.ts
 # Diagnostic reports (https://nodejs.org/api/report.html)
 
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+
+# python
+*.pyc
+__pycache__/
 
 # Runtime data
 

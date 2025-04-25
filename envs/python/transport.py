@@ -1,20 +1,21 @@
-import logging
 import asyncio
+import logging
+import os
+import socket
 from contextlib import asynccontextmanager
 
 import anyio
-from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
-from starlette.types import Receive, Scope, Send
-from starlette.websockets import WebSocket
-from starlette.applications import Starlette
-from starlette.routing import WebSocketRoute
-import uvicorn
-import socket
-
-import mcp.types as types
+import mcp.server.sse as sse
 import mcp.server.stdio as stdio
 import mcp.server.websocket as websocket
-import mcp.server.sse as sse
+import mcp.types as types
+import uvicorn
+from anyio.streams.memory import (MemoryObjectReceiveStream,
+                                  MemoryObjectSendStream)
+from starlette.applications import Starlette
+from starlette.routing import WebSocketRoute
+from starlette.types import Receive, Scope, Send
+from starlette.websockets import WebSocket
 
 logger = logging.getLogger(__name__)
 
@@ -28,28 +29,28 @@ async def websocket_server():
     active_clients = {}
     # Mutex pour protéger l'accès au dictionnaire
     clients_lock = asyncio.Lock()
-    
+
     async def _websocket_server(websocket: WebSocket):
         # Generate a unique client ID
         client_id = str(id(websocket))
-        
+
         # Create dedicated streams for this client
         client_read_stream_writer, client_read_stream = anyio.create_memory_object_stream(0)
         client_write_stream, client_write_stream_reader = anyio.create_memory_object_stream(0)
-        
+
         # Register this client's streams
         async with clients_lock:
             active_clients[client_id] = (client_read_stream, client_write_stream)
-        
+
         # Accept the connection without requiring a specific subprotocol
         await websocket.accept()
-        
+
         # Use a flag to track if the websocket is already closed
         websocket_closed = False
-        
+
         # Create a lock to prevent concurrent close operations
         close_lock = asyncio.Lock()
-        
+
         async def safe_close_websocket():
             nonlocal websocket_closed
             async with close_lock:
@@ -130,19 +131,20 @@ async def websocket_server():
     app = Starlette(routes=routes, debug=True)
 
     # Configure the server with more detailed logging
+    port = os.getenv("BL_SERVER_PORT", 8080)
     server = uvicorn.Server(
         config=uvicorn.Config(
-            app=app, 
-            host="0.0.0.0", 
-            port=8080, 
+            app=app,
+            host="0.0.0.0",
+            port=int(port),
             log_level="info",
         )
     )
-    
+
     async def start_server():
         logger.info(f"Starting WebSocket server on 0.0.0.0:8080")
         await server.serve()
-    
+
     # Create a multiplexer function to handle messages from all clients
     async def message_router():
         try:
@@ -150,11 +152,11 @@ async def websocket_server():
             async for message in write_stream_reader:
                 logger.debug(f"Message from main stream: {message.root}")
                 logger.debug("--------------------------------")
-                
+
                 # Envoyer le message à tous les clients actifs
                 async with clients_lock:
                     client_items = list(active_clients.items())
-                
+
                 for client_id, (_, client_write_stream) in client_items:
                     try:
                         # Envoyer le message au client
@@ -165,12 +167,12 @@ async def websocket_server():
             logger.info("Main write stream closed")
         except Exception as e:
             logger.error(f"Message router error: {e}")
-    
+
     # Start the server in a background task
     async with anyio.create_task_group() as tg:
         tg.start_soon(start_server)
         tg.start_soon(message_router)  # Start the message router
-        
+
         try:
             # Yield the original streams to maintain compatibility
             yield (read_stream, write_stream)
