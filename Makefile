@@ -19,5 +19,8 @@ test:
 	&& cp src/configs/config.$(ARGS).ts src/config.ts \
 	&& pnpm run test
 
+clean:
+	rm -rf tmp/*
+
 %:
 	@:
