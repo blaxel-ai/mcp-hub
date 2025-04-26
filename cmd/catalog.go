@@ -39,6 +39,7 @@ func runCatalog(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	fmt.Printf("Start catalog for %s\n", mcp)
 	hub := hub.Hub{}
 	errors.HandleError("read config file", hub.Read(configPath))
 	errors.HandleError("validate config file", hub.ValidateWithDefaultValues())

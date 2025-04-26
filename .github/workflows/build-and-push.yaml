@@ -38,12 +38,24 @@ jobs:
 
           # Filter servers based on changes
           changed_servers=()
-          for server in $(echo $all_servers | jq -r '.[]'); do
-            if git diff --name-only HEAD^ HEAD | grep -q "hub/${server}.yaml" || \
-               git diff --name-only HEAD^ HEAD | grep -q "hub/${server}/"; then
+
+          # Check if there are changes in internal or cmd folders
+          if git diff --name-only HEAD^ HEAD | grep -q "internal/" || \
+             git diff --name-only HEAD^ HEAD | grep -q "cmd/"; then
+            # If there are changes in internal or cmd, include all servers
+            echo "Changes detected in internal or cmd folders, including all servers"
+            for server in $(echo $all_servers | jq -r '.[]'); do
               changed_servers+=("$server")
-            fi
-          done
+            done
+          else
+            # Otherwise, only include servers with specific changes
+            for server in $(echo $all_servers | jq -r '.[]'); do
+              if git diff --name-only HEAD^ HEAD | grep -q "hub/${server}.yaml" || \
+                 git diff --name-only HEAD^ HEAD | grep -q "hub/${server}/"; then
+                changed_servers+=("$server")
+              fi
+            done
+          fi
 
           # Convert array to JSON array
           if [ ${#changed_servers[@]} -eq 0 ]; then
