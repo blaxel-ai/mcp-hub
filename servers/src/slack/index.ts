@@ -323,7 +323,7 @@ class SlackClient {
 }
 
 export async function call(request: Request, config: Record<string, string>, secrets: Record<string, string>) {
-	const slackClient = new SlackClient(secrets.botToken, config.teamId);
+	const slackClient = new SlackClient(secrets.slackBotToken, config.slackTeamId);
 	try {
 		const requestBody: { name: string; arguments: any } = (await request.json()) as { name: string; arguments: any };
 		if (!requestBody.arguments) {
