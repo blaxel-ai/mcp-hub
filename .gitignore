@@ -175,3 +175,5 @@ dist
 
 .dev.vars
 .wrangler/
+
+tmp
