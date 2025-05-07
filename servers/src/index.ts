@@ -23,12 +23,11 @@ program
 	});
 
 	const tools = await mcpServer.list()
-
 	for (const tool of tools.tools) {
 		const zodSchema = transformInZodSchema(tool.inputSchema.properties);
 		server.tool(tool.name, tool.description, zodSchema, async (argsSchema) => {
 			const config: Record<string, string> = {};
-			const secrets: Record<string, string> = {};
+			const secrets: Record<string, string> = {};			
 
 			if (mcpServer.infos) {
 				const infos = await mcpServer.infos()
@@ -41,7 +40,6 @@ program
 				}
 
 				for (const key in infos.form.config) {
-					transformKeyInEnVarName(key)
 					config[key] = process.env[transformKeyInEnVarName(key)] || '';
 				}
 				for (const key in infos.form.secrets) {
