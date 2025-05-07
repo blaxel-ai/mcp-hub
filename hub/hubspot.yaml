@@ -1,0 +1,30 @@
+repository: https://github.com/beamlit/sdk-typescript.git
+displayName: Hubspot
+branch: main
+language: javascript
+package: "@hubspot/mcp-server"
+entrypoint: "@hubspot/mcp-server/dist/index.js"
+url: https://developers.hubspot.com/docs/guides/apps/private-apps/overview
+icon: https://avatars.githubusercontent.com/u/326419?s=200&v=4
+description: HubSpot - All-in-One CRM Platform
+longDescription: HubSpot is a comprehensive CRM platform that helps businesses grow better by providing tools for marketing, sales, content management, and customer service. It enables you to manage customer relationships, automate workflows, track deals, and create personalized customer experiences across the entire customer journey.
+secrets:
+  - hubspotPrivateAppAccessToken
+categories:
+  - crm
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - hubspotPrivateAppAccessToken
+      properties:
+        hubspotPrivateAppAccessToken:
+          type: string
+          description: The private app access token for the Hubspot server.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      config=>({command:'node',args:['/blaxel/loader.js'],env:{PRIVATE_APP_ACCESS_TOKEN:config.hubspotPrivateAppAccessToken}})

@@ -29,6 +29,7 @@ type Repository struct {
 	BasePath        string                   `yaml:"basePath" mandatory:"false" default:""`
 	SrcPath         string                   `yaml:"srcPath" mandatory:"false" default:"src"`
 	DistPath        string                   `yaml:"distPath" mandatory:"false" default:"dist"`
+	Package         string                   `yaml:"package" mandatory:"false"`
 	Entrypoint      string                   `yaml:"entrypoint" mandatory:"false"`
 	Smithery        *smithery.SmitheryConfig `yaml:"smithery" mandatory:"false"`
 	Language        string                   `yaml:"language" mandatory:"false" default:"typescript"`

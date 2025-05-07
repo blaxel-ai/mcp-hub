@@ -23,6 +23,11 @@ func GetImageName(name string, tag string) string {
 
 func (b *Build) Build(name string, repository *hub.Repository) error {
 	switch repository.Language {
+	case "javascript":
+		err := b.prepareJavascript(name, repository)
+		if err != nil {
+			return fmt.Errorf("prepare javascript: %w", err)
+		}
 	case "typescript":
 		err := b.prepareTypescript(name, repository)
 		if err != nil {
@@ -43,6 +48,12 @@ func (b *Build) Build(name string, repository *hub.Repository) error {
 	}
 	if repository.DistPath != "" {
 		buildArgs["DIST_PATH"] = repository.DistPath
+	}
+	if repository.Entrypoint != "" {
+		buildArgs["ENTRYPOINT"] = repository.Entrypoint
+	}
+	if repository.Package != "" {
+		buildArgs["PACKAGE"] = repository.Package
 	}
 	err := docker.BuildImage(context.Background(), b.registry, GetImageName(name, b.tag), repository.Path, buildArgs)
 	if err != nil {
@@ -136,6 +147,14 @@ func (b *Build) prepareTypescript(name string, repository *hub.Repository) error
 	} else {
 		return fmt.Errorf("unsupported package.json type: %s, only module is supported", pj.Type)
 	}
+	if err != nil {
+		return fmt.Errorf("copy overrides: %w", err)
+	}
+	return nil
+}
+
+func (b *Build) prepareJavascript(name string, repository *hub.Repository) error {
+	err := files.CopyMergeDir("envs/javascript", repository.Path)
 	if err != nil {
 		return fmt.Errorf("copy overrides: %w", err)
 	}
