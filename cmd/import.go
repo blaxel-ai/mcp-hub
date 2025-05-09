@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/beamlit/mcp-hub/internal/catalog"
-	"github.com/beamlit/mcp-hub/internal/docker"
-	"github.com/beamlit/mcp-hub/internal/git"
-	"github.com/beamlit/mcp-hub/internal/hub"
-	"github.com/beamlit/mcp-hub/internal/smithery"
+	"github.com/blaxel-ai/mcp-hub/internal/catalog"
+	"github.com/blaxel-ai/mcp-hub/internal/docker"
+	"github.com/blaxel-ai/mcp-hub/internal/git"
+	"github.com/blaxel-ai/mcp-hub/internal/hub"
+	"github.com/blaxel-ai/mcp-hub/internal/smithery"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +32,7 @@ var importCmd = &cobra.Command{
 func init() {
 	importCmd.Flags().StringVarP(&configPath, "config", "c", "", "The path to the config files")
 	importCmd.Flags().BoolVarP(&push, "push", "p", false, "Push the images to the registry")
-	importCmd.Flags().StringVarP(&registry, "registry", "r", "ghcr.io/beamlit/hub", "The registry to push the images to")
+	importCmd.Flags().StringVarP(&registry, "registry", "r", "ghcr.io/blaxel-ai/hub", "The registry to push the images to")
 	importCmd.Flags().StringVarP(&mcp, "mcp", "m", "", "The MCP to import, if not provided, all MCPs will be imported")
 	importCmd.Flags().BoolVarP(&skipBuild, "skip-build", "s", false, "Skip building the image")
 	importCmd.Flags().StringVarP(&tag, "tag", "t", "latest", "The tag to use for the image")
@@ -165,7 +165,7 @@ func setupTempDirectory() {
 func manageDeps(repository *hub.Repository) []string {
 	deps := []string{
 		"npm install -g pnpm",
-		"pnpm install https://github.com/beamlit/supergateway",
+		"pnpm install https://github.com/blaxel-ai/supergateway",
 	}
 	switch repository.PackageManager {
 	case hub.PackageManagerAPK:

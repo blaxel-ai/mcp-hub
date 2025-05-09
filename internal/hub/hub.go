@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/beamlit/mcp-hub/internal/smithery"
+	"github.com/blaxel-ai/mcp-hub/internal/smithery"
 	"gopkg.in/yaml.v2"
 )
 

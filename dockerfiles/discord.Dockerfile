@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && npm install -g pnpm \
-    && pnpm install https://github.com/beamlit/supergateway
+    && pnpm install https://github.com/blaxel-ai/supergateway
 
 # Enable bytecode compilation
 ENV UV_COMPILE_BYTECODE=1
