@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/beamlit/mcp-hub/internal/catalog"
-	"github.com/beamlit/mcp-hub/internal/errors"
-	"github.com/beamlit/mcp-hub/internal/git"
-	"github.com/beamlit/mcp-hub/internal/hub"
-	"github.com/beamlit/mcp-hub/internal/smithery"
+	"github.com/blaxel-ai/mcp-hub/internal/catalog"
+	"github.com/blaxel-ai/mcp-hub/internal/errors"
+	"github.com/blaxel-ai/mcp-hub/internal/git"
+	"github.com/blaxel-ai/mcp-hub/internal/hub"
+	"github.com/blaxel-ai/mcp-hub/internal/smithery"
 )
 
 func (b *Build) CloneRepository(name string, repository *hub.Repository) (*catalog.Catalog, error) {

@@ -9,7 +9,7 @@ describe('Slack', async () => {
 	// @ts-ignore
 	const apiKey = import.meta.env.SLACK_BOT_TOKEN;
 	DefineSecret('bot_token', apiKey);
-	DefineConfig('team_id', 'beamlit');
+	DefineConfig('team_id', 'blaxel-ai');
 
 	it('listTools', async () => {
 		const { tools } = await list();

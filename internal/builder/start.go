@@ -7,8 +7,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/beamlit/mcp-hub/internal/catalog"
-	"github.com/beamlit/mcp-hub/internal/hub"
+	"github.com/blaxel-ai/mcp-hub/internal/catalog"
+	"github.com/blaxel-ai/mcp-hub/internal/hub"
 )
 
 func (b *Build) Start(name string, repository *hub.Repository, c *catalog.Catalog) error {

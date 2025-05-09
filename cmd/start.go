@@ -4,9 +4,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/beamlit/mcp-hub/internal/builder"
-	"github.com/beamlit/mcp-hub/internal/errors"
-	"github.com/beamlit/mcp-hub/internal/hub"
+	"github.com/blaxel-ai/mcp-hub/internal/builder"
+	"github.com/blaxel-ai/mcp-hub/internal/errors"
+	"github.com/blaxel-ai/mcp-hub/internal/hub"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
@@ -20,7 +20,7 @@ var startCmd = &cobra.Command{
 
 func init() {
 	startCmd.Flags().StringVarP(&configPath, "config", "c", "hub", "The path to the config files")
-	startCmd.Flags().StringVarP(&registry, "registry", "r", "ghcr.io/beamlit/hub", "The registry to push the images to")
+	startCmd.Flags().StringVarP(&registry, "registry", "r", "ghcr.io/blaxel-ai/hub", "The registry to push the images to")
 	startCmd.Flags().StringVarP(&mcp, "mcp", "m", "", "The MCP to import, if not provided")
 	startCmd.Flags().StringVarP(&tag, "tag", "t", "latest", "The tag to use for the image")
 	startCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug mode, will not save the catalog")

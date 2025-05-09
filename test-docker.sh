@@ -3,5 +3,5 @@ docker run --rm \
 -e REFRESH_TOKEN="asdasd" \
 --name gmail \
 -p 8080:80 \
-ghcr.io/beamlit/mcp-hub/dev/gmail:12dc38fff6ce55eadb06af174f3d10003a2f053c \
+ghcr.io/blaxel-ai/mcp-hub/dev/gmail:12dc38fff6ce55eadb06af174f3d10003a2f053c \
 "node /blaxel/build/loader.js start gmail"

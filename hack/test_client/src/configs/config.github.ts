@@ -5,7 +5,7 @@ export const payload: ((previousResult: Record<string, any>) => {
   () => ({
     name: "search_repositories",
     arguments: {
-      query: "beamlit"
+      query: "blaxel-ai"
     },
   }),
 ];

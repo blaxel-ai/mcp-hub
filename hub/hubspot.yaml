@@ -1,4 +1,4 @@
-repository: https://github.com/beamlit/sdk-typescript.git
+repository: https://github.com/blaxel-ai/sdk-typescript.git
 displayName: Hubspot
 branch: main
 language: javascript

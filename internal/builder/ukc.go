@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/beamlit/mcp-hub/internal/hub"
+	"github.com/blaxel-ai/mcp-hub/internal/hub"
 )
 
 func (b *Build) BuildAndPushUKC(name string, repository *hub.Repository) error {

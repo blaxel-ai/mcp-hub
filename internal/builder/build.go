@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/beamlit/mcp-hub/internal/docker"
-	"github.com/beamlit/mcp-hub/internal/files"
-	"github.com/beamlit/mcp-hub/internal/hub"
+	"github.com/blaxel-ai/mcp-hub/internal/docker"
+	"github.com/blaxel-ai/mcp-hub/internal/files"
+	"github.com/blaxel-ai/mcp-hub/internal/hub"
 )
 
 func GetImageName(name string, tag string) string {

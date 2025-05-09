@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/beamlit/mcp-hub/internal/docker"
-	"github.com/beamlit/mcp-hub/internal/hub"
+	"github.com/blaxel-ai/mcp-hub/internal/docker"
+	"github.com/blaxel-ai/mcp-hub/internal/hub"
 )
 
 func (b *Build) Push(name string, repository *hub.Repository) error {
