@@ -34,7 +34,7 @@ COPY --from=builder /app/package.json /app/package.json
 
 RUN apk add git \
   && npm install -g pnpm \
-  && pnpm install https://github.com/beamlit/supergateway
+  && pnpm install https://github.com/blaxel-ai/supergateway
 
 # Command to run the application
 ENTRYPOINT ["npx","-y","@blaxel/supergateway","--port","80","--stdio"]

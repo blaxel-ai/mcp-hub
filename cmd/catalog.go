@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/beamlit/mcp-hub/internal/hub"
+	"github.com/blaxel-ai/mcp-hub/internal/hub"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
@@ -21,7 +21,7 @@ var catalogCmd = &cobra.Command{
 func init() {
 	catalogCmd.Flags().StringVarP(&configPath, "config", "c", "", "The path to the config files")
 	catalogCmd.Flags().BoolVarP(&push, "push", "p", false, "Push the images to the registry")
-	catalogCmd.Flags().StringVarP(&registry, "registry", "r", "ghcr.io/beamlit/hub", "The registry to push the images to")
+	catalogCmd.Flags().StringVarP(&registry, "registry", "r", "ghcr.io/blaxel-ai/hub", "The registry to push the images to")
 	catalogCmd.Flags().StringVarP(&mcp, "mcp", "m", "", "The MCP to import, if not provided")
 	catalogCmd.Flags().BoolVarP(&skipBuild, "skip-build", "s", true, "Skip building the image")
 	catalogCmd.Flags().StringVarP(&tag, "tag", "t", "latest", "The tag to use for the image")

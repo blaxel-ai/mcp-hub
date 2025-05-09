@@ -9,7 +9,7 @@ WORKDIR /app
 
 RUN apk add git \
   && npm install -g pnpm \
-  && pnpm install https://github.com/beamlit/supergateway
+  && pnpm install https://github.com/blaxel-ai/supergateway
 
 RUN pnpm i @hubspot/mcp-server
 

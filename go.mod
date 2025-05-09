@@ -1,4 +1,4 @@
-module github.com/beamlit/mcp-hub
+module github.com/blaxel-ai/mcp-hub
 
 go 1.23.3
 

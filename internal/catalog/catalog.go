@@ -8,8 +8,8 @@ import (
 	"os"
 	"slices"
 
-	"github.com/beamlit/mcp-hub/internal/hub"
-	"github.com/beamlit/mcp-hub/internal/smithery"
+	"github.com/blaxel-ai/mcp-hub/internal/hub"
+	"github.com/blaxel-ai/mcp-hub/internal/smithery"
 )
 
 const (
