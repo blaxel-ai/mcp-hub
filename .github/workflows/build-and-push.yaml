@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Fetch last 2 commits to compare changes
       - name: Retrieve hub servers
         id: retrieve-servers
         shell: bash
@@ -27,8 +29,53 @@ jobs:
             echo "servers=[\"${{ inputs.mcp }}\"]" >> $GITHUB_OUTPUT
             exit 0
           fi
-          servers=$(tree -J -L 1 | jq -c '.[0].contents | map(.name | rtrimstr(".yaml"))')
-          echo "servers=${servers}" >> $GITHUB_OUTPUT
+
+          # Get list of all server YAML files
+          all_servers=$(tree -J -L 1 | jq -c '.[0].contents | map(.name | rtrimstr(".yaml"))')
+
+          # Filter servers based on changes
+          changed_servers=()
+
+          if [[ "${{ inputs.all }}" == "true" ]]; then
+            echo "Importing all servers"
+            echo "servers=$all_servers" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Check if there are changes in internal or cmd folders
+          if git diff --name-only HEAD^ HEAD | grep -q "internal/" || \
+             git diff --name-only HEAD^ HEAD | grep -q "cmd/"; then
+            # If there are changes in internal or cmd, include all servers
+            echo "Changes detected in internal or cmd folders, including all servers"
+            for server in $(echo $all_servers | jq -r '.[]'); do
+              changed_servers+=("$server")
+            done
+          else
+            # Otherwise, only include servers with specific changes
+            for server in $(echo $all_servers | jq -r '.[]'); do
+              if git diff --name-only HEAD^ HEAD | grep -q "hub/${server}.yaml" || \
+                 git diff --name-only HEAD^ HEAD | grep -q "hub/${server}/"; then
+                changed_servers+=("$server")
+              fi
+            done
+          fi
+
+          # Convert array to JSON array
+          if [ ${#changed_servers[@]} -eq 0 ]; then
+            echo "No servers with changes found"
+            echo "servers=[]" >> $GITHUB_OUTPUT
+          else
+            # Create a properly formatted JSON array
+            servers_json="["
+            for server in "${changed_servers[@]}"; do
+              if [ "$servers_json" != "[" ]; then
+                servers_json="$servers_json,"
+              fi
+              servers_json="$servers_json\"$server\""
+            done
+            servers_json="$servers_json]"
+            echo "servers=$servers_json" >> $GITHUB_OUTPUT
+          fi
   publish:
     runs-on: ubuntu-latest
     environment: |-
