@@ -3,7 +3,7 @@ dockerfile: "@mcp-hub"
 displayName: smartlead
 branch: main
 url: https://app.smartlead.ai/app/settings/profile
-icon: https://play.google.com/store/apps/details?id=com.smartlead
+icon: https://play-lh.googleusercontent.com/3TRenpb3zBDoRTurTpPFsmFPQYeByFoqKDxBIQ_nayEo3qUYw8bDiB0lYGUf9d3QiQ=w600-h300-pc0xffffff-pd
 description: Smartlead - AI-Powered Cold Email Automation & Deliverability Platform
 longDescription: Smartlead is an advanced cold email automation platform designed to help businesses and agencies scale their outreach with confidence. Featuring unlimited mailboxes, automated email warmups, and a unified master inbox, Smartlead ensures your emails land in the primary inbox and not spam. The platform leverages AI for hyper-personalized campaigns, dynamic IP rotation, and intent-based follow-ups, maximizing deliverability and engagement. Agencies benefit from robust client management, white-label options, and detailed analytics. Smartlead integrates with major CRMs and tools, supports API/webhook automation, and offers team management for seamless collaboration. Whether you're a sales leader, marketer, or recruiter, Smartlead streamlines your cold outreach and lead generation workflows. Learn more at https://www.smartlead.ai/ and see a detailed review at https://www.saleshandy.com/blog/smartlead-ai-review/.
 secrets:
