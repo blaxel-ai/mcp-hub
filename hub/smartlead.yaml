@@ -1,0 +1,31 @@
+repository: https://github.com/jean-technologies/smartlead-mcp-server-local.git
+dockerfile: "@mcp-hub"
+displayName: smartlead
+branch: main
+url: https://app.smartlead.ai/app/settings/profile
+icon: https://cdn.prod.website-files.com/6204a703ff61516512c04f55/6618e20081f3fd598cbaabcc_Smartlead%20Logo.svg
+description: Smartlead - AI-Powered Cold Email Automation & Deliverability Platform
+longDescription: Smartlead is an advanced cold email automation platform designed to help businesses and agencies scale their outreach with confidence. Featuring unlimited mailboxes, automated email warmups, and a unified master inbox, Smartlead ensures your emails land in the primary inbox and not spam. The platform leverages AI for hyper-personalized campaigns, dynamic IP rotation, and intent-based follow-ups, maximizing deliverability and engagement. Agencies benefit from robust client management, white-label options, and detailed analytics. Smartlead integrates with major CRMs and tools, supports API/webhook automation, and offers team management for seamless collaboration. Whether you're a sales leader, marketer, or recruiter, Smartlead streamlines your cold outreach and lead generation workflows. Learn more at https://www.smartlead.ai/ and see a detailed review at https://www.saleshandy.com/blog/smartlead-ai-review/.
+secrets:
+  - smartleadApiKey
+categories:
+  - cold-email
+  - sales-automation
+  - lead-generation
+  - agency-tools
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - smartleadApiKey
+      properties:
+        smartleadApiKey:
+          type: string
+          description: The API key for the Smartlead server.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      config=>({command:'node',args:['dist/index.js'],env:{SMARTLEAD_API_KEY:config.smartleadApiKey}})
