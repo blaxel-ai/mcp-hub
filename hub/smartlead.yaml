@@ -1,5 +1,5 @@
 repository: https://github.com/jean-technologies/smartlead-mcp-server-local.git
-displayName: smartlead
+displayName: Smartlead
 branch: main
 distPath: dist
 url: https://app.smartlead.ai/app/settings/profile
