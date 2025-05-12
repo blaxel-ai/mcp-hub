@@ -11,4 +11,4 @@ export const payload: ((previousResult: Record<string, any>) => {
 
 export const description = "Smartlead description";
 export const name = "smartlead";
-export const url = "http://localhost:1400";
+export const url = "http://localhost:8080";

@@ -1,7 +1,7 @@
 repository: https://github.com/jean-technologies/smartlead-mcp-server-local.git
-dockerfile: "@mcp-hub"
 displayName: smartlead
 branch: main
+distPath: dist
 url: https://app.smartlead.ai/app/settings/profile
 icon: https://play.google.com/store/apps/details?id=com.smartlead
 description: Smartlead - AI-Powered Cold Email Automation & Deliverability Platform
