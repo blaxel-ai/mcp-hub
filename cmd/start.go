@@ -91,9 +91,18 @@ func dockerRun(artifact catalog.Artifact, envKeys []string) error {
 
 	dockerCmd := artifact.Entrypoint.Command
 	for _, arg := range artifact.Entrypoint.Args {
-		dockerCmd += " " + arg
+		if strings.HasPrefix(arg, "$") {
+			// Convert camelCase to ENV_VAR format
+			envVar := strings.TrimPrefix(arg, "$")
+			envVarName := camelToEnvVar(envVar)
+			dockerCmd += " " + os.Getenv(envVarName)
+		} else {
+			dockerCmd += " " + arg
+		}
 	}
 	dockerRunCmd = append(dockerRunCmd, dockerCmd)
+
+	fmt.Println("Running docker command: " + strings.Join(dockerRunCmd, " "))
 
 	cmd := exec.Command("docker", dockerRunCmd...)
 	// Connect command's stdout and stderr to our process stdout and stderr
@@ -124,4 +133,16 @@ func checkEnvironmentVariable(artifact catalog.Artifact, key string, val string)
 		return fmt.Errorf("Environment variable %s is not set and is required for the MCP %s", key, mcp)
 	}
 	return nil
+}
+
+// camelToEnvVar converts a camelCase string to an ENV_VAR format (uppercase with underscores)
+func camelToEnvVar(s string) string {
+	var result strings.Builder
+	for i, r := range s {
+		if i > 0 && 'A' <= r && r <= 'Z' {
+			result.WriteRune('_')
+		}
+		result.WriteRune(r)
+	}
+	return strings.ToUpper(result.String())
 }
