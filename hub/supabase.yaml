@@ -1,0 +1,40 @@
+repository: https://github.com/supabase-community/supabase-mcp.git
+dockerfile: "@mcp-hub"
+displayName: Supabase
+branch: main
+url: https://github.com/supabase-community/supabase-mcp/tree/main
+icon: https://avatars.githubusercontent.com/u/87650496?s=200&v=4
+description: Open source Firebase alternative with PostgreSQL, Auth, APIs, and more
+longDescription: Supabase is a comprehensive backend platform providing a PostgreSQL database with auto-generated REST and GraphQL APIs, built-in authentication and authorization via Row Level Security, real-time capabilities through websockets, file storage with CDN support, serverless Edge Functions, and vector database capabilities for AI applications. It offers a complete suite of tools for building modern applications without managing infrastructure, all built on open source technologies.
+secrets:
+  - supabaseAccessToken
+categories:
+  - crm
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - supabaseAccessToken
+      properties:
+        supabaseAccessToken:
+          type: string
+          description: The access token for the Supabase instance.
+        readOnly:
+          type: boolean
+          description: Whether the access token is read-only.
+          default: false
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      (config) => ({
+        command: 'node',
+        args: [
+          'dist/stdio.js',
+          '--access-token',
+          config.supabaseAccessToken,
+          ...(config.readOnly ? ['--read-only'] : [])
+        ]
+      })
