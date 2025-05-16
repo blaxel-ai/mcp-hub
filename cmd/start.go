@@ -74,15 +74,3 @@ func runStart(cmd *cobra.Command, args []string) {
 		errors.HandleError("save catalog", c.Save())
 	}
 }
-
-// camelToEnvVar converts a camelCase string to an ENV_VAR format (uppercase with underscores)
-func camelToEnvVar(s string) string {
-	var result strings.Builder
-	for i, r := range s {
-		if i > 0 && 'A' <= r && r <= 'Z' {
-			result.WriteRune('_')
-		}
-		result.WriteRune(r)
-	}
-	return strings.ToUpper(result.String())
-}

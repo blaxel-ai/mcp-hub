@@ -22,6 +22,7 @@ func GetImageName(name string, tag string) string {
 }
 
 func (b *Build) Build(name string, repository *hub.Repository) error {
+	buildArgs := map[string]string{}
 	switch repository.Language {
 	case "javascript":
 		err := b.prepareJavascript(name, repository)
@@ -38,11 +39,15 @@ func (b *Build) Build(name string, repository *hub.Repository) error {
 		if err != nil {
 			return fmt.Errorf("prepare python: %w", err)
 		}
+	case "custom":
+		err := b.prepareCustom(name, repository)
+		if err != nil {
+			return fmt.Errorf("prepare custom: %w", err)
+		}
 	default:
 		return fmt.Errorf("unsupported language: %s", repository.Language)
 	}
 
-	buildArgs := map[string]string{}
 	if repository.BasePath != "" {
 		buildArgs["BUILD_PATH"] = "/" + repository.BasePath
 	}
@@ -155,6 +160,14 @@ func (b *Build) prepareTypescript(name string, repository *hub.Repository) error
 
 func (b *Build) prepareJavascript(name string, repository *hub.Repository) error {
 	err := files.CopyMergeDir("envs/javascript", repository.Path)
+	if err != nil {
+		return fmt.Errorf("copy overrides: %w", err)
+	}
+	return nil
+}
+
+func (b *Build) prepareCustom(name string, repository *hub.Repository) error {
+	err := files.CopyMergeDir("envs/custom/"+name, repository.Path)
 	if err != nil {
 		return fmt.Errorf("copy overrides: %w", err)
 	}

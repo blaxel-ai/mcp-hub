@@ -13,4 +13,4 @@ export const payload: ((previousResult: Record<string, any>) => {
 
 export const description = "Example MCP for Supabase Postgrest";
 export const name = "supabase-postgrest";
-export const url = "http://localhost:8000";
+export const url = "http://localhost:8080";

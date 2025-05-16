@@ -1,5 +1,5 @@
 repository: https://github.com/supabase-community/supabase-mcp.git
-dockerfile: "@mcp-hub"
+language: custom
 displayName: Supabase
 branch: main
 url: https://github.com/supabase-community/supabase-mcp/tree/main

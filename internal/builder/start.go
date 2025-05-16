@@ -49,7 +49,14 @@ func (b *Build) dockerRun(mcp string, artifact catalog.Artifact, envKeys []strin
 
 	dockerCmd := artifact.Entrypoint.Command
 	for _, arg := range artifact.Entrypoint.Args {
-		dockerCmd += " " + arg
+		if strings.HasPrefix(arg, "$") {
+			// Convert camelCase to ENV_VAR format
+			envVar := strings.TrimPrefix(arg, "$")
+			envVarName := camelToEnvVar(envVar)
+			dockerCmd += " " + os.Getenv(envVarName)
+		} else {
+			dockerCmd += " " + arg
+		}
 	}
 	dockerRunCmd = append(dockerRunCmd, dockerCmd)
 
@@ -83,4 +90,15 @@ func (b *Build) checkEnvironmentVariable(mcp string, artifact catalog.Artifact, 
 		return fmt.Errorf("Environment variable %s is not set and is required for the MCP %s", key, mcp)
 	}
 	return nil
+}
+
+func camelToEnvVar(s string) string {
+	var result strings.Builder
+	for i, r := range s {
+		if i > 0 && 'A' <= r && r <= 'Z' {
+			result.WriteRune('_')
+		}
+		result.WriteRune(r)
+	}
+	return strings.ToUpper(result.String())
 }
