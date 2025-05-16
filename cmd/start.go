@@ -65,6 +65,7 @@ func runStart(cmd *cobra.Command, args []string) {
 	}
 
 	err = buildInstance.Start(mcp, repository, c)
+
 	if err != nil {
 		log.Printf("Failed to start image for repository %s: %v", mcp, err)
 		os.Exit(1)
@@ -72,4 +73,16 @@ func runStart(cmd *cobra.Command, args []string) {
 	if !debug {
 		errors.HandleError("save catalog", c.Save())
 	}
+}
+
+// camelToEnvVar converts a camelCase string to an ENV_VAR format (uppercase with underscores)
+func camelToEnvVar(s string) string {
+	var result strings.Builder
+	for i, r := range s {
+		if i > 0 && 'A' <= r && r <= 'Z' {
+			result.WriteRune('_')
+		}
+		result.WriteRune(r)
+	}
+	return strings.ToUpper(result.String())
 }

@@ -1,0 +1,35 @@
+repository: https://github.com/supabase-community/supabase-mcp.git
+dockerfile: "@mcp-hub"
+displayName: Supabase PostgREST
+branch: main
+url: https://github.com/supabase-community/supabase-mcp/tree/main/packages/mcp-server-postgrest
+icon: https://avatars.githubusercontent.com/u/87650496?s=200&v=4
+description: Auto-generated RESTful API for your PostgreSQL database
+longDescription: Supabase PostgREST provides auto-generated RESTful APIs directly from your PostgreSQL database schema. It creates instant, self-documenting APIs without writing any code, allowing you to perform CRUD operations, join related tables, and execute complex queries with built-in security via PostgreSQL's Row Level Security. This thin API layer delivers high performance with each request resolving to a single SQL statement for fast response times and high throughput.
+secrets:
+  - supabaseApiKey
+categories:
+  - crm
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - supabaseApiUrl
+        - supabaseApiKey
+      properties:
+        supabaseApiUrl:
+          type: string
+          description: The URL of the Supabase instance.
+        supabaseApiKey:
+          type: string
+          description: The service role key for Supabase.
+        supabaseSchema:
+          type: string
+          description: The schema to use for the MCP.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      (config) => ({command:'node',args:['dist/stdio.js', '--apiUrl', config.supabaseApiUrl, '--apiKey', config.supabaseApiKey, '--schema', config.supabaseSchema]})
