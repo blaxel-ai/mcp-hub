@@ -9,7 +9,7 @@ longDescription: Supabase is a comprehensive backend platform providing a Postgr
 secrets:
   - supabaseAccessToken
 categories:
-  - crm
+  - database
 smithery:
   startCommand:
     type: stdio
