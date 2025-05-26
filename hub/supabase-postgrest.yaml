@@ -9,7 +9,7 @@ longDescription: Supabase PostgREST provides auto-generated RESTful APIs directl
 secrets:
   - supabaseApiKey
 categories:
-  - crm
+  - database
 smithery:
   startCommand:
     type: stdio
@@ -19,6 +19,7 @@ smithery:
       required:
         - supabaseApiUrl
         - supabaseApiKey
+        - supabaseSchema
       properties:
         supabaseApiUrl:
           type: string
@@ -29,6 +30,7 @@ smithery:
         supabaseSchema:
           type: string
           description: The schema to use for the MCP.
+          default: public
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-

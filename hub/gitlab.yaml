@@ -5,7 +5,7 @@ srcPath: src/gitlab
 branch: main
 displayName: Gitlab
 url: https://gitlab.com/-/user_settings/personal_access_tokens?page=1
-icon: https://gitlab.com/uploads/-/system/group/avatar/6543/logo-extra-whitespace.png?width=48
+icon: https://avatars.githubusercontent.com/u/1086321?s=200&v=4
 description: Search repos, files and issues, and commit in Gitlab
 longDescription: Search repos, files and issues, and commit in Gitlab
 secrets:
