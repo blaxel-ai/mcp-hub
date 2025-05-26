@@ -1,0 +1,31 @@
+repository: https://github.com/lharries/whatsapp-mcp.git
+dockerfile: "@mcp-hub"
+displayName: WhatsApp
+branch: main
+url: https://github.com/lharries/whatsapp-mcp
+icon: https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg
+description: WhatsApp MCP Server - Connect to your personal WhatsApp account
+longDescription: This is a Model Context Protocol (MCP) server for WhatsApp that allows you to search and read your personal WhatsApp messages (including images, videos, documents, and audio messages), search your contacts and send messages to either individuals or groups. It connects to your personal WhatsApp account directly via the WhatsApp web multidevice API using the whatsmeow library. All your messages are stored locally in a SQLite database and only sent to an LLM when accessed through tools.
+secrets: []
+categories:
+  - messaging
+  - social
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the WhatsApp MCP.
+      type: object
+      properties:
+        dbPath:
+          type: string
+          description: Path to store the WhatsApp database files (optional, defaults to ./store)
+          default: "./store"
+        enableAudioConversion:
+          type: boolean
+          description: Enable automatic audio conversion for voice messages (requires FFmpeg)
+          default: true
+    commandFunction:
+      # A function that produces the CLI command to start the WhatsApp MCP on stdio.
+      |-
+      config=>({command:'/app/start.sh',args:[],env:{DB_PATH:config.dbPath||'./store',ENABLE_AUDIO_CONVERSION:config.enableAudioConversion!==false?'true':'false'}})
