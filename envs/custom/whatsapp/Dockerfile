@@ -41,6 +41,9 @@ RUN apt-get update && apt-get install -y \
     curl \
     ca-certificates \
     procps \
+    nodejs \
+    npm \
+    git \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -113,5 +116,7 @@ ENV GO111MODULE=on
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD pgrep -f whatsapp-bridge && pgrep -f "main.py" || exit 1
 
+RUN npm install https://github.com/blaxel-ai/supergateway
+  
 # Start both services
-ENTRYPOINT ["/app/start.sh"]
+ENTRYPOINT ["npx","-y","@blaxel/supergateway","--port","80","--stdio"]
