@@ -13,19 +13,7 @@ categories:
 smithery:
   startCommand:
     type: stdio
-    configSchema:
-      # JSON Schema defining the configuration options for the WhatsApp MCP.
-      type: object
-      properties:
-        dbPath:
-          type: string
-          description: Path to store the WhatsApp database files (optional, defaults to ./store)
-          default: "./store"
-        enableAudioConversion:
-          type: boolean
-          description: Enable automatic audio conversion for voice messages (requires FFmpeg)
-          default: true
     commandFunction:
       # A function that produces the CLI command to start the WhatsApp MCP on stdio.
       |-
-      config=>({command:'/app/start.sh',args:[],env:{DB_PATH:config.dbPath||'./store',ENABLE_AUDIO_CONVERSION:config.enableAudioConversion!==false?'true':'false'}})
+      config=>({command:'/app/start.sh',args:[],env:{}})
