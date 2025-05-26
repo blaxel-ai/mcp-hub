@@ -9,6 +9,7 @@ description: WhatsApp MCP Server - Connect to your personal WhatsApp account
 longDescription: This is a Model Context Protocol (MCP) server for WhatsApp that allows you to search and read your personal WhatsApp messages (including images, videos, documents, and audio messages), search your contacts and send messages to either individuals or groups. It connects to your personal WhatsApp account directly via the WhatsApp web multidevice API using the whatsmeow library. All your messages are stored locally in a SQLite database and only sent to an LLM when accessed through tools.
 secrets: []
 categories:
+  - communication
   - messaging
   - social
 smithery:
