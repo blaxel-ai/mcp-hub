@@ -1,5 +1,6 @@
 repository: https://github.com/lharries/whatsapp-mcp.git
 dockerfile: "@mcp-hub"
+language: custom
 displayName: WhatsApp
 branch: main
 url: https://github.com/lharries/whatsapp-mcp
