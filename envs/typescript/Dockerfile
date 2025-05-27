@@ -52,7 +52,6 @@ COPY --from=build /etc/os-release /etc/os-release
 ARG DIST_PATH="build"
 ARG BUILD_PATH=""
 
-COPY --from=build /blaxel/node_modules /blaxel/node_modules
 COPY --from=build /blaxel${BUILD_PATH}/node_modules /blaxel/node_modules
 COPY --from=build /blaxel${BUILD_PATH}/package.json /blaxel/package.json
 COPY --from=build /blaxel/${DIST_PATH} /blaxel/build

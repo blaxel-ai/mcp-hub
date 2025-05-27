@@ -18,6 +18,7 @@ func BuildImage(ctx context.Context, registry string, imageName string, repoPath
 	for k, v := range buildArgs {
 		cmd.Args = append(cmd.Args, "--build-arg", fmt.Sprintf("%s=%s", k, v))
 	}
+	fmt.Println("cmd", cmd.String())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = repoPath
