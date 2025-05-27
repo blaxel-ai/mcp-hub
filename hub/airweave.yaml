@@ -1,0 +1,41 @@
+repository: https://github.com/airweave-ai/airweave
+dockerfile: "@mcp-hub"
+displayName: Airweave
+branch: main
+url: https://app.airweave.ai/api-keys
+icon: https://avatars.githubusercontent.com/u/192721200?s=200&v=4
+description: AI agent search platform that lets agents search any app with 100+ connectors and unified search layer
+longDescription: Airweave is a comprehensive AI agent infrastructure platform that enables intelligent agents to search and interact with any application or data source. It provides over 100 pre-built connectors for popular services like GitHub, Slack, Google Drive, Notion, and more, allowing agents to access and synchronize data from multiple sources through a unified search layer. The platform features white-labeled multi-tenant support with OAuth2-based security, automated sync capabilities, semantic search across all connected data sources, and scalable deployments from Docker Compose to Kubernetes. Airweave transforms fragmented data silos into agent-ready knowledge, making it easier to build smart agents that can retrieve contextual information from across an organization's entire data ecosystem without custom integrations.
+secrets:
+  - airweaveApiKey
+categories:
+  - ai-agents
+  - search
+  - data-integration
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - airweaveApiKey
+        - airweaveCollection
+      properties:
+        airweaveApiKey:
+          type: string
+          description: Your Airweave API key (get this from your Airweave dashboard)
+        airweaveCollection:
+          type: string
+          description: The readable ID of the collection to search
+        airweaveBaseUrl:
+          type: string
+          description: "Base URL for the Airweave API (default: https://api.airweave.ai)"
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      (config) => ({
+        command: 'node',
+        args: ['build/index.js'],
+        env: {AIRWEAVE_API_KEY:config.airweaveApiKey,AIRWEAVE_COLLECTION:config.airweaveCollection,AIRWEAVE_BASE_URL:config.airweaveBaseUrl || 'https://api.airweave.ai'}
+      })
