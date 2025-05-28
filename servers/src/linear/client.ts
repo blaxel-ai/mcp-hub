@@ -13,7 +13,7 @@ export class LinearMCPClient {
     this.baseUrl = 'https://api.linear.app/graphql';
     this.headers = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${secrets.apiKey}`,
+      'Authorization': `${secrets.apiKey}`,
     };
   }
 
