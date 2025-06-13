@@ -8,13 +8,11 @@
 	"scripts": {
 		"build": "tsc",
 		"dev": "tsc --watch",
-		"test": "vitest",
 		"cf-typegen": "wrangler types"
 	},
 	"devDependencies": {
 		"dotenv": "^16.4.7",
-		"typescript": "^5.5.2",
-		"vitest": "2.1.8"
+		"typescript": "^5.5.2"
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.738.0",
