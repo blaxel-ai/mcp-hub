@@ -1,0 +1,36 @@
+repository: https://github.com/agentmail-to/agentmail-mcp
+dockerfile: "@mcp-hub"
+displayName: AgentMail Toolkit
+branch: main
+url: https://github.com/agentmail-to/agentmail-toolkit
+icon: https://www.svgrepo.com/show/521128/email-1.svg
+description: Agent framework integration toolkit that connects OpenAI Agents SDK, Vercel AI SDK, and Model Context Protocol (MCP) with the AgentMail API
+longDescription: The AgentMail Toolkit is a comprehensive integration platform that bridges popular agent frameworks and protocols with the AgentMail API. It provides seamless connectivity between OpenAI Agents SDK, Vercel AI SDK, and Model Context Protocol (MCP), enabling developers to build sophisticated email-powered AI agents. The toolkit includes dedicated packages for both Python and Node.js environments, offering flexible integration options for different development preferences. With AgentMail Toolkit, agents can send, receive, and manage emails as part of their autonomous workflows, making it ideal for building AI systems that need email communication capabilities. The platform supports enterprise-grade email automation, agent-to-agent communication via email, and integration with existing business processes that rely on email workflows.
+secrets:
+  - agentmailApiKey
+categories:
+  - email
+  - inbox
+  - agent
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - agentmailApiKey
+      properties:
+        agentmailApiKey:
+          type: string
+          description: Your AgentMail API Key
+    commandFunction:
+      # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+      |-
+      (config) => ({
+        command: 'node',
+        args: ['dist/index.js'],
+        env: {
+          AGENTMAIL_API_KEY: config.agentmailApiKey
+        }
+      })
