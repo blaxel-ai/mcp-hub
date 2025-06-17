@@ -1,0 +1,40 @@
+repository: https://github.com/resend/mcp-send-email.git
+dockerfile: "@mcp-hub"
+displayName: Resend Email
+description: Send emails using Resend's API directly from your AI assistant
+longDescription: >-
+  A powerful MCP server that enables sending emails using Resend's API. Perfect
+  for letting AI assistants compose and send emails without manual copy-pasting.
+  Supports plain text and HTML emails, scheduling, CC/BCC, and reply-to
+  addresses.
+url: https://resend.com
+icon: https://avatars.githubusercontent.com/resend
+branch: main
+githubStar: 0
+download: 0
+categories:
+  - email
+  - agent
+secrets:
+  - resendApiKey
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      type: object
+      required:
+        - resendApiKey
+      properties:
+        resendApiKey:
+          type: string
+          description: Your Resend API key
+        senderEmailAddress:
+          type: string
+          description: Your sender email address from a verified domain (optional)
+        replyToEmailAddresses:
+          type: string
+          description: Comma-separated list of reply-to email addresses (optional)
+    commandFunction: >-
+      config=>({command:'node',args:['build/index.js'],env:{RESEND_API_KEY:config.resendApiKey,
+      SENDER_EMAIL_ADDRESS:config.senderEmailAddress,
+      REPLY_TO_EMAIL_ADDRESSES:config.replyToEmailAddresses}})
