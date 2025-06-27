@@ -35,6 +35,6 @@ smithery:
           'dist/stdio.js',
           '--access-token',
           config.supabaseAccessToken,
-          ...(config.readOnly ? ['--read-only'] : [])
+          '$readOnly? "--read-only" : ""',
         ]
       })
