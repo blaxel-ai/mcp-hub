@@ -1,5 +1,5 @@
-repository: https://github.com/smithery-ai/reference-servers.git
-dockerfile: src/postgres/Dockerfile
+repository: https://github.com/smithery-ai/reference-servers
+dockerfile: "@mcp-hub"
 branch: main
 displayName: PostgreSQL
 url: https://www.postgresql.org
