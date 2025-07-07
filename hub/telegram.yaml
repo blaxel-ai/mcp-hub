@@ -1,8 +1,7 @@
-repository: https://github.com/smithery-ai/mcp-communicator-telegram
-smitheryPath: smithery.yaml
+repository: https://github.com/qpd-v/mcp-communicator-telegram
 dockerfile: "@mcp-hub"
 displayName: Telegram
-branch: smithery/config-p18v
+branch: main
 url: https://core.telegram.org/bots#how-do-i-create-a-bot
 icon: https://telegram.org/img/t_logo.svg
 description: Enables communication with users through Telegram
@@ -11,3 +10,23 @@ secrets:
   - telegramToken
 categories:
   - communication
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - telegramToken
+        - chatId
+      properties:
+        telegramToken:
+          type: string
+          description: The Telegram bot token.
+        chatId:
+          type: string
+          description: The Telegram chat ID.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      config => ({ command: 'node', args: ['build/index.js'], env: { TELEGRAM_TOKEN: config.telegramToken, CHAT_ID: config.chatId } })

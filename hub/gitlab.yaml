@@ -1,5 +1,4 @@
 repository: https://github.com/smithery-ai/reference-servers.git
-smitheryPath: src/gitlab/smithery.yaml
 dockerfile: src/gitlab/Dockerfile
 branch: main
 displayName: Gitlab
@@ -14,3 +13,23 @@ secrets:
 categories:
   - code
   - git
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - gitlabPersonalAccessToken
+      properties:
+        gitlabPersonalAccessToken:
+          type: string
+          description: Your GitLab personal access token.
+        gitlabApiUrl:
+          type: string
+          default: https://gitlab.com/api/v4
+          description: Base URL for GitLab API, optional for self-hosted instances.
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      (config) => ({ command: 'node', args: ['dist/index.js'], env: { GITLAB_PERSONAL_ACCESS_TOKEN: config.gitlabPersonalAccessToken, GITLAB_API_URL: config.gitlabApiUrl } })

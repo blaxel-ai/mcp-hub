@@ -8,8 +8,22 @@ on:
     inputs:
       mcp:
         description: "MCP to import"
+      all:
+        description: "Import all MCPs"
+        type: choice
+        required: false
+        default: "false"
+        options:
+          - "false"
+          - "true"
+
 env:
   REGISTRY: ghcr.io
+  # Use latest tag because of infrastructure limitation
+  # When solved use ${{ github.sha }}
+  TAG: latest
+  BL_ENV: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+
 jobs:
   generate-matrix:
     runs-on: ubuntu-latest
@@ -121,4 +135,28 @@ jobs:
       - name: Install dependencies
         run: go get .
       - name: Build and push
-        run: go run main.go import -p -r ${{ env.REGISTRY }}/${{ github.repository }} -m ${{ matrix.server }} -t "${{ github.sha }}"
+        run: |
+          go run main.go import \
+            -p \
+            -r ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.BL_ENV }} \
+            -m ${{ matrix.server }} \
+            -t ${{ env.TAG }}
+  trigger-uvm:
+    runs-on: ubuntu-latest
+    needs: [generate-matrix, publish]
+    if: always() && needs.generate-matrix.outputs.servers != '[]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Trigger UVM Workflow
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository_owner }}/uvm
+          event-type: build-mcp
+          client-payload: |
+            {
+              "mcp": ${{ needs.generate-matrix.outputs.servers }},
+              "tag": "${{ env.TAG }}",
+              "env": "${{ env.BL_ENV }}"
+            }
