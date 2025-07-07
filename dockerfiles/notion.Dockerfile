@@ -6,13 +6,13 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Copy the package.json and package-lock.json files
-COPY notion/package.json notion/package-lock.json ./
+COPY package.json package-lock.json ./
 
 # Install the dependencies
 RUN npm install --ignore-scripts
 
 # Copy the rest of the application source code
-COPY notion ./
+COPY . ./
 
 # Build the application
 RUN npm run build
