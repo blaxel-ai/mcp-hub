@@ -19,9 +19,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  # Use latest tag because of infrastructure limitation
-  # When solved use ${{ github.sha }}
-  TAG: latest
+  TAG: ${{ github.sha }}
   BL_ENV: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
 
 jobs:
