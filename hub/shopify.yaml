@@ -1,7 +1,6 @@
-repository: https://github.com/smithery-ai/shopify-mcp-server-main-1
-branch: smithery/config-17cc
-smitheryPath: smithery.yaml
+repository: https://github.com/therealhexi/shopify-mcp-server-main
 dockerfile: /
+branch: main
 displayName: Shopify
 url: https://shopify.com
 icon: https://avatars.githubusercontent.com/u/8085?s=200&v=4
@@ -20,3 +19,23 @@ secrets:
   - shopifyAccessToken
 categories:
   - marketplace
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - shopifyAccessToken
+        - myshopifyDomain
+      properties:
+        shopifyAccessToken:
+          type: string
+          description: Access token for the Shopify Admin API.
+        myshopifyDomain:
+          type: string
+          description: Shopify store domain in the format <YOUR_SHOP>.myshopify.com
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      (config) => ({ command: 'node', args: ['build/index.js'], env: { SHOPIFY_ACCESS_TOKEN: config.shopifyAccessToken, MYSHOPIFY_DOMAIN: config.myshopifyDomain } })
