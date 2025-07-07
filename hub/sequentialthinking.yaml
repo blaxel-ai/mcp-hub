@@ -1,5 +1,5 @@
 repository: https://github.com/smithery-ai/reference-servers.git
-dockerfile: src/sequentialthinking/Dockerfile
+dockerfile: "@mcp-hub"
 branch: main
 displayName: Sequential Thinking
 url: https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking
