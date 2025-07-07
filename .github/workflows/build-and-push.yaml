@@ -91,7 +91,7 @@ jobs:
       ${{
         github.ref_name == 'main' && 'prod'
       || github.ref_name == 'develop' && 'dev'
-      || 'dev'
+      || 'prod'
       }}
     env:
       BL_API_URL: ${{ vars.BL_API_URL }}
