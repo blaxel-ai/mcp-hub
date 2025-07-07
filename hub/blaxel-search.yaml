@@ -1,5 +1,5 @@
 repository: https://github.com/cploujoux/exa-mcp-server
-dockerfile: /
+dockerfile: "@mcp-hub"
 branch: reset
 displayName: Blaxel Search
 url: https://app.blaxel.ai
