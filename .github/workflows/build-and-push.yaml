@@ -87,12 +87,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     if: needs.generate-matrix.outputs.servers != '[]'
-    environment: |-
-      ${{
-        github.ref_name == 'main' && 'prod'
-      || github.ref_name == 'develop' && 'dev'
-      || 'prod'
-      }}
+    environment: prod
     env:
       BL_API_URL: ${{ vars.BL_API_URL }}
       BL_ADMIN_USERNAME: ${{ secrets.BL_ADMIN_USERNAME }}
