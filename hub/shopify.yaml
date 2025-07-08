@@ -1,5 +1,5 @@
 repository: https://github.com/therealhexi/shopify-mcp-server-main
-dockerfile: /
+dockerfile: "@mcp-hub"
 branch: main
 displayName: Shopify
 url: https://shopify.com
@@ -38,4 +38,4 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      (config) => ({ command: 'node', args: ['build/index.js'], env: { SHOPIFY_ACCESS_TOKEN: config.shopifyAccessToken, MYSHOPIFY_DOMAIN: config.myshopifyDomain } })
+      (config) => ({ command: 'node', args: ['dist/index.js'], env: { SHOPIFY_ACCESS_TOKEN: config.shopifyAccessToken, MYSHOPIFY_DOMAIN: config.myshopifyDomain } })
