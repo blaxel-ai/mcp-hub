@@ -12,6 +12,15 @@ import (
 func Inject(ctx context.Context, name string, path string, smitheryDir string, dockerfileDir string, cmd string, deps []string) (string, error) {
 	dockerFilePath := filepath.Join(path, smitheryDir, dockerfileDir)
 	os.Remove(fmt.Sprintf("%s.tmp", dockerFilePath))
+
+	// Copy super-gateway binary to temp docker path
+	sgBinary, err := os.ReadFile(filepath.Join("bin", "super-gateway"))
+	if err != nil {
+		return "", fmt.Errorf("failed to read super-gateway binary: %w", err)
+	}
+	if err := os.WriteFile(filepath.Join(path, "super-gateway"), sgBinary, 0755); err != nil {
+		return "", fmt.Errorf("failed to write super-gateway binary: %w", err)
+	}
 	if smitheryDir == "@mcp-hub" {
 		// Use the current working directory to construct the full path to the source file
 		sourcePath := filepath.Join("dockerfiles", fmt.Sprintf("%s.Dockerfile", strings.ToLower(name)))

@@ -132,6 +132,9 @@ jobs:
           go-version: "1.23.3"
       - name: Install dependencies
         run: go get .
+      - name: Build super gateway
+        run: |
+          make build-super-gateway
       - name: Build and push
         run: |
           go run main.go import \

@@ -83,7 +83,7 @@ func runStart(cmd *cobra.Command, args []string) {
 func dockerRun(artifact catalog.Artifact, envKeys []string) error {
 	name := fmt.Sprintf("mcp-hub-%s", mcp)
 	exec.Command("docker", "rm", "-f", name).Run()
-	dockerRunCmd := []string{"run", "--rm", "-i", "-p", "1400:80", "--name", name}
+	dockerRunCmd := []string{"run", "--platform", "linux/amd64", "--rm", "-i", "-p", "1400:80", "--name", name}
 	for _, key := range envKeys {
 		dockerRunCmd = append(dockerRunCmd, "-e", fmt.Sprintf("%s=%s", key, os.Getenv(key)))
 	}
