@@ -29,3 +29,14 @@ build-super-gateway:
 
 %:
 	@:
+
+list:
+	@echo "Available MCP servers:"
+	@echo "======================"
+	@for file in hub/*.yaml; do \
+		basename=$$(basename $$file .yaml); \
+		echo "  $$basename"; \
+	done | sort
+	@echo ""
+	@echo "Usage: make <command> <mcp-name>"
+	@echo "Example: make run github" 
