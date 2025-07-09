@@ -16,5 +16,16 @@ test:
 	&& cp src/configs/config.$(ARGS).ts src/config.ts \
 	&& pnpm run test
 
+build-super-gateway:
+	@echo "Building super-gateway for linux/amd64..."
+	@cd super-gateway && \
+		CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+		-ldflags="-w -s" \
+		-trimpath \
+		-o ../bin/super-gateway \
+		.
+	@echo "Binary built: bin/super-gateway"
+	@echo "Binary size: $$(du -h bin/super-gateway | cut -f1)"
+
 %:
 	@:

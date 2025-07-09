@@ -31,7 +31,7 @@ smithery:
         return {
           command: 'node',
           args: [
-            'build/index.js',
+            '/app/build/index.js',
             '--tools=web_search_exa,research_paper_search,company_research,crawling,competitor_finder,linkedin_search,wikipedia_search_exa,github_search'
           ],
           env

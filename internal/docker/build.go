@@ -21,7 +21,7 @@ func BuildImage(ctx context.Context, imageName string, smitheryPath string, dock
 	}
 
 	fmt.Println("Building image", imageName, "with smitheryPath", smitheryPath, "with dockerfile", dockerfile, "in directory", directory)
-	cmd := exec.Command("docker", "build", "-t", imageName, "-f", dockerfile, ".")
+	cmd := exec.Command("docker", "build", "--platform", "linux/amd64", "-t", imageName, "-f", dockerfile, ".")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = directory
