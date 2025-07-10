@@ -21,7 +21,7 @@ WORKDIR /app
 
 RUN npm ci --ignore-scripts --omit-dev
 
-RUN apk add --no-cache git
-RUN npm install -g pnpm
-RUN pnpm install https://github.com/blaxel-ai/supergateway
-ENTRYPOINT ["npx","-y","@blaxel/supergateway","--port","80","--stdio"]
+COPY super-gateway ./super-gateway
+
+# Command to run the application
+ENTRYPOINT ["./super-gateway","--port","80","--stdio"]

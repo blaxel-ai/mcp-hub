@@ -5,4 +5,5 @@ WORKDIR /app
 RUN npm install -g pnpm
 RUN pnpm install --frozen-lockfile --ignore-scripts
 RUN pnpm run build
-ENTRYPOINT ["npx","-y","supergateway","--port","80","--stdio"]
+COPY super-gateway ./super-gateway
+ENTRYPOINT ["./super-gateway","--port","80","--stdio"]

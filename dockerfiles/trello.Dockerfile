@@ -25,14 +25,16 @@ WORKDIR /app
 
 # Copy built files from the builder stage
 COPY --from=builder /app/build ./build
-COPY --from=builder /app/package.json /app/package-lock.json ./
+COPY --from=builder /app/package.json /app/package.json
+COPY --from=builder /app/package-lock.json /app/package-lock.json
 
 # Expose the port the app runs on
 # (This line is optional and depends on whether you want to specify a port to be exposed)
 
-RUN apk add git \
-    && npm install -g pnpm \
-    && pnpm install https://github.com/blaxel-ai/supergateway
+# Install only production dependencies
+RUN npm install --ignore-scripts
+
+COPY super-gateway ./super-gateway
 
 # Command to run the application
-ENTRYPOINT ["npx","-y","@blaxel/supergateway","--port","80","--stdio"]
+ENTRYPOINT ["./super-gateway","--port","80","--stdio"]
