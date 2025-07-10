@@ -146,6 +146,10 @@ func buildAndPushImage(cfg *smithery.SmitheryConfig, name string, smitheryPath s
 		return fmt.Errorf("remove tmp dockerfile: %w", err)
 	}
 
+	if err := os.Remove(filepath.Join(repoPath, "super-gateway")); err != nil {
+		return fmt.Errorf("remove super-gateway: %w", err)
+	}
+
 	if push {
 		if err := docker.PushImage(context.Background(), imageName); err != nil {
 			return fmt.Errorf("push image: %w", err)
@@ -163,10 +167,7 @@ func setupTempDirectory() {
 }
 
 func manageDeps(repository *hub.Repository) []string {
-	deps := []string{
-		"npm install -g pnpm",
-		"pnpm install https://github.com/blaxel-ai/supergateway",
-	}
+	deps := []string{}
 	switch repository.PackageManager {
 	case hub.PackageManagerAPK:
 		if !repository.HasNPM {

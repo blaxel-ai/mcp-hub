@@ -25,4 +25,10 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config => ({ command: 'node', args: ['build/index.js'], env: { TAVILY_API_KEY: config.tavilyApiKey } })
+      config => ({
+        command: 'node',
+        args: ['build/index.js'],
+        env: {
+          TAVILY_API_KEY: config.tavilyApiKey
+        }
+      })

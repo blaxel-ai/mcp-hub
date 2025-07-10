@@ -19,8 +19,10 @@ COPY --from=builder /app/package-lock.json /app/package-lock.json
 
 ENV NODE_ENV=production
 
-RUN apk add --no-cache git
-RUN npm ci --ignore-scripts --omit-dev
-RUN npm install -g pnpm
-RUN pnpm install https://github.com/blaxel-ai/supergateway
-ENTRYPOINT ["npx","-y","@blaxel/supergateway","--port","80","--stdio"]
+# Install only production dependencies
+RUN npm ci --production --ignore-scripts
+
+COPY super-gateway ./super-gateway
+
+# Command to run the application
+ENTRYPOINT ["./super-gateway","--port","80","--stdio"]

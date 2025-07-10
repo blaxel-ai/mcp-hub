@@ -33,8 +33,7 @@ smithery:
         command: 'node',
         args: [
           'dist/transports/stdio.js',
-          '--access-token',
-          config.supabaseAccessToken,
+          '--access-token', config.supabaseAccessToken,
           '$readOnly? "--read-only" : ""',
         ]
       })

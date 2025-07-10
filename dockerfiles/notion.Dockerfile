@@ -30,9 +30,9 @@ COPY --from=builder /app/package.json /app/package-lock.json ./
 # Expose the port the app runs on
 # (This line is optional and depends on whether you want to specify a port to be exposed)
 
-RUN apk add git \
-    && npm install -g pnpm \
-    && pnpm install https://github.com/blaxel-ai/supergateway
+RUN npm ci --production --ignore-scripts
+
+COPY super-gateway ./super-gateway
 
 # Command to run the application
-ENTRYPOINT ["npx","-y","@blaxel/supergateway","--port","80","--stdio"]
+ENTRYPOINT ["./super-gateway","--port","80","--stdio"]

@@ -28,13 +28,7 @@ type Command struct {
 }
 
 func (c *Command) Entrypoint() string {
-	entrypoint := []string{"\"npx\"", "\"-y\"", "\"@blaxel/supergateway\"", "\"--port\"", "\"80\""}
-	switch c.Type {
-	case "stdio":
-		entrypoint = append(entrypoint, "\"--stdio\"")
-	case "sse":
-		entrypoint = append(entrypoint, "\"--sse\"")
-	}
+	entrypoint := []string{"\"./super-gateway\"", "\"--port\"", "\"80\"", "\"--stdio\""}
 	return strings.Join(entrypoint, ",")
 }
 

@@ -8,10 +8,11 @@ WORKDIR /app
 # (This line is optional and depends on whether you want to specify a port to be exposed)
 
 RUN apk add git \
-  && npm install -g pnpm \
-  && pnpm install https://github.com/blaxel-ai/supergateway
+  && npm install -g pnpm
 
 RUN pnpm i @hubspot/mcp-server
 
+COPY super-gateway ./super-gateway
+
 # Command to run the application
-ENTRYPOINT ["npx","-y","@blaxel/supergateway","--port","80","--stdio"]
+ENTRYPOINT ["./super-gateway","--port","80","--stdio"]

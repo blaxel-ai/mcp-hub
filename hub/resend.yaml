@@ -34,7 +34,14 @@ smithery:
         replyToEmailAddresses:
           type: string
           description: Comma-separated list of reply-to email addresses (optional)
-    commandFunction: >-
-      config=>({command:'node',args:['build/index.js'],env:{RESEND_API_KEY:config.resendApiKey,
-      SENDER_EMAIL_ADDRESS:config.senderEmailAddress,
-      REPLY_TO_EMAIL_ADDRESSES:config.replyToEmailAddresses}})
+    commandFunction:
+      |-
+      config => ({
+        command:'node',
+        args:['build/index.js'],
+        env:{
+          RESEND_API_KEY:config.resendApiKey,
+          SENDER_EMAIL_ADDRESS:config.senderEmailAddress,
+          REPLY_TO_EMAIL_ADDRESSES:config.replyToEmailAddresses
+        }
+      })

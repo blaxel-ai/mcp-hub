@@ -34,4 +34,12 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      (config) => ({command:'node',args:['build/index.js'],env:{TRELLO_API_KEY:config.trelloApiKey,TRELLO_TOKEN:config.trelloToken,TRELLO_BOARD_ID:config.trelloBoardId}})
+      (config) => ({
+        command: 'node',
+        args: ['build/index.js'],
+        env: {
+          TRELLO_API_KEY: config.trelloApiKey,
+          TRELLO_TOKEN: config.trelloToken,
+          TRELLO_BOARD_ID: config.trelloBoardId
+        }
+      })
