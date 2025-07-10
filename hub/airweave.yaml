@@ -37,5 +37,9 @@ smithery:
       (config) => ({
         command: 'node',
         args: ['build/index.js'],
-        env: {AIRWEAVE_API_KEY:config.airweaveApiKey,AIRWEAVE_COLLECTION:config.airweaveCollection,AIRWEAVE_BASE_URL:config.airweaveBaseUrl || 'https://api.airweave.ai'}
+        env: {
+          AIRWEAVE_API_KEY:config.airweaveApiKey,
+          AIRWEAVE_COLLECTION:config.airweaveCollection,
+          AIRWEAVE_BASE_URL:config.airweaveBaseUrl || 'https://api.airweave.ai'
+        }
       })

@@ -25,4 +25,10 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config=>({command:'node',args:['node_modules/@hubspot/mcp-server/dist'],env:{PRIVATE_APP_ACCESS_TOKEN:config.hubspotPrivateAppAccessToken}})
+      config=>({
+        command:'node',
+        args:['node_modules/@hubspot/mcp-server/dist'],
+        env:{
+          PRIVATE_APP_ACCESS_TOKEN:config.hubspotPrivateAppAccessToken
+        }
+      })

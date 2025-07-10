@@ -45,4 +45,15 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config => ({command: 'uv', args: ['run', 'mcp-server-snowflake'], env: {SNOWFLAKE_USER: config.snowflakeUser, SNOWFLAKE_PASSWORD: config.snowflakePassword, SNOWFLAKE_ACCOUNT: config.snowflakeAccount, SNOWFLAKE_DATABASE: config.snowflakeDatabase, SNOWFLAKE_WAREHOUSE: config.snowflakeWarehouse, SNOWFLAKE_SCHEMA: config.snowflakeSchema}})
+      config => ({
+        command: 'uv',
+        args: ['run', 'mcp-server-snowflake'],
+        env: {
+          SNOWFLAKE_USER: config.snowflakeUser,
+          SNOWFLAKE_PASSWORD: config.snowflakePassword,
+          SNOWFLAKE_ACCOUNT: config.snowflakeAccount,
+          SNOWFLAKE_DATABASE: config.snowflakeDatabase,
+          SNOWFLAKE_WAREHOUSE: config.snowflakeWarehouse,
+          SNOWFLAKE_SCHEMA: config.snowflakeSchema
+        }
+      })

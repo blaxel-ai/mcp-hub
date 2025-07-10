@@ -26,4 +26,10 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config=>({command:'node',args:['dist/index.js', 'start', 'github'],env:{GITHUB_PERSONAL_ACCESS_TOKEN:config.personalAccessToken}})
+      config => ({
+        command: 'node',
+        args: ['dist/index.js', 'start', 'github'],
+        env: {
+          GITHUB_PERSONAL_ACCESS_TOKEN: config.personalAccessToken
+        }
+      })

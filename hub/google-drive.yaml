@@ -41,4 +41,12 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config=>({command:'node',args:['dist/index.js', 'start', 'google-drive'],env:{REFRESH_TOKEN:config.refreshToken,CLIENT_ID:config.clientId,CLIENT_SECRET:config.clientSecret}})
+      config=>({
+        command:'node',
+        args:['dist/index.js', 'start', 'google-drive'],
+        env:{
+          REFRESH_TOKEN: config.refreshToken,
+          CLIENT_ID: config.clientId,
+          CLIENT_SECRET: config.clientSecret
+        }
+      })

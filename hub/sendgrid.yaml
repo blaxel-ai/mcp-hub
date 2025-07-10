@@ -25,4 +25,10 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config=>({command:'node',args:['build/index.js'],env:{SENDGRID_API_KEY:config.sendgridApiKey}})
+      config => ({
+        command: 'node',
+        args: ['build/index.js'],
+        env: {
+          SENDGRID_API_KEY: config.sendgridApiKey
+        }
+      })

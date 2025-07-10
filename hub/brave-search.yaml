@@ -24,4 +24,10 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config=>({command:'node',args:['dist/index.js', 'start', 'brave-search'],env:{BRAVE_API_KEY:config.braveApiKey}})
+      config=>({
+        command:'node',
+        args:['dist/index.js', 'start', 'brave-search'],
+        env:{
+          BRAVE_API_KEY:config.braveApiKey
+        }
+      })

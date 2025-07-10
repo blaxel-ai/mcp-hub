@@ -20,4 +20,9 @@ smithery:
     configSchema:
       type: object
       description: Empty configuration
-    commandFunction: config=>({command:'node',args:['/app/dist/index.js'], env:{}})
+    commandFunction:
+      |-
+      config=>({
+        command:'node',args:['/app/dist/index.js'],
+        env:{}
+      })

@@ -25,4 +25,10 @@ smithery:
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
-      config => ({command: 'uv', args: ['run', 'mcp-discord'], env: {DISCORD_TOKEN: config.discordToken}})
+      config => ({
+        command: 'uv',
+        args: ['run', 'mcp-discord'],
+        env: {
+          DISCORD_TOKEN: config.discordToken
+        }
+      })
