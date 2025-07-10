@@ -6,6 +6,10 @@ import:
 	go run main.go import -c hub -m $(ARGS) --debug
 
 run:
+	@if [ ! -f bin/super-gateway ]; then \
+		echo "bin/super-gateway not found, building it..."; \
+		$(MAKE) build-super-gateway; \
+	fi
 	go run main.go start -m $(ARGS) --debug
 
 catalog:
@@ -39,4 +43,4 @@ list:
 	done | sort
 	@echo ""
 	@echo "Usage: make <command> <mcp-name>"
-	@echo "Example: make run github" 
+	@echo "Example: make run github"

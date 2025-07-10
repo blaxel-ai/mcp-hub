@@ -12,9 +12,7 @@ RUN apt-get update && apt-get install -y \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && npm install -g pnpm \
-    && pnpm install https://github.com/blaxel-ai/supergateway
+    && rm -rf /var/lib/apt/lists/*
 
 # Enable bytecode compilation
 ENV UV_COMPILE_BYTECODE=1
@@ -33,8 +31,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
-# Set the environment variable for the Discord bot token
-ENV DISCORD_TOKEN=your_bot_token
-# when running the container, add --db-path and a bind mount to the host's db file
 
-ENTRYPOINT ["npx","-y","@blaxel/supergateway","--port","80","--stdio"]
+COPY super-gateway ./super-gateway
+
+ENTRYPOINT ["./super-gateway","--port","80","--stdio"]
