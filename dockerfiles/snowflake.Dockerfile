@@ -9,12 +9,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
     git \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && npm install -g pnpm \
-    && pnpm install https://github.com/beamlit/supergateway
+    && rm -rf /var/lib/apt/lists/*
 
 # Enable bytecode compilation
 ENV UV_COMPILE_BYTECODE=1
