@@ -47,7 +47,7 @@ smithery:
       |-
       config => ({
         command: 'uv',
-        args: ['run', 'mcp-server-snowflake'],
+        args: ['run', '--offline', 'mcp-server-snowflake'],
         env: {
           SNOWFLAKE_USER: config.snowflakeUser,
           SNOWFLAKE_PASSWORD: config.snowflakePassword,
