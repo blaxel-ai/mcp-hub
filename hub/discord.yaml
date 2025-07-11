@@ -27,7 +27,7 @@ smithery:
       |-
       config => ({
         command: 'uv',
-        args: ['run', 'mcp-discord'],
+        args: ['run', '--offline', 'mcp-discord'],
         env: {
           DISCORD_TOKEN: config.discordToken
         }
