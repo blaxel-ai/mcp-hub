@@ -49,27 +49,55 @@ jobs:
           changed_servers=()
 
           if [[ "${{ inputs.all }}" == "true" ]]; then
-            echo "Importing all servers"
-            echo "servers=$all_servers" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Check if there are changes in internal or cmd folders
-          if git diff --name-only HEAD^ HEAD | grep -q "internal/" || \
-             git diff --name-only HEAD^ HEAD | grep -q "cmd/"; then
-            # If there are changes in internal or cmd, include all servers
-            echo "Changes detected in internal or cmd folders, including all servers"
+            echo "Importing all servers (excluding disabled/coming soon)"
             for server in $(echo $all_servers | jq -r '.[]'); do
-              changed_servers+=("$server")
-            done
-          else
-            # Otherwise, only include servers with specific changes
-            for server in $(echo $all_servers | jq -r '.[]'); do
-              if git diff --name-only HEAD^ HEAD | grep -q "hub/${server}.yaml" || \
-                 git diff --name-only HEAD^ HEAD | grep -q "hub/${server}/"; then
-                changed_servers+=("$server")
+              # Check if the server is disabled or coming soon
+              if [ -f "${server}.yaml" ]; then
+                disabled=$(grep -E "^disabled: true" "${server}.yaml" || true)
+                coming_soon=$(grep -E "^comingSoon: true" "${server}.yaml" || true)
+                if [ -z "$disabled" ] && [ -z "$coming_soon" ]; then
+                  changed_servers+=("$server")
+                else
+                  echo "Skipping $server (disabled or coming soon)"
+                fi
               fi
             done
+          else
+            # Check if there are changes in internal or cmd folders
+            if git diff --name-only HEAD^ HEAD | grep -q "internal/" || \
+               git diff --name-only HEAD^ HEAD | grep -q "cmd/"; then
+              # If there are changes in internal or cmd, include all servers (excluding disabled/coming soon)
+              echo "Changes detected in internal or cmd folders, including all servers (excluding disabled/coming soon)"
+              for server in $(echo $all_servers | jq -r '.[]'); do
+                # Check if the server is disabled or coming soon
+                if [ -f "${server}.yaml" ]; then
+                  disabled=$(grep -E "^disabled: true" "${server}.yaml" || true)
+                  coming_soon=$(grep -E "^comingSoon: true" "${server}.yaml" || true)
+                  if [ -z "$disabled" ] && [ -z "$coming_soon" ]; then
+                    changed_servers+=("$server")
+                  else
+                    echo "Skipping $server (disabled or coming soon)"
+                  fi
+                fi
+              done
+            else
+              # Otherwise, only include servers with specific changes (excluding disabled/coming soon)
+              for server in $(echo $all_servers | jq -r '.[]'); do
+                if git diff --name-only HEAD^ HEAD | grep -q "hub/${server}.yaml" || \
+                   git diff --name-only HEAD^ HEAD | grep -q "hub/${server}/"; then
+                  # Check if the server is disabled or coming soon
+                  if [ -f "${server}.yaml" ]; then
+                    disabled=$(grep -E "^disabled: true" "${server}.yaml" || true)
+                    coming_soon=$(grep -E "^comingSoon: true" "${server}.yaml" || true)
+                    if [ -z "$disabled" ] && [ -z "$coming_soon" ]; then
+                      changed_servers+=("$server")
+                    else
+                      echo "Skipping $server (disabled or coming soon)"
+                    fi
+                  fi
+                fi
+              done
+            fi
           fi
 
           # Convert array to JSON array
