@@ -5,17 +5,19 @@ FROM node:22-alpine AS builder
 # Set the working directory inside the container
 WORKDIR /app
 
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 # Copy the package.json and package-lock.json files
-COPY package.json package-lock.json ./
+COPY package.json pnpm-lock.yaml ./
 
 # Install the dependencies
-RUN SKIP_PREPARE=true npm install --ignore-scripts
+RUN SKIP_PREPARE=true pnpm install --ignore-scripts
 
 # Copy the rest of the application source code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN pnpm run build
 
 # Use a separate runtime environment
 FROM node:22-alpine
@@ -26,13 +28,15 @@ WORKDIR /app
 # Copy built files from the builder stage
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/package.json /app/package.json
-COPY --from=builder /app/package-lock.json /app/package-lock.json
+COPY --from=builder /app/pnpm-lock.yaml /app/pnpm-lock.yaml
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Expose the port the app runs on
 # (This line is optional and depends on whether you want to specify a port to be exposed)
 
 # Install only production dependencies
-RUN npm install --ignore-scripts
+RUN pnpm install --ignore-scripts --prod
 
 COPY super-gateway ./super-gateway
 
