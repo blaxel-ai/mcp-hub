@@ -66,11 +66,22 @@ func runImport(cmd *cobra.Command, args []string) {
 
 func processRepository(name string, repository *hub.Repository) (*catalog.Catalog, error) {
 	var repoPath string
+	var shouldCleanupRepo bool
 	imageName := fmt.Sprintf("%s:%s", strings.ToLower(name), tag)
+
 	if repository.Path != "" {
 		repoPath = repository.Path
-	} else {
+	} else if repository.Repository != "" {
+		// Has repository URL, clone it
 		repoPath = fmt.Sprintf("%s/%s/%s", tmpDir, strings.TrimPrefix(repository.Repository, githubPrefix), repository.Branch)
+		shouldCleanupRepo = true
+	} else {
+		// No repository URL, create a temporary directory
+		repoPath = fmt.Sprintf("%s/%s", tmpDir, name)
+		shouldCleanupRepo = true
+	}
+
+	if shouldCleanupRepo {
 		defer git.DeleteRepository(repoPath)
 	}
 
@@ -83,9 +94,15 @@ func processRepository(name string, repository *hub.Repository) (*catalog.Catalo
 		return &c, nil
 	}
 
-	if repository.Path == "" {
+	if repository.Path == "" && repository.Repository != "" {
+		// Only clone if we have a repository URL
 		if _, err := git.CloneRepository(repoPath, repository.Branch, repository.Repository); err != nil {
 			return nil, fmt.Errorf("clone repository: %w", err)
+		}
+	} else if repository.Path == "" && repository.Repository == "" {
+		// Create empty directory for repositories without a source repo
+		if err := os.MkdirAll(repoPath, 0755); err != nil {
+			return nil, fmt.Errorf("create temporary directory: %w", err)
 		}
 	}
 

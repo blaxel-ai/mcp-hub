@@ -1,0 +1,38 @@
+dockerfile: "@mcp-hub"
+displayName: Nia
+url: https://docs.trynia.ai/integrations/nia-mcp
+icon: https://mintlify.s3.us-west-1.amazonaws.com/niaai/logo/light.svg
+description: Nia is an MCP that gives more developer context to coding agents.
+longDescription: Nia is an MCP that gives more developer context to coding agents. It improved Cursor’s performance by 27% by indexing extra documentation and codebases that coding agents can't.
+secrets:
+  - niaApiKey
+categories:
+  - ai-agents
+  - coding
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      # JSON Schema defining the configuration options for the MCP.
+      type: object
+      required:
+        - niaApiKey
+      properties:
+        niaApiKey:
+          type: string
+          description: Your Nia API key (get this from your Nia dashboard)
+        niaApiUrl:
+          type: string
+          description: "Your Nia API URL (default: https://apigcp.trynia.ai/)"
+          default: "https://apigcp.trynia.ai/"
+    commandFunction:
+      # A function that produces the CLI command to start the MCP on stdio.
+      |-
+      (config) => ({
+        command: 'pipx',
+        args: ["run", "--no-cache", "nia-mcp-server"],
+        env: {
+          NIA_API_KEY: config.niaApiKey,
+          NIA_API_URL: config.niaApiUrl || "https://apigcp.trynia.ai/"
+        }
+      })
