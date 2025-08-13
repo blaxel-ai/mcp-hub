@@ -47,6 +47,8 @@ type Gateway struct {
 	stdinWriter   *bufio.Writer
 	stdoutScanner *bufio.Scanner
 	stderrScanner *bufio.Scanner
+	includeTools  []string
+	ignoreTools   map[string]bool
 }
 
 func NewGateway() *Gateway {
@@ -148,6 +150,58 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 			if err := json.Unmarshal([]byte(line), &msg); err != nil {
 				log.Printf("Failed to parse JSON from child: %s", line)
 				continue
+			}
+
+			// Filter tools/list responses if flags are set
+			if len(g.includeTools) > 0 || len(g.ignoreTools) > 0 {
+				// Try to detect a tools list result by shape { "tools": [...] }
+				if len(msg.Result) > 0 {
+					var resultMap map[string]interface{}
+					if err := json.Unmarshal(msg.Result, &resultMap); err == nil {
+						if toolsVal, ok := resultMap["tools"]; ok {
+							if toolsArr, ok := toolsVal.([]interface{}); ok {
+								// Build include lookup for faster checks
+								includeLookup := map[string]bool{}
+								for _, n := range g.includeTools {
+									includeLookup[n] = true
+								}
+								filtered := make([]interface{}, 0, len(toolsArr))
+								for _, t := range toolsArr {
+									tmap, ok := t.(map[string]interface{})
+									if !ok {
+										continue
+									}
+									name, _ := tmap["name"].(string)
+									// Apply include (whitelist) if provided
+									if len(includeLookup) > 0 {
+										if !includeLookup[name] {
+											continue
+										}
+									}
+									// Apply ignore (blacklist)
+									if g.ignoreTools != nil {
+										if g.ignoreTools[name] {
+											continue
+										}
+									}
+									filtered = append(filtered, t)
+								}
+								// Only rewrite if filtering changed something
+								if len(filtered) != len(toolsArr) {
+									resultMap["tools"] = filtered
+									if patched, err := json.Marshal(resultMap); err == nil {
+										msg.Result = patched
+										// Also update the raw line variable so logs reflect the change
+										if rawMsg, err := json.Marshal(msg); err == nil {
+											line = string(rawMsg)
+										}
+										log.Printf("Filtered tools list: %d -> %d", len(toolsArr), len(filtered))
+									}
+								}
+							}
+						}
+					}
+				}
 			}
 
 			log.Printf("Child → WebSocket: %s", line)
@@ -364,12 +418,34 @@ func main() {
 	// Custom flag parsing to handle everything after --stdio as subprocess args
 	args := os.Args[1:]
 	portStr := "8000"
+	includeTools := []string{}
+	ignoreTools := []string{}
 
 	// Find --port flag if present
 	for i := 0; i < len(args); i++ {
 		if args[i] == "--port" && i+1 < len(args) {
 			portStr = args[i+1]
 			break
+		}
+	}
+
+	// Collect include/ignore tool flags (before --stdio)
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--include-tool" && i+1 < len(args) {
+			for _, part := range strings.Split(args[i+1], ",") {
+				part = strings.TrimSpace(part)
+				if part != "" {
+					includeTools = append(includeTools, part)
+				}
+			}
+		}
+		if args[i] == "--ignore-tools" && i+1 < len(args) {
+			for _, part := range strings.Split(args[i+1], ",") {
+				part = strings.TrimSpace(part)
+				if part != "" {
+					ignoreTools = append(ignoreTools, part)
+				}
+			}
 		}
 	}
 
@@ -398,6 +474,12 @@ func main() {
 	stdioCmd = args[stdioIndex+1:]
 
 	gateway := NewGateway()
+	// Store filters in gateway
+	gateway.includeTools = includeTools
+	gateway.ignoreTools = map[string]bool{}
+	for _, n := range ignoreTools {
+		gateway.ignoreTools[n] = true
+	}
 
 	// Start the MCP server
 	if err := gateway.StartMCPServer(stdioCmd); err != nil {
@@ -431,6 +513,12 @@ func main() {
 
 	log.Printf("Starting...")
 	log.Printf("  - port: %d", port)
+	if len(includeTools) > 0 {
+		log.Printf("  - include tools: %s", strings.Join(includeTools, ", "))
+	}
+	if len(ignoreTools) > 0 {
+		log.Printf("  - ignore tools: %s", strings.Join(ignoreTools, ", "))
+	}
 
 	// In Node.js version, WebSocket is served directly on the port
 	// The ws library creates a WebSocket-only server, not HTTP+WebSocket

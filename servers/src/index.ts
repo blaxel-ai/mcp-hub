@@ -27,7 +27,7 @@ program
 		const zodSchema = transformInZodSchema(tool.inputSchema.properties);
 		server.tool(tool.name, tool.description, zodSchema, async (argsSchema) => {
 			const config: Record<string, string> = {};
-			const secrets: Record<string, string> = {};			
+			const secrets: Record<string, string> = {};
 
 			if (mcpServer.infos) {
 				const infos = await mcpServer.infos()
