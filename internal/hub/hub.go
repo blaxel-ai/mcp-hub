@@ -24,27 +24,27 @@ const (
 )
 
 type Repository struct {
-	Repository      string                   `yaml:"repository" mendatory:"false"`
-	Path            string                   `yaml:"path" mendatory:"false"`
-	SmitheryPath    string                   `yaml:"smitheryPath" mendatory:"false" default:"smithery.yaml"`
-	Smithery        *smithery.SmitheryConfig `yaml:"smithery" mendatory:"false"`
-	Dockerfile      string                   `yaml:"dockerfile" mendatory:"false" default:"Dockerfile"`
-	PackageManager  PackageManager           `yaml:"packageManager" mendatory:"false" default:"apk"`
-	DoNotShow       []string                 `yaml:"doNotShow" mendatory:"false"`
-	HasNPM          bool                     `yaml:"hasNPM" mendatory:"false" default:"true"`
-	Branch          string                   `yaml:"branch" mendatory:"false" default:"main"`
-	URL             string                   `yaml:"url" mendatory:"false"`
-	DisplayName     string                   `yaml:"displayName" mendatory:"true"`
-	Icon            string                   `yaml:"icon" mendatory:"true"`
-	Disabled        bool                     `yaml:"disabled" mendatory:"false" default:"false"`
-	Description     string                   `yaml:"description" mendatory:"true"`
-	LongDescription string                   `yaml:"longDescription" mendatory:"true"`
-	Enterprise      bool                     `yaml:"enterprise" mendatory:"false" default:"false"`
-	ComingSoon      bool                     `yaml:"comingSoon" mendatory:"false" default:"false"`
-	Secrets         []string                 `yaml:"secrets" mendatory:"false"`
-	HiddenSecrets   []string                 `yaml:"hiddenSecrets" mendatory:"false"`
-	OAuth           *OAuth                   `yaml:"oauth" mendatory:"false"`
-	Integration     string                   `yaml:"integration" mendatory:"false"`
+	Repository      string                   `yaml:"repository" mandatory:"false"`
+	Path            string                   `yaml:"path" mandatory:"false"`
+	SmitheryPath    string                   `yaml:"smitheryPath" mandatory:"false" default:"smithery.yaml"`
+	Smithery        *smithery.SmitheryConfig `yaml:"smithery" mandatory:"false"`
+	Dockerfile      string                   `yaml:"dockerfile" mandatory:"false" default:"Dockerfile"`
+	PackageManager  PackageManager           `yaml:"packageManager" mandatory:"false" default:"apk"`
+	DoNotShow       []string                 `yaml:"doNotShow" mandatory:"false"`
+	HasNPM          bool                     `yaml:"hasNPM" mandatory:"false" default:"true"`
+	Branch          string                   `yaml:"branch" mandatory:"false" default:"main"`
+	URL             string                   `yaml:"url" mandatory:"false"`
+	DisplayName     string                   `yaml:"displayName" mandatory:"true"`
+	Icon            string                   `yaml:"icon" mandatory:"true"`
+	Disabled        bool                     `yaml:"disabled" mandatory:"false" default:"false"`
+	Description     string                   `yaml:"description" mandatory:"true"`
+	LongDescription string                   `yaml:"longDescription" mandatory:"true"`
+	Enterprise      bool                     `yaml:"enterprise" mandatory:"false" default:"false"`
+	ComingSoon      bool                     `yaml:"comingSoon" mandatory:"false" default:"false"`
+	Secrets         []string                 `yaml:"secrets" mandatory:"false"`
+	HiddenSecrets   []string                 `yaml:"hiddenSecrets" mandatory:"false"`
+	OAuth           *OAuth                   `yaml:"oauth" mandatory:"false"`
+	Integration     string                   `yaml:"integration" mandatory:"false"`
 	Tags            []string                 `yaml:"tags"`
 	Categories      []string                 `yaml:"categories"`
 }
@@ -102,7 +102,7 @@ func (h *Hub) ValidateWithDefaultValues() error {
 			value := v.Field(i)
 
 			// Check mandatory fields
-			if mandatory, ok := field.Tag.Lookup("mendatory"); ok && mandatory == "true" {
+			if mandatory, ok := field.Tag.Lookup("mandatory"); ok && mandatory == "true" {
 				if value.IsZero() {
 					errs = append(errs, fmt.Errorf("field %s is required in repository %s", field.Name, name))
 				}
