@@ -33,9 +33,10 @@ func (c *Command) Entrypoint() string {
 }
 
 type StartCommand struct {
-	Type            string       `yaml:"type"`
-	ConfigSchema    ConfigSchema `yaml:"configSchema"`
-	CommandFunction string       `yaml:"commandFunction"`
+	Type             string       `yaml:"type"`
+	ConfigSchema     ConfigSchema `yaml:"configSchema"`
+	CommandFunction  string       `yaml:"commandFunction"`
+	SuperGatewayArgs []string     `yaml:"superGatewayArgs,omitempty"`
 }
 
 type ConfigSchema struct {

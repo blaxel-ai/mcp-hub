@@ -53,9 +53,10 @@ type OAuth struct {
 }
 
 type Entrypoint struct {
-	Command string            `json:"command"`
-	Args    []string          `json:"args"`
-	Env     map[string]string `json:"env"`
+	Command          string            `json:"command"`
+	Args             []string          `json:"args"`
+	Env              map[string]string `json:"env"`
+	SuperGatewayArgs []string          `json:"superGatewayArgs"`
 }
 
 type Catalog struct {
@@ -202,9 +203,10 @@ func (c *Catalog) Load(name string, hub *hub.Repository, imageName string, smith
 			OAuth:   oauth,
 		},
 		Entrypoint: Entrypoint{
-			Command: smithery.ParsedCommand.Command,
-			Args:    smithery.ParsedCommand.Args,
-			Env:     smithery.ParsedCommand.Env,
+			Command:          smithery.ParsedCommand.Command,
+			Args:             smithery.ParsedCommand.Args,
+			Env:              smithery.ParsedCommand.Env,
+			SuperGatewayArgs: smithery.StartCommand.SuperGatewayArgs,
 		},
 		Enterprise:    hub.Enterprise,
 		ComingSoon:    hub.ComingSoon,

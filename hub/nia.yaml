@@ -25,6 +25,7 @@ smithery:
           type: string
           description: "Your Nia API URL (default: https://apigcp.trynia.ai/)"
           default: "https://apigcp.trynia.ai/"
+    superGatewayArgs: ["--port","80", "--ignore-tools", "index_local_filesystem,scan_local_filesystem,check_local_filesystem_status,search_local_filesystem", "--stdio"]
     commandFunction:
       # A function that produces the CLI command to start the MCP on stdio.
       |-
