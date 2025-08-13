@@ -431,7 +431,6 @@ func main() {
 
 	log.Printf("Starting...")
 	log.Printf("  - port: %d", port)
-	log.Printf("  - stdio: %s", strings.Join(stdioCmd, " "))
 
 	// In Node.js version, WebSocket is served directly on the port
 	// The ws library creates a WebSocket-only server, not HTTP+WebSocket
