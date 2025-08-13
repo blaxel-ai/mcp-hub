@@ -142,22 +142,117 @@ jobs:
             -r ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.BL_ENV }} \
             -m ${{ matrix.server }} \
             -t ${{ env.TAG }}
-  trigger-uvm:
-    runs-on: ubuntu-latest
+  mk3-build:
+    runs-on: codebuild-mcp-hub-${{ github.run_id }}-${{ github.run_attempt }}
+    environment: |-
+      ${{
+        github.ref_name == 'main' && 'prod'
+      || github.ref_name == 'develop' && 'dev'
+      || 'dev'
+      }}
     needs: [generate-matrix, publish]
-    if: always() && needs.generate-matrix.outputs.servers != '[]'
+    if: always() && needs.generate-matrix.outputs.servers != '[]' && needs.publish.result == 'success'
+    strategy:
+      matrix:
+        server: ${{ fromJson(needs.generate-matrix.outputs.servers )}}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Trigger UVM Workflow
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository_owner }}/uvm
-          event-type: build-mcp
-          client-payload: |
-            {
-              "mcp": ${{ needs.generate-matrix.outputs.servers }},
-              "tag": "${{ env.TAG }}",
-              "env": "${{ env.BL_ENV }}"
-            }
+      - name: Build mk3 image
+        env:
+          MCP_NAME: ${{ matrix.server }}
+          IMAGE_TAG: ${{ env.TAG }}
+          BL_TYPE: function
+          STAGE: ${{ env.BL_ENV }}
+          SRC_REGISTRY: ${{ env.REGISTRY }}/${{ github.repository }}
+          BUILD_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          LOG_LEVEL: debug
+          DEPOT_PROJECT_ID: ${{ env.BL_ENV == 'prod' && secrets.DEPOT_PROJECT_ID_PROD || secrets.DEPOT_PROJECT_ID_DEV }}
+          LAMBDA_FUNCTION_NAME: controlplane-${{ env.BL_ENV }}-metamorph
+          LAMBDA_REGION: ${{ env.BL_ENV == 'prod' && secrets.LAMBDA_REGION_PROD || secrets.LAMBDA_REGION_DEV }}
+          REGISTRY_CONFIG: ${{ env.BL_ENV == 'prod' && secrets.REGISTRY_CONFIG_PROD || secrets.REGISTRY_CONFIG_DEV }}
+          DEPOT_TOKEN: ${{ env.BL_ENV == 'prod' && secrets.DEPOT_TOKEN_PROD || secrets.DEPOT_TOKEN_DEV }}
+        run: |
+          # Parse registry configuration from JSON
+          # Expected format:
+          # [
+          #   {
+          #     "url": "registry1.example.com:8443/path",
+          #     "path": "blaxel",
+          #     "username": "user1",
+          #     "password": "pass1"
+          #   },
+          #   {
+          #     "url": "registry2.example.com:8443/path",
+          #     "path": "blaxel",
+          #     "username": "user2", 
+          #     "password": "pass2"
+          #   }
+          # ]
+          
+          # Build push_to JSON array from registry configuration
+          PUSH_TO_JSON=$(echo "$REGISTRY_CONFIG" | jq -c 'map({
+            host: "",
+            url: .url,
+            path: .path,
+            user: .username,
+            password: .password,
+            secure: true
+          }) | @json' | jq -r)
+          
+          # Build the JSON payload
+          PAYLOAD=$(cat <<EOF
+          {
+            "otel_enabled": false,
+            "bl_env": "$STAGE",
+            "push_to": $PUSH_TO_JSON,
+            "no_optimize": false,
+            "depot_token": "$DEPOT_TOKEN",
+            "bl_build_id": "$BUILD_ID",
+            "bl_type": "$BL_TYPE",
+            "bl_generation": "mk3",
+            "log_level": "$LOG_LEVEL",
+            "depot_project_id": "$DEPOT_PROJECT_ID",
+            "bl_image_override": "$STAGE/$MCP_NAME:$IMAGE_TAG",
+            "image": "$SRC_REGISTRY/$STAGE/$MCP_NAME:$IMAGE_TAG"
+          }
+          EOF
+          )
+          
+          echo "Invoking Lambda function: $LAMBDA_FUNCTION_NAME"
+          echo "MCP Name: $MCP_NAME"
+          echo "Image Tag: $IMAGE_TAG"
+          echo "BL Type: $BL_TYPE"
+          echo "Number of registries: $(echo "$REGISTRY_CONFIG" | jq 'length')"
+          echo "Lambda Region: $LAMBDA_REGION"
+          
+          # Show registry URLs without credentials
+          echo "Target registries:"
+          echo "$REGISTRY_CONFIG" | jq -r '.[].url'
+          
+          # Invoke Lambda and capture response
+          aws lambda invoke \
+            --function-name "$LAMBDA_FUNCTION_NAME" \
+            --region "$LAMBDA_REGION" \
+            --payload "$PAYLOAD" \
+            --cli-binary-format raw-in-base64-out \
+            --log-type Tail \
+            --no-cli-pager \
+            /tmp/response.json
+          
+          # Check response
+          if [ -f /tmp/response.json ]; then
+            cat /tmp/response.json | jq '.'
+            
+            # Check if build was successful
+            SUCCESS=$(jq -r '.success // false' /tmp/response.json)
+            if [ "$SUCCESS" != "true" ]; then
+              echo "Build failed"
+              MESSAGE=$(jq -r '.message // "No message provided"' /tmp/response.json)
+              echo "Error: $MESSAGE"
+              exit 1
+            fi
+            
+            echo "Build completed successfully"
+          else
+            echo "No response from Lambda"
+            exit 1
+          fi
