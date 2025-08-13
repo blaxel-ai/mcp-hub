@@ -19,4 +19,4 @@ COPY super-gateway ./super-gateway
 # Test that pipx can run nia-mcp-server (this will install it if needed)
 RUN pipx run --no-cache nia-mcp-server --help || true
 
-ENTRYPOINT ["./super-gateway","--port","80","--stdio"]
+ENTRYPOINT ["./super-gateway","--port","80", "--ignore-tools", "index_local_filesystem,scan_local_filesystem,check_local_filesystem_status,search_local_filesystem", "--stdio"]
