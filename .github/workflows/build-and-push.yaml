@@ -264,6 +264,8 @@ jobs:
             --cli-binary-format raw-in-base64-out \
             --log-type Tail \
             --no-cli-pager \
+            --cli-read-timeout 900 \
+            --cli-connect-timeout 60 \
             /tmp/response.json
           
           # Check response
