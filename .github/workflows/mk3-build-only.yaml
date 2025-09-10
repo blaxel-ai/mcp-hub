@@ -29,130 +29,36 @@ env:
   REGISTRY: ghcr.io
   TAG: ${{ inputs.tag || github.sha }}
   BL_ENV: ${{ inputs.environment }}
+  DEV_IMAGE_BUCKET: controlplane-dev-build-images-eu-west-1-89f8d3
+  PROD_IMAGE_BUCKET: controlplane-prod-build-images-us-west-2-3c9279
 
 jobs:
-  generate-servers-list:
-    runs-on: ubuntu-latest
-    outputs:
-      servers: ${{ steps.retrieve-servers.outputs.servers }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Retrieve servers list
-        id: retrieve-servers
-        shell: bash
-        run: |
-          cd hub
-          
-          # If a specific MCP is provided, use that
-          if [[ ! -z "${{ inputs.mcp }}" ]]; then
-            echo "Building specific MCP: ${{ inputs.mcp }}"
-            echo "servers=[\"${{ inputs.mcp }}\"]" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          
-          # Get list of all server YAML files
-          all_servers=$(tree -J -L 1 | jq -c '.[0].contents | map(.name | rtrimstr(".yaml"))')
-          
-          # Filter servers
-          build_servers=()
-          
-          if [[ "${{ inputs.all }}" == "true" ]]; then
-            echo "Building all servers (excluding disabled/coming soon)"
-            for server in $(echo $all_servers | jq -r '.[]'); do
-              # Check if the server is disabled or coming soon
-              if [ -f "${server}.yaml" ]; then
-                disabled=$(grep -E "^disabled: true" "${server}.yaml" || true)
-                coming_soon=$(grep -E "^comingSoon: true" "${server}.yaml" || true)
-                if [ -z "$disabled" ] && [ -z "$coming_soon" ]; then
-                  build_servers+=("$server")
-                else
-                  echo "Skipping $server (disabled or coming soon)"
-                fi
-              fi
-            done
-          else
-            echo "No servers specified. Use 'mcp' input for specific server or 'all' for all servers."
-            echo "servers=[]" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          
-          # Convert array to JSON array
-          if [ ${#build_servers[@]} -eq 0 ]; then
-            echo "No servers to build"
-            echo "servers=[]" >> $GITHUB_OUTPUT
-          else
-            # Create a properly formatted JSON array
-            servers_json="["
-            for server in "${build_servers[@]}"; do
-              if [ "$servers_json" != "[" ]; then
-                servers_json="$servers_json,"
-              fi
-              servers_json="$servers_json\"$server\""
-            done
-            servers_json="$servers_json]"
-            echo "Building servers: $servers_json"
-            echo "servers=$servers_json" >> $GITHUB_OUTPUT
-          fi
-
   mk3-build:
     runs-on: codebuild-mcp-hub-${{ github.run_id }}-${{ github.run_attempt }}
     environment: ${{ inputs.environment }}
-    needs: generate-servers-list
-    if: needs.generate-servers-list.outputs.servers != '[]'
-    strategy:
-      matrix:
-        server: ${{ fromJson(needs.generate-servers-list.outputs.servers) }}
+    if: inputs.mcp != '' || inputs.all == true
     steps:
       - name: Build mk3 image
         env:
-          MCP_NAME: ${{ matrix.server }}
+          MCP_NAME: ${{ inputs.mcp || 'all' }}
           IMAGE_TAG: ${{ env.TAG }}
           BL_TYPE: function
           STAGE: ${{ env.BL_ENV }}
           SRC_REGISTRY: ${{ env.REGISTRY }}/${{ github.repository }}
           BUILD_ID: ${{ github.run_id }}-${{ github.run_attempt }}
           LOG_LEVEL: debug
+          IMAGE_BUCKET_MK3: ${{ env.BL_ENV == 'prod' && env.PROD_IMAGE_BUCKET || env.DEV_IMAGE_BUCKET }}
           DEPOT_PROJECT_ID: ${{ env.BL_ENV == 'prod' && secrets.DEPOT_PROJECT_ID_PROD || secrets.DEPOT_PROJECT_ID_DEV }}
           LAMBDA_FUNCTION_NAME: controlplane-${{ env.BL_ENV }}-metamorph
           LAMBDA_REGION: ${{ env.BL_ENV == 'prod' && secrets.LAMBDA_REGION_PROD || secrets.LAMBDA_REGION_DEV }}
-          REGISTRY_CONFIG: ${{ env.BL_ENV == 'prod' && secrets.REGISTRY_CONFIG_PROD || secrets.REGISTRY_CONFIG_DEV }}
           DEPOT_TOKEN: ${{ env.BL_ENV == 'prod' && secrets.DEPOT_TOKEN_PROD || secrets.DEPOT_TOKEN_DEV }}
         run: |
-          # Parse registry configuration from JSON
-          # Expected format:
-          # [
-          #   {
-          #     "url": "registry1.example.com:8443/path",
-          #     "path": "blaxel",
-          #     "username": "user1",
-          #     "password": "pass1"
-          #   },
-          #   {
-          #     "url": "registry2.example.com:8443/path",
-          #     "path": "blaxel",
-          #     "username": "user2", 
-          #     "password": "pass2"
-          #   }
-          # ]
-          
-          # Build push_to JSON array from registry configuration
-          PUSH_TO_JSON=$(echo "$REGISTRY_CONFIG" | jq -c 'map({
-            host: "",
-            url: .url,
-            path: .path,
-            user: .username,
-            password: .password,
-            secure: true
-          }) | @json' | jq -r)
-          
           # Build the JSON payload
           PAYLOAD=$(cat <<EOF
           {
             "otel_enabled": false,
             "bl_env": "$STAGE",
-            "push_to": $PUSH_TO_JSON,
+            "output_s3": "s3://${{ env.IMAGE_BUCKET_MK3 }}/$MCP_NAME/$IMAGE_TAG",
             "no_optimize": false,
             "depot_token": "$DEPOT_TOKEN",
             "bl_build_id": "$BUILD_ID",
@@ -160,7 +66,6 @@ jobs:
             "bl_generation": "mk3",
             "log_level": "$LOG_LEVEL",
             "depot_project_id": "$DEPOT_PROJECT_ID",
-            "bl_image_override": "$STAGE/$MCP_NAME:$IMAGE_TAG",
             "image": "$SRC_REGISTRY/$STAGE/$MCP_NAME:$IMAGE_TAG"
           }
           EOF
@@ -170,12 +75,10 @@ jobs:
           echo "MCP Name: $MCP_NAME"
           echo "Image Tag: $IMAGE_TAG"
           echo "BL Type: $BL_TYPE"
-          echo "Number of registries: $(echo "$REGISTRY_CONFIG" | jq 'length')"
           echo "Lambda Region: $LAMBDA_REGION"
           
           # Show registry URLs without credentials
           echo "Target registries:"
-          echo "$REGISTRY_CONFIG" | jq -r '.[].url'
           
           # Invoke Lambda and capture response
           aws lambda invoke \

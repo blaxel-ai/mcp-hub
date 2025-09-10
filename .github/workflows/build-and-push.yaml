@@ -21,6 +21,8 @@ env:
   REGISTRY: ghcr.io
   TAG: ${{ github.sha }}
   BL_ENV: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+  DEV_IMAGE_BUCKET: controlplane-dev-build-images-eu-west-1-89f8d3
+  PROD_IMAGE_BUCKET: controlplane-prod-build-images-us-west-2-3c9279
 
 jobs:
   generate-matrix:
@@ -193,45 +195,18 @@ jobs:
           SRC_REGISTRY: ${{ env.REGISTRY }}/${{ github.repository }}
           BUILD_ID: ${{ github.run_id }}-${{ github.run_attempt }}
           LOG_LEVEL: debug
+          IMAGE_BUCKET_MK3: ${{ env.BL_ENV == 'prod' && env.PROD_IMAGE_BUCKET || env.DEV_IMAGE_BUCKET }}
           DEPOT_PROJECT_ID: ${{ env.BL_ENV == 'prod' && secrets.DEPOT_PROJECT_ID_PROD || secrets.DEPOT_PROJECT_ID_DEV }}
           LAMBDA_FUNCTION_NAME: controlplane-${{ env.BL_ENV }}-metamorph
           LAMBDA_REGION: ${{ env.BL_ENV == 'prod' && secrets.LAMBDA_REGION_PROD || secrets.LAMBDA_REGION_DEV }}
-          REGISTRY_CONFIG: ${{ env.BL_ENV == 'prod' && secrets.REGISTRY_CONFIG_PROD || secrets.REGISTRY_CONFIG_DEV }}
           DEPOT_TOKEN: ${{ env.BL_ENV == 'prod' && secrets.DEPOT_TOKEN_PROD || secrets.DEPOT_TOKEN_DEV }}
         run: |
-          # Parse registry configuration from JSON
-          # Expected format:
-          # [
-          #   {
-          #     "url": "registry1.example.com:8443/path",
-          #     "path": "blaxel",
-          #     "username": "user1",
-          #     "password": "pass1"
-          #   },
-          #   {
-          #     "url": "registry2.example.com:8443/path",
-          #     "path": "blaxel",
-          #     "username": "user2", 
-          #     "password": "pass2"
-          #   }
-          # ]
-          
-          # Build push_to JSON array from registry configuration
-          PUSH_TO_JSON=$(echo "$REGISTRY_CONFIG" | jq -c 'map({
-            host: "",
-            url: .url,
-            path: .path,
-            user: .username,
-            password: .password,
-            secure: true
-          }) | @json' | jq -r)
-          
           # Build the JSON payload
           PAYLOAD=$(cat <<EOF
           {
             "otel_enabled": false,
             "bl_env": "$STAGE",
-            "push_to": $PUSH_TO_JSON,
+            "output_s3": "s3://$IMAGE_BUCKET_MK3/$MCP_NAME/$IMAGE_TAG",
             "no_optimize": false,
             "depot_token": "$DEPOT_TOKEN",
             "bl_build_id": "$BUILD_ID",
@@ -239,7 +214,6 @@ jobs:
             "bl_generation": "mk3",
             "log_level": "$LOG_LEVEL",
             "depot_project_id": "$DEPOT_PROJECT_ID",
-            "bl_image_override": "$STAGE/$MCP_NAME:$IMAGE_TAG",
             "image": "$SRC_REGISTRY/$STAGE/$MCP_NAME:$IMAGE_TAG"
           }
           EOF
@@ -249,12 +223,11 @@ jobs:
           echo "MCP Name: $MCP_NAME"
           echo "Image Tag: $IMAGE_TAG"
           echo "BL Type: $BL_TYPE"
-          echo "Number of registries: $(echo "$REGISTRY_CONFIG" | jq 'length')"
           echo "Lambda Region: $LAMBDA_REGION"
           
-          # Show registry URLs without credentials
-          echo "Target registries:"
-          echo "$REGISTRY_CONFIG" | jq -r '.[].url'
+          # Show S3 output location
+          echo "Target S3 location:"
+          echo "s3://$IMAGE_BUCKET_MK3/$MCP_NAME/$IMAGE_TAG"
           
           # Invoke Lambda and capture response
           aws lambda invoke \
