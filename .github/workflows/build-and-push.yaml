@@ -130,6 +130,7 @@ jobs:
       BL_ADMIN_PASSWORD: ${{ secrets.BL_ADMIN_PASSWORD }}
     needs:
       - generate-matrix
+    if: needs.generate-matrix.outputs.servers != '[]'
     strategy:
       matrix:
         server: ${{ fromJson(needs.generate-matrix.outputs.servers )}}
