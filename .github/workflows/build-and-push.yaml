@@ -247,14 +247,20 @@ jobs:
           
           # Check response
           if [ -f /tmp/response.json ]; then
-            cat /tmp/response.json | jq '.'
+            echo "Lambda response received, parsing..."
             
-            # Check if build was successful
-            SUCCESS=$(jq -r '.success // false' /tmp/response.json)
-            if [ "$SUCCESS" != "true" ]; then
-              echo "Build failed"
-              MESSAGE=$(jq -r '.message // "No message provided"' /tmp/response.json)
-              echo "Error: $MESSAGE"
+            # First, let's check if we have valid JSON
+            if ! jq empty /tmp/response.json 2>/dev/null; then
+              echo "Warning: Lambda response is not valid JSON"
+              cat /tmp/response.json
+            else
+              cat /tmp/response.json | jq '.'
+            fi
+            
+            # we check for successful status code (200)
+            STATUS_CODE=$(jq -r '.StatusCode // 0' /tmp/response.json 2>/dev/null)
+            if [ "$STATUS_CODE" != "200" ]; then
+              echo "Build failed with status code: $STATUS_CODE"
               exit 1
             fi
 
@@ -277,25 +283,32 @@ jobs:
             fi
             
             # Prepare the JSON payload for the API
-            API_PAYLOAD=$(cat <<EOF
-            {
-              "registry": "${{ env.REGISTRY }}",
-              "workspace": "$WORKSPACE",
-              "repository": "$MCP_NAME",
-              "tag": "$IMAGE_TAG",
-              "registry_type": "$REGISTRY_TYPE",
-              "original": "$MCP_NAME",
-              "region": "$LAMBDA_REGION",
-              "bucket": "$IMAGE_BUCKET_MK3"
-            }
-            EOF
-            )
+            API_PAYLOAD=$(jq -n \
+              --arg registry "${{ env.REGISTRY }}" \
+              --arg workspace "$WORKSPACE" \
+              --arg repository "$MCP_NAME" \
+              --arg tag "$IMAGE_TAG" \
+              --arg registry_type "$REGISTRY_TYPE" \
+              --arg original "$MCP_NAME" \
+              --arg region "$LAMBDA_REGION" \
+              --arg bucket "$IMAGE_BUCKET_MK3" \
+              '{
+                registry: $registry,
+                workspace: $workspace,
+                repository: $repository,
+                tag: $tag,
+                registry_type: $registry_type,
+                original: $original,
+                region: $region,
+                bucket: $bucket
+              }')
             
             echo "Calling Blaxel API to register image..."
             echo "URL: $BL_API_URL/v0/admin/images"
             echo "Workspace: $WORKSPACE"
             echo "Repository: $MCP_NAME"
             echo "Tag: $IMAGE_TAG"
+            echo "Payload: $API_PAYLOAD"
             
             # Make the API call
             HTTP_RESPONSE=$(curl -s -w "\n%{http_code}" --request PUT \
