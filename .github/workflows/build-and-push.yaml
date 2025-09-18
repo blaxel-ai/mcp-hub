@@ -210,7 +210,7 @@ jobs:
           {
             "otel_enabled": false,
             "bl_env": "$STAGE",
-            "output_s3": "s3://$IMAGE_BUCKET_MK3/blaxel/$MCP_NAME/$IMAGE_TAG",
+            "output_s3": "s3://$IMAGE_BUCKET_MK3/blaxel/mcp/$MCP_NAME/$IMAGE_TAG",
             "no_optimize": false,
             "depot_token": "$DEPOT_TOKEN",
             "bl_build_id": "$BUILD_ID",
@@ -287,7 +287,7 @@ jobs:
               --arg repository "$MCP_NAME" \
               --arg tag "$IMAGE_TAG" \
               --arg registry_type "$REGISTRY_TYPE" \
-              --arg original "$MCP_NAME:$IMAGE_TAG" \
+              --arg original "mcp/$MCP_NAME:$IMAGE_TAG" \
               --arg region "$LAMBDA_REGION" \
               --arg bucket "$IMAGE_BUCKET_MK3" \
               '{
