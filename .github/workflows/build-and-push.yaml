@@ -302,7 +302,7 @@ jobs:
               }')
             
             echo "Calling Blaxel API to register image..."
-            echo "URL: $BL_API_URL/v0/admin/images"
+            echo "URL: $BL_API_URL/admin/images"
             echo "Workspace: $WORKSPACE"
             echo "Repository: $MCP_NAME"
             echo "Tag: $IMAGE_TAG"
@@ -310,7 +310,7 @@ jobs:
             
             # Make the API call
             HTTP_RESPONSE=$(curl -s -w "\n%{http_code}" --request PUT \
-              --url "$BL_API_URL/v0/admin/images" \
+              --url "$BL_API_URL/admin/images" \
               --header "Authorization: Basic $AUTH_HEADER" \
               --header "Content-Type: application/json" \
               --data "$API_PAYLOAD")
