@@ -249,18 +249,16 @@ jobs:
           if [ -f /tmp/response.json ]; then
             echo "Lambda response received, parsing..."
             
-            # First, let's check if we have valid JSON
-            if ! jq empty /tmp/response.json 2>/dev/null; then
-              echo "Warning: Lambda response is not valid JSON"
-              cat /tmp/response.json
-            else
-              cat /tmp/response.json | jq '.'
-            fi
+            # Display the full response for debugging
+            cat /tmp/response.json | jq '.'
             
-            # we check for successful status code (200)
-            STATUS_CODE=$(jq -r '.StatusCode // 0' /tmp/response.json 2>/dev/null)
-            if [ "$STATUS_CODE" != "200" ]; then
-              echo "Build failed with status code: $STATUS_CODE"
+            # Check if the build was successful
+            # The response has a 'success' field that indicates build status
+            BUILD_SUCCESS=$(jq -r '.success // false' /tmp/response.json 2>/dev/null)
+            if [ "$BUILD_SUCCESS" != "true" ]; then
+              echo "Build failed"
+              MESSAGE=$(jq -r '.message // "No message provided"' /tmp/response.json)
+              echo "Error: $MESSAGE"
               exit 1
             fi
 
