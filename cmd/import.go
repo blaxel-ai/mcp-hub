@@ -68,6 +68,7 @@ func processRepository(name string, repository *hub.Repository) (*catalog.Catalo
 	var repoPath string
 	var shouldCleanupRepo bool
 	imageName := fmt.Sprintf("%s:%s", strings.ToLower(name), tag)
+	templateImageName := fmt.Sprintf("blaxel/mcp/%s:latest", strings.ToLower(name))
 
 	if repository.Path != "" {
 		repoPath = repository.Path
@@ -87,7 +88,7 @@ func processRepository(name string, repository *hub.Repository) (*catalog.Catalo
 
 	if repository.Disabled {
 		c := catalog.Catalog{}
-		handleError("load catalog", c.Load(name, repository, imageName, &smithery.SmitheryConfig{}))
+		handleError("load catalog", c.Load(name, repository, templateImageName, &smithery.SmitheryConfig{}))
 		if !debug {
 			handleError("save catalog", c.Save())
 		}
@@ -133,7 +134,7 @@ func processRepository(name string, repository *hub.Repository) (*catalog.Catalo
 	}
 
 	c := catalog.Catalog{}
-	handleError("load catalog", c.Load(name, repository, buildTo, cfg))
+	handleError("load catalog", c.Load(name, repository, templateImageName, cfg))
 	if !debug {
 		handleError("save catalog", c.Save())
 	}
