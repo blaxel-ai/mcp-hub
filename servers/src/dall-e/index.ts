@@ -68,6 +68,11 @@ class DallEClient {
 				response_format: 'url',
 				size: (request.size as any) || '1024x1024',
 			});
+
+			if (!result.data || result.data.length === 0) {
+				throw new Error('No image data returned from DALL-E');
+			}
+
 			return {
 				content: [{ type: 'text', text: result.data[0].url }],
 				isError: false,
