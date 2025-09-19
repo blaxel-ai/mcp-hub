@@ -191,12 +191,14 @@ jobs:
       matrix:
         server: ${{ fromJson(needs.generate-matrix.outputs.servers )}}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Build mk3 image
         env:
           MCP_NAME: ${{ matrix.server }}
           IMAGE_TAG: ${{ env.TAG }}
           BL_TYPE: function
-          STAGE: ${{ env.BL_ENV }}
+          BL_ENV: ${{ env.BL_ENV }}
           SRC_REGISTRY: ${{ env.REGISTRY }}/${{ github.repository }}
           BUILD_ID: ${{ github.run_id }}-${{ github.run_attempt }}
           LOG_LEVEL: debug
@@ -206,134 +208,5 @@ jobs:
           LAMBDA_REGION: ${{ env.BL_ENV == 'prod' && secrets.LAMBDA_REGION_PROD || secrets.LAMBDA_REGION_DEV }}
           DEPOT_TOKEN: ${{ env.BL_ENV == 'prod' && secrets.DEPOT_TOKEN_PROD || secrets.DEPOT_TOKEN_DEV }}
         run: |
-          # Build the JSON payload
-          PAYLOAD=$(cat <<EOF
-          {
-            "otel_enabled": false,
-            "bl_env": "$STAGE",
-            "output_s3": "s3://$IMAGE_BUCKET_MK3/blaxel/mcp/$MCP_NAME/$IMAGE_TAG",
-            "no_optimize": false,
-            "depot_token": "$DEPOT_TOKEN",
-            "bl_build_id": "$BUILD_ID",
-            "bl_type": "$BL_TYPE",
-            "bl_generation": "mk3",
-            "log_level": "$LOG_LEVEL",
-            "depot_project_id": "$DEPOT_PROJECT_ID",
-            "image": "$SRC_REGISTRY/$STAGE/$MCP_NAME:$IMAGE_TAG"
-          }
-          EOF
-          )
-          
-          echo "Invoking Lambda function: $LAMBDA_FUNCTION_NAME"
-          echo "MCP Name: $MCP_NAME"
-          echo "Image Tag: $IMAGE_TAG"
-          echo "BL Type: $BL_TYPE"
-          echo "Lambda Region: $LAMBDA_REGION"
-          
-          # Show S3 output location
-          echo "Target S3 location:"
-          echo "s3://$IMAGE_BUCKET_MK3/$MCP_NAME/$IMAGE_TAG"
-          
-          # Invoke Lambda and capture response
-          aws lambda invoke \
-            --function-name "$LAMBDA_FUNCTION_NAME" \
-            --region "$LAMBDA_REGION" \
-            --payload "$PAYLOAD" \
-            --cli-binary-format raw-in-base64-out \
-            --log-type Tail \
-            --no-cli-pager \
-            --cli-read-timeout 900 \
-            --cli-connect-timeout 60 \
-            /tmp/response.json
-          
-          # Check response
-          if [ -f /tmp/response.json ]; then
-            echo "Lambda response received, parsing..."
-            
-            # Display the full response for debugging
-            cat /tmp/response.json | jq '.'
-            
-            # Check if the build was successful
-            # The response has a 'success' field that indicates build status
-            BUILD_SUCCESS=$(jq -r '.success // false' /tmp/response.json 2>/dev/null)
-            if [ "$BUILD_SUCCESS" != "true" ]; then
-              echo "Build failed"
-              MESSAGE=$(jq -r '.message // "No message provided"' /tmp/response.json)
-              echo "Error: $MESSAGE"
-              exit 1
-            fi
-
-            echo "Build completed successfully"
-            
-            # Update image registry after successful build
-            echo "Updating image registry..."
-            
-            # Create Basic auth header (base64 encode username:password)
-            AUTH_HEADER=$(echo -n "$BL_ADMIN_USERNAME:$BL_ADMIN_PASSWORD" | base64)
-            
-            # Workspace is always blaxel
-            WORKSPACE="blaxel"
-            
-            # Determine registry type based on the registry URL
-            if [[ "${{ env.REGISTRY }}" == "ghcr.io" ]]; then
-              REGISTRY_TYPE="github"
-            else
-              REGISTRY_TYPE="docker_hub"
-            fi
-            
-            # Prepare the JSON payload for the API
-            API_PAYLOAD=$(jq -n \
-              --arg registry "${{ env.REGISTRY }}" \
-              --arg workspace "$WORKSPACE" \
-              --arg repository "$MCP_NAME" \
-              --arg tag "$IMAGE_TAG" \
-              --arg registry_type "$REGISTRY_TYPE" \
-              --arg original "mcp/$MCP_NAME:$IMAGE_TAG" \
-              --arg region "$LAMBDA_REGION" \
-              --arg bucket "$IMAGE_BUCKET_MK3" \
-              '{
-                registry: $registry,
-                workspace: $workspace,
-                repository: $repository,
-                tag: $tag,
-                registry_type: $registry_type,
-                original: $original,
-                region: $region,
-                bucket: $bucket
-              }')
-            
-            echo "Calling Blaxel API to register image..."
-            echo "URL: $BL_API_URL/admin/images"
-            echo "Workspace: $WORKSPACE"
-            echo "Repository: $MCP_NAME"
-            echo "Tag: $IMAGE_TAG"
-            echo "Payload: $API_PAYLOAD"
-            
-            # Make the API call
-            HTTP_RESPONSE=$(curl -s -w "\n%{http_code}" --request PUT \
-              --url "$BL_API_URL/admin/images" \
-              --header "Authorization: Basic $AUTH_HEADER" \
-              --header "Content-Type: application/json" \
-              --data "$API_PAYLOAD")
-            
-            # Extract HTTP status code
-            HTTP_STATUS=$(echo "$HTTP_RESPONSE" | tail -n 1)
-            HTTP_BODY=$(echo "$HTTP_RESPONSE" | sed '$d')
-            
-            echo "API Response Status: $HTTP_STATUS"
-            if [ ! -z "$HTTP_BODY" ]; then
-              echo "API Response Body: $HTTP_BODY"
-            fi
-            
-            # Check if the API call was successful
-            if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
-              echo "Image successfully registered in Blaxel"
-            else
-              echo "Warning: Failed to register image in Blaxel (HTTP $HTTP_STATUS)"
-              # Don't fail the build if image registration fails
-              # exit 1
-            fi
-          else
-            echo "No response from Lambda"
-            exit 1
-          fi
+          chmod +x ./scripts/mk3-build.sh
+          ./scripts/mk3-build.sh
