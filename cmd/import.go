@@ -68,7 +68,7 @@ func processRepository(name string, repository *hub.Repository) (*catalog.Catalo
 	var repoPath string
 	var shouldCleanupRepo bool
 	imageName := fmt.Sprintf("%s:%s", strings.ToLower(name), tag)
-	templateImageName := fmt.Sprintf("blaxel/mcp/%s:latest", strings.ToLower(name))
+	templateImageName := fmt.Sprintf("%s:latest", strings.ToLower(name))
 
 	if repository.Path != "" {
 		repoPath = repository.Path
