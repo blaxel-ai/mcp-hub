@@ -22,6 +22,7 @@ type Artifact struct {
 	Enterprise      bool       `json:"enterprise"`
 	ComingSoon      bool       `json:"coming_soon"`
 	DisplayName     string     `json:"displayName"`
+	Transport       string     `json:"transport"`
 	Categories      []string   `json:"categories"`
 	Integration     string     `json:"integration"`
 	Description     string     `json:"description"`
@@ -186,11 +187,15 @@ func (c *Catalog) Load(name string, hub *hub.Repository, imageName string, smith
 	if hub.Integration == "" {
 		hub.Integration = name
 	}
+	if hub.Transport == "" {
+		hub.Transport = "websocket"
+	}
 
 	artifact := Artifact{
 		Name:            name,
 		Image:           imageName,
 		DisplayName:     hub.DisplayName,
+		Transport:       hub.Transport,
 		Description:     hub.Description,
 		LongDescription: hub.LongDescription,
 		Icon:            hub.Icon,

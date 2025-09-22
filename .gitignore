@@ -1,5 +1,4 @@
 # Logs
-
 logs
 _.log
 npm-debug.log_
@@ -7,9 +6,9 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
-hack/test_client/src/config.ts
+tests/src/config.ts
 # Diagnostic reports (https://nodejs.org/api/report.html)
-
+tmp
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Runtime data

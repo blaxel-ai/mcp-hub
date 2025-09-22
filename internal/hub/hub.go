@@ -34,6 +34,7 @@ type Repository struct {
 	HasNPM          bool                     `yaml:"hasNPM" mandatory:"false" default:"true"`
 	Branch          string                   `yaml:"branch" mandatory:"false" default:"main"`
 	URL             string                   `yaml:"url" mandatory:"false"`
+	Transport       string                   `yaml:"transport" mandatory:"false"`
 	DisplayName     string                   `yaml:"displayName" mandatory:"true"`
 	Icon            string                   `yaml:"icon" mandatory:"true"`
 	Disabled        bool                     `yaml:"disabled" mandatory:"false" default:"false"`

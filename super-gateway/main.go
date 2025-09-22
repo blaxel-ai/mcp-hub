@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -35,23 +37,44 @@ type Client struct {
 	Send chan []byte
 }
 
+// SSEClient represents a connected HTTP stream (SSE) client
+type SSEClient struct {
+	ID   string
+	Send chan []byte
+}
+
 // Gateway manages the MCP server subprocess and WebSocket connections
 type Gateway struct {
-	cmd           *exec.Cmd
-	clients       map[string]*Client
-	clientsMu     sync.RWMutex
-	register      chan *Client
-	unregister    chan *Client
-	broadcast     chan []byte
-	upgrader      websocket.Upgrader
-	stdinWriter   *bufio.Writer
-	stdoutScanner *bufio.Scanner
-	stderrScanner *bufio.Scanner
+	cmd                *exec.Cmd
+	clients            map[string]*Client
+	clientsMu          sync.RWMutex
+	sseClients         map[string]*SSEClient
+	sseClientsMu       sync.RWMutex
+	defaultSSEClientID string
+	waiters            map[string]chan []byte
+	waitersMu          sync.RWMutex
+	sessions           map[string]Session
+	sessionsMu         sync.RWMutex
+	register           chan *Client
+	unregister         chan *Client
+	broadcast          chan []byte
+	upgrader           websocket.Upgrader
+	stdinWriter        *bufio.Writer
+	stdoutScanner      *bufio.Scanner
+	stderrScanner      *bufio.Scanner
+}
+
+type Session struct {
+	ProtocolVersion string
+	CreatedAt       time.Time
 }
 
 func NewGateway() *Gateway {
 	return &Gateway{
 		clients:    make(map[string]*Client),
+		sseClients: make(map[string]*SSEClient),
+		waiters:    make(map[string]chan []byte),
+		sessions:   make(map[string]Session),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		broadcast:  make(chan []byte),
@@ -150,7 +173,7 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 				continue
 			}
 
-			log.Printf("Child → WebSocket: %s", line)
+			log.Printf("Child → Gateway: %s", line)
 
 			// In the Node.js version, it sends using wsTransport?.send(jsonMsg, jsonMsg.id)
 			// This means it uses the message's own ID to route back to the correct client
@@ -167,7 +190,26 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 					}
 					msg.ID = restoredID
 
-					// Send to specific client
+					// First, try to fulfill a pending HTTP waiter for this clientID:originalID
+					key := clientID + ":" + originalID
+					g.waitersMu.RLock()
+					ch, hasWaiter := g.waiters[key]
+					g.waitersMu.RUnlock()
+					if hasWaiter {
+						if data, err := json.Marshal(msg); err == nil {
+							select {
+							case ch <- data:
+							default:
+							}
+						}
+						// Clean up the waiter
+						g.waitersMu.Lock()
+						delete(g.waiters, key)
+						g.waitersMu.Unlock()
+						continue
+					}
+
+					// If no waiter, forward to connected clients (WS/SSE)
 					g.clientsMu.RLock()
 					if client, ok := g.clients[clientID]; ok {
 						if data, err := json.Marshal(msg); err == nil {
@@ -182,6 +224,18 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 						}
 					}
 					g.clientsMu.RUnlock()
+
+					g.sseClientsMu.RLock()
+					if sseClient, ok := g.sseClients[clientID]; ok {
+						if data, err := json.Marshal(msg); err == nil {
+							select {
+							case sseClient.Send <- data:
+							default:
+								// Drop if channel full
+							}
+						}
+					}
+					g.sseClientsMu.RUnlock()
 					continue
 				}
 			}
@@ -225,7 +279,7 @@ func (g *Gateway) SendToMCP(msg JSONRPCMessage, clientID string) error {
 		return fmt.Errorf("failed to marshal message: %w", err)
 	}
 
-	log.Printf("WebSocket → Child: %s", string(data))
+	log.Printf("Gateway → Child: %s", string(data))
 
 	if _, err := g.stdinWriter.Write(append(data, '\n')); err != nil {
 		return fmt.Errorf("failed to write to stdin: %w", err)
@@ -256,6 +310,7 @@ func (g *Gateway) Run() {
 			}
 
 		case message := <-g.broadcast:
+			// Broadcast to WebSocket clients
 			g.clientsMu.RLock()
 			for _, client := range g.clients {
 				select {
@@ -268,6 +323,19 @@ func (g *Gateway) Run() {
 				}
 			}
 			g.clientsMu.RUnlock()
+
+			// Send to only one SSE stream to avoid duplicate delivery across streams
+			g.sseClientsMu.RLock()
+			if g.defaultSSEClientID != "" {
+				if sseClient, ok := g.sseClients[g.defaultSSEClientID]; ok {
+					select {
+					case sseClient.Send <- message:
+					default:
+						// Drop if channel full
+					}
+				}
+			}
+			g.sseClientsMu.RUnlock()
 		}
 	}
 }
@@ -290,6 +358,199 @@ func (g *Gateway) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	go client.writePump()
 	go client.readPump(g)
+}
+
+// HandleHTTPStream handles SSE connections for HTTP streaming mode
+func (g *Gateway) HandleHTTPStream(w http.ResponseWriter, r *http.Request) {
+	// Validate Origin per spec to mitigate DNS rebinding
+	origin := r.Header.Get("Origin")
+	if origin != "" && !strings.HasPrefix(origin, "http://localhost") && !strings.HasPrefix(origin, "http://127.0.0.1") && !strings.HasPrefix(origin, "https://localhost") && !strings.HasPrefix(origin, "https://127.0.0.1") {
+		http.Error(w, "Forbidden origin", http.StatusForbidden)
+		return
+	}
+	// Check if client ID is provided in header or query param
+	clientID := r.Header.Get("X-Client-ID")
+	if clientID == "" {
+		clientID = r.URL.Query().Get("clientId")
+	}
+	if clientID == "" {
+		clientID = uuid.New().String()
+	}
+
+	// Set SSE headers
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("X-Client-ID", clientID)
+
+	// Ensure we can flush to the client
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "Streaming not supported", http.StatusInternalServerError)
+		return
+	}
+
+	// Register SSE client
+	g.sseClientsMu.Lock()
+	g.sseClients[clientID] = &SSEClient{ID: clientID, Send: make(chan []byte, 256)}
+	sseClient := g.sseClients[clientID]
+	if g.defaultSSEClientID == "" {
+		g.defaultSSEClientID = clientID
+	}
+	g.sseClientsMu.Unlock()
+
+	// Send initial connection event
+	fmt.Fprintf(w, "event: connected\nid: %s\ndata: {\"clientId\":\"%s\"}\n\n", clientID, clientID)
+	flusher.Flush()
+
+	// Writer goroutine
+	done := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case msg := <-sseClient.Send:
+				_, err := fmt.Fprintf(w, "data: %s\n\n", string(msg))
+				if err != nil {
+					log.Printf("SSE write error for client %s: %v", clientID, err)
+					close(done)
+					return
+				}
+				flusher.Flush()
+			case <-ticker.C:
+				_, err := fmt.Fprintf(w, ": ping\n\n")
+				if err != nil {
+					log.Printf("SSE ping error for client %s: %v", clientID, err)
+					close(done)
+					return
+				}
+				flusher.Flush()
+			case <-done:
+				return
+			}
+		}
+	}()
+
+	// Keep the connection open until client disconnects
+	<-r.Context().Done()
+	close(done)
+
+	// Unregister SSE client
+	g.sseClientsMu.Lock()
+	delete(g.sseClients, clientID)
+	g.sseClientsMu.Unlock()
+}
+
+// HandleHTTPMessage handles incoming messages in HTTP streaming mode
+func (g *Gateway) HandleHTTPMessage(w http.ResponseWriter, r *http.Request) {
+	// Validate Origin per spec to mitigate DNS rebinding
+	origin := r.Header.Get("Origin")
+	if origin != "" && !strings.HasPrefix(origin, "http://localhost") && !strings.HasPrefix(origin, "http://127.0.0.1") && !strings.HasPrefix(origin, "https://localhost") && !strings.HasPrefix(origin, "https://127.0.0.1") {
+		http.Error(w, "Forbidden origin", http.StatusForbidden)
+		return
+	}
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Prefer session-based correlation if provided by client (per spec)
+	clientID := r.Header.Get("Mcp-Session-Id")
+	if clientID == "" {
+		// Fallback to legacy X-Client-ID or query param if present
+		clientID = r.Header.Get("X-Client-ID")
+	}
+	if clientID == "" {
+		clientID = r.URL.Query().Get("clientId")
+	}
+	if clientID == "" {
+		clientID = uuid.New().String()
+	}
+
+	// If session exists, enforce protocol version header after initialization
+	g.sessionsMu.RLock()
+	session, hasSession := g.sessions[clientID]
+	g.sessionsMu.RUnlock()
+	if hasSession {
+		// The spec requires MCP-Protocol-Version on subsequent requests
+		pv := r.Header.Get("MCP-Protocol-Version")
+		if pv == "" {
+			// Back-compat: server SHOULD assume 2025-03-26 when header is missing
+			// We accept missing header, but can log
+			log.Printf("Warning: missing MCP-Protocol-Version header; assuming %s", session.ProtocolVersion)
+		}
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	var msg JSONRPCMessage
+	if err := json.Unmarshal(body, &msg); err != nil {
+		http.Error(w, "Invalid JSON-RPC message", http.StatusBadRequest)
+		return
+	}
+
+	if err := g.SendToMCP(msg, clientID); err != nil {
+		log.Printf("Failed to send message to MCP from client %s: %v", clientID, err)
+		http.Error(w, "Failed to process message", http.StatusInternalServerError)
+		return
+	}
+
+	// Per spec: if input is response/notification, return 202 Accepted with no body
+	if msg.Method == "" && msg.ID != nil {
+		// JSON-RPC response: 202 with no body
+		w.WriteHeader(http.StatusAccepted)
+		return
+	}
+	if msg.Method != "" && msg.ID == nil {
+		// JSON-RPC notification: 202 with no body
+		w.WriteHeader(http.StatusAccepted)
+		return
+	}
+
+	// If input is a request (method+id), we must return either application/json or SSE stream
+	// For simplicity, we return application/json by waiting for the child's response.
+	// Create a waiter for this specific response
+	key := clientID + ":" + fmt.Sprintf("%v", msg.ID)
+	ch := make(chan []byte, 1)
+	g.waitersMu.Lock()
+	g.waiters[key] = ch
+	g.waitersMu.Unlock()
+
+	// Wait with a timeout to avoid hanging forever
+	select {
+	case data := <-ch:
+		w.Header().Set("Content-Type", "application/json")
+		// On initialize, generate and attach a session id (if not already present)
+		if strings.EqualFold(msg.Method, "initialize") {
+			// Attach session and protocol version for future requests
+			sessionId := clientID
+			if sessionId == "" {
+				sessionId = uuid.New().String()
+			}
+			// Extract protocolVersion from request params
+			var params struct {
+				ProtocolVersion string `json:"protocolVersion"`
+			}
+			_ = json.Unmarshal(msg.Params, &params)
+			g.sessionsMu.Lock()
+			g.sessions[sessionId] = Session{ProtocolVersion: params.ProtocolVersion, CreatedAt: time.Now()}
+			g.sessionsMu.Unlock()
+			w.Header().Set("Mcp-Session-Id", sessionId)
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(data)
+	case <-time.After(30 * time.Second):
+		g.waitersMu.Lock()
+		delete(g.waiters, key)
+		g.waitersMu.Unlock()
+		http.Error(w, "Timeout waiting for response", http.StatusGatewayTimeout)
+	}
 }
 
 // readPump reads messages from the WebSocket connection
@@ -350,13 +611,21 @@ func main() {
 	var (
 		stdioCmd []string
 		port     int
+		mode     string
 	)
 
 	// Show help if no arguments
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "Usage: %s --port <port> --stdio <command> [args...]\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\nExample:\n")
-		fmt.Fprintf(os.Stderr, "  %s --port 8000 --stdio npx -y @modelcontextprotocol/server-filesystem /path/to/folder\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s --port <port> --mode <mode> --stdio <command> [args...]\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "\nOptions:\n")
+		fmt.Fprintf(os.Stderr, "  --port <port>     Port to listen on (default: 8000)\n")
+		fmt.Fprintf(os.Stderr, "  --mode <mode>     Connection mode: 'websocket' or 'http-stream' (default: websocket)\n")
+		fmt.Fprintf(os.Stderr, "  --stdio <command> MCP server command to run\n")
+		fmt.Fprintf(os.Stderr, "\nExamples:\n")
+		fmt.Fprintf(os.Stderr, "  WebSocket mode:\n")
+		fmt.Fprintf(os.Stderr, "    %s --port 8000 --mode websocket --stdio npx -y @modelcontextprotocol/server-filesystem /path\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "  HTTP streaming mode:\n")
+		fmt.Fprintf(os.Stderr, "    %s --port 8000 --mode http-stream --stdio npx -y @modelcontextprotocol/server-filesystem /path\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\nNote: Everything after --stdio is passed to the subprocess\n")
 		os.Exit(1)
 	}
@@ -364,6 +633,7 @@ func main() {
 	// Custom flag parsing to handle everything after --stdio as subprocess args
 	args := os.Args[1:]
 	portStr := "8000"
+	mode = "websocket"
 
 	// Find --port flag if present
 	for i := 0; i < len(args); i++ {
@@ -373,12 +643,31 @@ func main() {
 		}
 	}
 
+	// Find --mode flag if present
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--mode" && i+1 < len(args) {
+			mode = args[i+1]
+			break
+		}
+	}
+
+	if mode != "websocket" && mode != "http-stream" {
+		log.Fatalf("Invalid mode: %s. Must be 'websocket' or 'http-stream'", mode)
+	}
+
 	// Parse port
 	_, _ = fmt.Sscanf(portStr, "%d", &port)
 
 	// Override with environment variable if set
 	if envPort := os.Getenv("PORT"); envPort != "" {
 		_, _ = fmt.Sscanf(envPort, "%d", &port)
+	}
+
+	// Override mode with environment variable if set
+	if envMode := os.Getenv("MODE"); envMode != "" {
+		if envMode == "websocket" || envMode == "http-stream" {
+			mode = envMode
+		}
 	}
 
 	// Find --stdio flag and capture everything after it
@@ -431,20 +720,64 @@ func main() {
 
 	log.Printf("Starting...")
 	log.Printf("  - port: %d", port)
+	log.Printf("  - mode: %s", mode)
 
-	// In Node.js version, WebSocket is served directly on the port
-	// The ws library creates a WebSocket-only server, not HTTP+WebSocket
-	log.Printf("WebSocket endpoint: ws://localhost:%d", port)
+	var handler http.Handler
+	if mode == "websocket" {
+		log.Printf("WebSocket endpoint: ws://localhost:%d", port)
+		handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Header.Get("Upgrade") == "websocket" {
+				gateway.HandleWebSocket(w, r)
+			} else {
+				http.Error(w, "This server only accepts WebSocket connections", http.StatusBadRequest)
+			}
+		})
+	} else {
+		log.Printf("HTTP streaming endpoints:")
+		log.Printf("  - MCP endpoint: GET/POST http://localhost:%d/mcp", port)
 
-	// Create a custom handler that only handles WebSocket upgrade requests
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Only handle WebSocket upgrade requests
-		if r.Header.Get("Upgrade") == "websocket" {
-			gateway.HandleWebSocket(w, r)
-		} else {
-			http.Error(w, "This server only accepts WebSocket connections", http.StatusBadRequest)
-		}
-	})
+		mux := http.NewServeMux()
+		mux.HandleFunc("/mcp", func(w http.ResponseWriter, r *http.Request) {
+			accept := r.Header.Get("Accept")
+			// Require Accept to i	ndicate support
+			if !strings.Contains(accept, "application/json") && !strings.Contains(accept, "text/event-stream") && r.Method == http.MethodPost {
+				http.Error(w, "Unsupported Accept header", http.StatusNotAcceptable)
+				return
+			}
+
+			if r.Method == http.MethodGet {
+				gateway.HandleHTTPStream(w, r)
+				return
+			}
+			if r.Method == http.MethodPost {
+				gateway.HandleHTTPMessage(w, r)
+				return
+			}
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		})
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path != "/" {
+				http.NotFound(w, r)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"mode":     "http-stream",
+				"endpoint": "/mcp",
+			})
+		})
+
+		handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, MCP-Protocol-Version, Mcp-Session-Id, Accept, Origin, Authorization")
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			mux.ServeHTTP(w, r)
+		})
+	}
 
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), handler); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
