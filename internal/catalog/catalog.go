@@ -187,6 +187,9 @@ func (c *Catalog) Load(name string, hub *hub.Repository, imageName string, smith
 	if hub.Integration == "" {
 		hub.Integration = name
 	}
+	if hub.Transport == "" {
+		hub.Transport = "websocket"
+	}
 
 	artifact := Artifact{
 		Name:            name,
