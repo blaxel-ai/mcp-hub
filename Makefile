@@ -5,7 +5,7 @@ REGISTRY:= ghcr.io/blaxel-ai/hub
 import:
 	go run main.go import -c hub -m $(ARGS) --debug
 
-run:
+run: build-super-gateway
 	@if [ ! -f bin/super-gateway ]; then \
 		echo "bin/super-gateway not found, building it..."; \
 		$(MAKE) build-super-gateway; \
@@ -16,7 +16,7 @@ catalog:
 	go run main.go catalog -m $(ARGS) --debug --skip-build
 
 test:
-	cd hack/test_client \
+	cd tests \
 	&& cp src/configs/config.$(ARGS).ts src/config.ts \
 	&& pnpm run test
 
