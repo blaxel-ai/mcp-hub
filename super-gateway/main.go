@@ -362,12 +362,6 @@ func (g *Gateway) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 // HandleHTTPStream handles SSE connections for HTTP streaming mode
 func (g *Gateway) HandleHTTPStream(w http.ResponseWriter, r *http.Request) {
-	// Validate Origin per spec to mitigate DNS rebinding
-	origin := r.Header.Get("Origin")
-	if origin != "" && !strings.HasPrefix(origin, "http://localhost") && !strings.HasPrefix(origin, "http://127.0.0.1") && !strings.HasPrefix(origin, "https://localhost") && !strings.HasPrefix(origin, "https://127.0.0.1") {
-		http.Error(w, "Forbidden origin", http.StatusForbidden)
-		return
-	}
 	// Check if client ID is provided in header or query param
 	clientID := r.Header.Get("X-Client-ID")
 	if clientID == "" {
@@ -444,12 +438,6 @@ func (g *Gateway) HandleHTTPStream(w http.ResponseWriter, r *http.Request) {
 
 // HandleHTTPMessage handles incoming messages in HTTP streaming mode
 func (g *Gateway) HandleHTTPMessage(w http.ResponseWriter, r *http.Request) {
-	// Validate Origin per spec to mitigate DNS rebinding
-	origin := r.Header.Get("Origin")
-	if origin != "" && !strings.HasPrefix(origin, "http://localhost") && !strings.HasPrefix(origin, "http://127.0.0.1") && !strings.HasPrefix(origin, "https://localhost") && !strings.HasPrefix(origin, "https://127.0.0.1") {
-		http.Error(w, "Forbidden origin", http.StatusForbidden)
-		return
-	}
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
