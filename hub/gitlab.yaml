@@ -1,5 +1,6 @@
 repository: https://github.com/smithery-ai/reference-servers.git
 dockerfile: "@mcp-hub"
+transport: http-stream
 branch: main
 displayName: Gitlab
 url: https://gitlab.com/-/user_settings/personal_access_tokens?page=1

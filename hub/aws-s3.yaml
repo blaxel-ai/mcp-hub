@@ -1,5 +1,6 @@
 path: servers/
 dockerfile: /
+transport: http-stream
 displayName: AWS S3
 url: https://aws.amazon.com/s3
 icon: https://a.b.cdn.console.awsstatic.com/a/v1/DKY2SIL5N3MJQCULDNOQE7TKLNQIUXRSOHBJKJGQAHLZO7TLH3TQ/icon/c0828e0381730befd1f7a025057c74fb-43acc0496e64afba82dbc9ab774dc622.svg

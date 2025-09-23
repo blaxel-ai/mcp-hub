@@ -1,5 +1,6 @@
 repository: https://github.com/smithery-ai/reference-servers
 dockerfile: "@mcp-hub"
+transport: http-stream
 branch: main
 displayName: PostgreSQL
 url: https://www.postgresql.org

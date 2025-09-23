@@ -1,5 +1,6 @@
 repository: https://github.com/LinkupPlatform/python-mcp-server
 dockerfile: "@mcp-hub"
+transport: http-stream
 displayName: Linkup
 branch: main
 url: https://app.linkup.so/api-keys

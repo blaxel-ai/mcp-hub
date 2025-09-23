@@ -1,5 +1,6 @@
 repository: https://github.com/hanweg/mcp-discord
 dockerfile: "@mcp-hub"
+transport: http-stream
 displayName: Discord
 branch: main
 url: https://discord.com/developers/applications

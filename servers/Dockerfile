@@ -6,4 +6,4 @@ RUN npm install -g pnpm
 RUN pnpm install --frozen-lockfile --ignore-scripts
 RUN pnpm run build
 COPY super-gateway ./super-gateway
-ENTRYPOINT ["./super-gateway","--port","80","--stdio"]
+ENTRYPOINT ["./super-gateway","--mode", "http-stream", "--port","80","--stdio"]

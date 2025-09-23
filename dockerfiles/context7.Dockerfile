@@ -39,4 +39,4 @@ RUN npm install -g pnpm \
 COPY super-gateway ./super-gateway
 
 # Command to run the application
-ENTRYPOINT ["./super-gateway","--port","80","--stdio"]
+ENTRYPOINT ["./super-gateway","--mode", "http-stream", "--port","80","--stdio"]
