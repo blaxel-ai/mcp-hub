@@ -1,5 +1,6 @@
 path: servers/
 dockerfile: /
+transport: http-stream
 displayName: Slack
 url: https://api.slack.com/apps
 icon: https://a.slack-edge.com/fd21de4/marketing/img/nav/logo.svg

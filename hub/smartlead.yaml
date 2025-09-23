@@ -1,5 +1,6 @@
 repository: https://github.com/jean-technologies/smartlead-mcp-server-local.git
 dockerfile: "@mcp-hub"
+transport: http-stream
 displayName: Smartlead
 branch: main
 url: https://app.smartlead.ai/app/settings/profile

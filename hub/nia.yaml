@@ -1,4 +1,5 @@
 dockerfile: "@mcp-hub"
+transport: http-stream
 displayName: Nia
 url: https://docs.trynia.ai/integrations/nia-mcp
 icon: https://mintlify.s3.us-west-1.amazonaws.com/niaai/logo/light.svg

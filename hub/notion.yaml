@@ -1,5 +1,6 @@
 repository: https://github.com/suekou/mcp-notion-server
 dockerfile: "@mcp-hub"
+transport: http-stream
 displayName: Notion
 branch: main
 url: https://www.notion.so/profile/integrations

@@ -1,5 +1,6 @@
 path: servers/
 dockerfile: /
+transport: http-stream
 displayName: Google Maps
 url: https://console.cloud.google.com/apis/credentials
 icon: https://www.google.com/favicon.ico

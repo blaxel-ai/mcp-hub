@@ -1,5 +1,6 @@
 repository: https://github.com/blaxel-ai/sdk-typescript.git
 dockerfile: "@mcp-hub"
+transport: http-stream
 displayName: Hubspot
 branch: main
 url: https://developers.hubspot.com/docs/guides/apps/private-apps/overview

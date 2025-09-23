@@ -1,5 +1,6 @@
 repository: https://github.com/Garoth/sendgrid-mcp.git
 dockerfile: "@mcp-hub"
+transport: http-stream
 displayName: Sendgrid
 branch: main
 url: https://app.sendgrid.com/settings/api_keys

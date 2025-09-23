@@ -1,5 +1,6 @@
 repository: https://github.com/therealhexi/shopify-mcp-server-main
 dockerfile: "@mcp-hub"
+transport: http-stream
 branch: main
 displayName: Shopify
 url: https://shopify.com
