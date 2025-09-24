@@ -44,3 +44,7 @@ list:
 	@echo ""
 	@echo "Usage: make <command> <mcp-name>"
 	@echo "Example: make run github"
+
+mr_develop:
+	$(eval BRANCH_NAME := $(shell git rev-parse --abbrev-ref HEAD))
+	gh pr create --base develop --head $(BRANCH_NAME) --title "$(BRANCH_NAME)" --body "Merge request from $(BRANCH_NAME) to develop"
