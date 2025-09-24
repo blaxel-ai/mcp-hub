@@ -20,4 +20,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 COPY super-gateway ./super-gateway
 
-ENTRYPOINT ["./super-gateway","--mode", "http-stream", "--port","80","--stdio"]
+ENTRYPOINT ["./super-gateway","--transport", "http-stream", "--port","80","--stdio"]

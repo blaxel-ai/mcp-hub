@@ -28,7 +28,7 @@ type Command struct {
 }
 
 func (c *Command) Entrypoint() string {
-	entrypoint := []string{"\"./super-gateway\"", "\"--mode\"", "\"http-stream\"", "\"--port\"", "\"80\"", "\"--stdio\""}
+	entrypoint := []string{"\"./super-gateway\"", "\"--transport\"", "\"http-stream\"", "\"--port\"", "\"80\"", "\"--stdio\""}
 	return strings.Join(entrypoint, ",")
 }
 

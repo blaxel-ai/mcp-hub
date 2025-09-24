@@ -360,7 +360,7 @@ func (g *Gateway) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	go client.readPump(g)
 }
 
-// HandleHTTPStream handles SSE connections for HTTP streaming mode
+// HandleHTTPStream handles SSE connections for HTTP streaming transport
 func (g *Gateway) HandleHTTPStream(w http.ResponseWriter, r *http.Request) {
 	// Check if client ID is provided in header or query param
 	clientID := r.Header.Get("X-Client-ID")
@@ -436,7 +436,7 @@ func (g *Gateway) HandleHTTPStream(w http.ResponseWriter, r *http.Request) {
 	g.sseClientsMu.Unlock()
 }
 
-// HandleHTTPMessage handles incoming messages in HTTP streaming mode
+// HandleHTTPMessage handles incoming messages in HTTP streaming transport
 func (g *Gateway) HandleHTTPMessage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -597,23 +597,23 @@ func (g *Gateway) HandleHealth(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	var (
-		stdioCmd []string
-		port     int
-		mode     string
+		stdioCmd  []string
+		port      int
+		transport string
 	)
 
 	// Show help if no arguments
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "Usage: %s --port <port> --mode <mode> --stdio <command> [args...]\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s --port <port> --transport <transport> --stdio <command> [args...]\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\nOptions:\n")
 		fmt.Fprintf(os.Stderr, "  --port <port>     Port to listen on (default: 8000)\n")
-		fmt.Fprintf(os.Stderr, "  --mode <mode>     Connection mode: 'websocket' or 'http-stream' (default: websocket)\n")
+		fmt.Fprintf(os.Stderr, "  --transport <transport> Connection transport: 'websocket' or 'http-stream' (default: websocket)\n")
 		fmt.Fprintf(os.Stderr, "  --stdio <command> MCP server command to run\n")
 		fmt.Fprintf(os.Stderr, "\nExamples:\n")
-		fmt.Fprintf(os.Stderr, "  WebSocket mode:\n")
-		fmt.Fprintf(os.Stderr, "    %s --port 8000 --mode websocket --stdio npx -y @modelcontextprotocol/server-filesystem /path\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "  HTTP streaming mode:\n")
-		fmt.Fprintf(os.Stderr, "    %s --port 8000 --mode http-stream --stdio npx -y @modelcontextprotocol/server-filesystem /path\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "  WebSocket transport:\n")
+		fmt.Fprintf(os.Stderr, "    %s --port 8000 --transport websocket --stdio npx -y @modelcontextprotocol/server-filesystem /path\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "  HTTP streaming transport:\n")
+		fmt.Fprintf(os.Stderr, "    %s --port 8000 --transport http-stream --stdio npx -y @modelcontextprotocol/server-filesystem /path\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\nNote: Everything after --stdio is passed to the subprocess\n")
 		os.Exit(1)
 	}
@@ -621,7 +621,7 @@ func main() {
 	// Custom flag parsing to handle everything after --stdio as subprocess args
 	args := os.Args[1:]
 	portStr := "8000"
-	mode = "websocket"
+	transport = "websocket"
 
 	// Find --port flag if present
 	for i := 0; i < len(args); i++ {
@@ -631,16 +631,16 @@ func main() {
 		}
 	}
 
-	// Find --mode flag if present
+	// Find --transport flag if present
 	for i := 0; i < len(args); i++ {
-		if args[i] == "--mode" && i+1 < len(args) {
-			mode = args[i+1]
+		if args[i] == "--transport" && i+1 < len(args) {
+			transport = args[i+1]
 			break
 		}
 	}
 
-	if mode != "websocket" && mode != "http-stream" {
-		log.Fatalf("Invalid mode: %s. Must be 'websocket' or 'http-stream'", mode)
+	if transport != "websocket" && transport != "http-stream" {
+		log.Fatalf("Invalid transport: %s. Must be 'websocket' or 'http-stream'", transport)
 	}
 
 	// Parse port
@@ -651,10 +651,10 @@ func main() {
 		_, _ = fmt.Sscanf(envPort, "%d", &port)
 	}
 
-	// Override mode with environment variable if set
-	if envMode := os.Getenv("MODE"); envMode != "" {
+	// Override transport with environment variable if set
+	if envMode := os.Getenv("TRANSPORT"); envMode != "" {
 		if envMode == "websocket" || envMode == "http-stream" {
-			mode = envMode
+			transport = envMode
 		}
 	}
 
@@ -708,10 +708,10 @@ func main() {
 
 	log.Printf("Starting...")
 	log.Printf("  - port: %d", port)
-	log.Printf("  - mode: %s", mode)
+	log.Printf("  - transport: %s", transport)
 
 	var handler http.Handler
-	if mode == "websocket" {
+	if transport == "websocket" {
 		log.Printf("WebSocket endpoint: ws://localhost:%d", port)
 		handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.Header.Get("Upgrade") == "websocket" {
@@ -750,8 +750,8 @@ func main() {
 			}
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]interface{}{
-				"mode":     "http-stream",
-				"endpoint": "/mcp",
+				"transport": "http-stream",
+				"endpoint":  "/mcp",
 			})
 		})
 
