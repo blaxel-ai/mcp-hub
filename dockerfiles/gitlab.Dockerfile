@@ -25,4 +25,4 @@ RUN npm ci --production --ignore-scripts
 COPY super-gateway ./super-gateway
 
 # Command to run the application
-ENTRYPOINT ["./super-gateway","--mode", "http-stream", "--port","80","--stdio"]
+ENTRYPOINT ["./super-gateway","--transport", "http-stream", "--port","80","--stdio"]
