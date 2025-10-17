@@ -162,7 +162,8 @@ fi
 
 # Extract the registry URL from SRC_REGISTRY
 REGISTRY_URL=$(echo "$SRC_REGISTRY" | cut -d'/' -f1)
-
+MK2="$SRC_REGISTRY/$BL_ENV/$MCP_NAME:$IMAGE_TAG"
+MK3="blaxel/$BL_ENV/$MCP_NAME:$IMAGE_TAG"
 # Prepare the JSON payload for the API
 API_PAYLOAD=$(jq -n \
   --arg registry "$REGISTRY_URL" \
@@ -173,6 +174,8 @@ API_PAYLOAD=$(jq -n \
   --arg original "mcp/$MCP_NAME:$IMAGE_TAG" \
   --arg region "$LAMBDA_REGION" \
   --arg bucket "$IMAGE_BUCKET_MK3" \
+  --arg mk2 "$MK2" \
+  --arg mk3 "$MK3" \
   '{
     registry: $registry,
     workspace: $workspace,
@@ -181,7 +184,9 @@ API_PAYLOAD=$(jq -n \
     registry_type: $registry_type,
     original: $original,
     region: $region,
-    bucket: $bucket
+    bucket: $bucket,
+    mk2: $mk2,
+    mk3: $mk3
   }')
 
 echo "Calling Blaxel API to register image..."
