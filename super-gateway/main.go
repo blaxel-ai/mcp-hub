@@ -48,6 +48,8 @@ type Gateway struct {
 	cmd                *exec.Cmd
 	clients            map[string]*Client
 	clientsMu          sync.RWMutex
+	readinessReply     chan JSONRPCMessage
+	readinessReplyMu   sync.Mutex
 	sseClients         map[string]*SSEClient
 	sseClientsMu       sync.RWMutex
 	defaultSSEClientID string
@@ -172,8 +174,24 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 				log.Printf("Failed to parse JSON from child: %s", line)
 				continue
 			}
+			if !strings.Contains(line, "readiness-check") {
+				log.Printf("Child → Gateway: %s", line)
+			}
 
-			log.Printf("Child → Gateway: %s", line)
+			// Check if this is a response to our readiness check
+			if msg.ID != nil {
+				if idStr, ok := msg.ID.(string); ok && idStr == "readiness-check" {
+					g.readinessReplyMu.Lock()
+					if g.readinessReply != nil {
+						select {
+						case g.readinessReply <- msg:
+						default:
+						}
+					}
+					g.readinessReplyMu.Unlock()
+					continue
+				}
+			}
 
 			// In the Node.js version, it sends using wsTransport?.send(jsonMsg, jsonMsg.id)
 			// This means it uses the message's own ID to route back to the correct client
@@ -286,6 +304,80 @@ func (g *Gateway) SendToMCP(msg JSONRPCMessage, clientID string) error {
 	}
 
 	return g.stdinWriter.Flush()
+}
+
+// WaitForReady waits for the MCP server to be ready by sending a tools/list request
+func (g *Gateway) WaitForReady(timeout time.Duration) error {
+	log.Printf("Waiting for MCP server to be ready (timeout: %v)...", timeout)
+
+	// Create a channel to receive the readiness reply
+	g.readinessReplyMu.Lock()
+	g.readinessReply = make(chan JSONRPCMessage, 1)
+	g.readinessReplyMu.Unlock()
+
+	defer func() {
+		g.readinessReplyMu.Lock()
+		close(g.readinessReply)
+		g.readinessReply = nil
+		g.readinessReplyMu.Unlock()
+	}()
+
+	// Prepare the initialize request
+	readinessMsg := JSONRPCMessage{
+		JSONRPC: "2.0",
+		ID:      "readiness-check",
+		Method:  "initialize",
+		Params:  json.RawMessage(`{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"super-gateway","version":"1.0.0"}}`),
+	}
+
+	data, err := json.Marshal(readinessMsg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal readiness check message: %w", err)
+	}
+
+	// Create a ticker for retries every 1 second
+	retryTicker := time.NewTicker(1 * time.Second)
+	defer retryTicker.Stop()
+
+	// Create a timeout timer
+	timeoutTimer := time.NewTimer(timeout)
+	defer timeoutTimer.Stop()
+
+	// Send the first request immediately
+	log.Printf("Sending readiness check: %s", string(data))
+	if _, err := g.stdinWriter.Write(append(data, '\n')); err != nil {
+		return fmt.Errorf("failed to write readiness check: %w", err)
+	}
+	if err := g.stdinWriter.Flush(); err != nil {
+		return fmt.Errorf("failed to flush readiness check: %w", err)
+	}
+
+	attempt := 1
+
+	for {
+		select {
+		case reply := <-g.readinessReply:
+			if reply.Error != nil {
+				return fmt.Errorf("MCP server returned error during readiness check: %v", reply.Error)
+			}
+			log.Printf("MCP server is ready! Received initialize response after %d attempt(s)", attempt)
+			return nil
+
+		case <-retryTicker.C:
+			// Retry sending the request
+			attempt++
+			log.Printf("Retrying readiness check (attempt %d)...", attempt)
+			if _, err := g.stdinWriter.Write(append(data, '\n')); err != nil {
+				return fmt.Errorf("failed to write readiness check: %w", err)
+			}
+			if err := g.stdinWriter.Flush(); err != nil {
+				return fmt.Errorf("failed to flush readiness check: %w", err)
+			}
+
+		case <-timeoutTimer.C:
+			return fmt.Errorf("timeout waiting for MCP server to be ready after %d attempt(s)", attempt)
+		}
+	}
 }
 
 // Run starts the gateway's main loop
@@ -679,6 +771,11 @@ func main() {
 	// Start the MCP server
 	if err := gateway.StartMCPServer(stdioCmd); err != nil {
 		log.Fatalf("Failed to start MCP server: %v", err)
+	}
+
+	// Wait for MCP server to be ready (30 second timeout)
+	if err := gateway.WaitForReady(120 * time.Second); err != nil {
+		log.Fatalf("MCP server failed to become ready: %v", err)
 	}
 
 	// Start the gateway's main loop
