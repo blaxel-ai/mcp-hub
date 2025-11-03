@@ -3,19 +3,9 @@ export const payload: ((previousResult: Record<string, any>) => {
   arguments: Record<string, any>;
 })[] = [
   () => ({
-    name: "notion_retrieve_bot_user",
+    name: "API-get-users",
     arguments: {},
-  }),
-  () => ({
-    name: "notion_list_all_users",
-    arguments: {},
-  }),
-  () => ({
-    name: "notion_search",
-    arguments: {
-      query: "Product Documentation",
-    },
-  }),
+  })
 ];
 
 export const description = "Notion description";
