@@ -50,10 +50,10 @@ COPY --from=builder /app/pnpm-lock.yaml ./
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
 # Copy the super-gateway binary
-COPY super-gateway /app/packages/mcp-server-postgrest/
+COPY super-gateway /app/packages/mcp-server-postgrest/super-gateway
 
 # Set working directory to the server package
 WORKDIR /app/packages/mcp-server-postgrest
 
 # Command to run the application
-ENTRYPOINT ["./super-gateway","--transport", "http-stream", "--port","80","--stdio"]
+ENTRYPOINT ["/app/packages/mcp-server-postgrest/super-gateway","--transport", "http-stream", "--port","80","--stdio"]
