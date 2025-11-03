@@ -33,8 +33,9 @@ smithery:
       (config) => ({
         command: 'node',
         args: [
-          'dist/transports/stdio.js',
-          '--access-token', config.supabaseAccessToken,
+          'packages/mcp-server-supabase/dist/transports/stdio.js',
+          '--access-token',
+          config.supabaseAccessToken,
           '$readOnly? "--read-only" : ""',
         ]
       })

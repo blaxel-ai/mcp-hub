@@ -38,7 +38,7 @@ smithery:
       (config) => ({
         command:'node',
         args:[
-          'dist/stdio.js',
+          'packages/mcp-server-postgrest/dist/stdio.js',
           '--apiUrl', config.supabaseApiUrl,
           '--apiKey', config.supabaseApiKey,
           '--schema', config.supabaseSchema
