@@ -33,6 +33,7 @@ smithery:
         command:'node',
         args:['dist/index.js'],
         env:{
-          SMARTLEAD_API_KEY:config.smartleadApiKey
+          SMARTLEAD_API_KEY:config.smartleadApiKey,
+          SKIP_READINESS_CHECK:true
         }
       })

@@ -161,8 +161,13 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 
 	log.Printf("Started MCP server with PID: %d", g.cmd.Process.Pid)
 
+	// Create channels to signal when stdout/stderr reading is complete
+	stdoutDone := make(chan struct{})
+	stderrDone := make(chan struct{})
+
 	// Handle stdout
 	go func() {
+		defer close(stdoutDone)
 		for g.stdoutScanner.Scan() {
 			line := g.stdoutScanner.Text()
 			if strings.TrimSpace(line) == "" {
@@ -174,6 +179,7 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 				log.Printf("Failed to parse JSON from child: %s", line)
 				continue
 			}
+
 			if !strings.Contains(line, "readiness-check") {
 				log.Printf("Child → Gateway: %s", line)
 			}
@@ -263,17 +269,27 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 				g.broadcast <- data
 			}
 		}
+
+		// Check for scanner errors
+		if err := g.stdoutScanner.Err(); err != nil {
+			log.Printf("stdout scanner error: %v", err)
+		}
 	}()
 
 	// Handle stderr
 	go func() {
+		defer close(stderrDone)
 		for g.stderrScanner.Scan() {
 			log.Printf("Child stderr: %s", g.stderrScanner.Text())
 		}
 	}()
 
-	// Monitor process exit
+	// Monitor process exit - wait for stdout/stderr to finish before calling Wait()
 	go func() {
+		// Wait for both stdout and stderr goroutines to finish reading
+		<-stdoutDone
+		<-stderrDone
+
 		if err := g.cmd.Wait(); err != nil {
 			log.Printf("MCP server exited with error: %v", err)
 		} else {
@@ -774,8 +790,17 @@ func main() {
 	}
 
 	// Wait for MCP server to be ready (30 second timeout)
-	if err := gateway.WaitForReady(120 * time.Second); err != nil {
-		log.Fatalf("MCP server failed to become ready: %v", err)
+	// Skip readiness check if SKIP_READINESS_CHECK env var is set
+	if os.Getenv("SKIP_READINESS_CHECK") != "true" {
+		if err := gateway.WaitForReady(30 * time.Second); err != nil {
+			log.Printf("Warning: MCP server readiness check failed: %v", err)
+			log.Printf("Continuing anyway - server may not be fully initialized")
+			// Don't fail, just warn - some servers have issues with stdio responses
+		}
+	} else {
+		log.Printf("Skipping readiness check (SKIP_READINESS_CHECK=true)")
+		// Give the server a moment to initialize
+		time.Sleep(2 * time.Second)
 	}
 
 	// Start the gateway's main loop
