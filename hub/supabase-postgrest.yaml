@@ -1,5 +1,6 @@
 repository: https://github.com/supabase-community/supabase-mcp.git
 dockerfile: "@mcp-hub"
+transport: http-stream
 displayName: Supabase PostgREST
 branch: main
 url: https://github.com/supabase-community/supabase-mcp/tree/main/packages/mcp-server-postgrest
@@ -37,7 +38,7 @@ smithery:
       (config) => ({
         command:'node',
         args:[
-          'dist/stdio.js',
+          'packages/mcp-server-postgrest/dist/stdio.js',
           '--apiUrl', config.supabaseApiUrl,
           '--apiKey', config.supabaseApiKey,
           '--schema', config.supabaseSchema

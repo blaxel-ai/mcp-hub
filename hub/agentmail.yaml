@@ -1,6 +1,7 @@
 repository: https://github.com/agentmail-to/agentmail-mcp
 dockerfile: "@mcp-hub"
 displayName: AgentMail
+transport: http-stream
 branch: main
 url: https://agentmail.to
 description: Give agents email inboxes with AgentMail, the API-first email provider.

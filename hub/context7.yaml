@@ -1,5 +1,6 @@
 repository: https://github.com/upstash/context7
 dockerfile: "@mcp-hub"
+transport: http-stream
 displayName: Context7
 description: Documentation Database
 longDescription: >-

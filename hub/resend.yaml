@@ -1,5 +1,6 @@
 repository: https://github.com/resend/mcp-send-email.git
 dockerfile: "@mcp-hub"
+transport: http-stream
 displayName: Resend Email
 description: Send emails using Resend's API directly from your AI assistant
 longDescription: >-

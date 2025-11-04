@@ -1,5 +1,6 @@
-repository: https://github.com/suekou/mcp-notion-server
+repository: https://github.com/makenotion/notion-mcp-server
 dockerfile: "@mcp-hub"
+transport: http-stream
 displayName: Notion
 branch: main
 url: https://www.notion.so/profile/integrations
@@ -7,7 +8,7 @@ icon: data:image/svg+xml;base64,PHN2ZyBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGZpbGwtcnVsZT0i
 description: Your wiki, docs & projects. Together. All in one connected workspace.
 longDescription: Notion is a single space where you can think, write, and plan. Capture thoughts, manage projects, or even run an entire company — and do it exactly the way you want.
 secrets:
-  - notionApiToken
+  - notionToken
 categories:
   - project-management
   - productivity
@@ -18,9 +19,9 @@ smithery:
       # JSON Schema defining the configuration options for the MCP.
       type: object
       required:
-        - notionApiToken
+        - notionToken
       properties:
-        notionApiToken:
+        notionToken:
           type: string
           description: The API token for accessing the Notion API.
     commandFunction:
@@ -28,8 +29,8 @@ smithery:
       |-
       config => ({
         command: 'node',
-        args: ['build/index.js'],
+        args: ['bin/cli.mjs'],
         env: {
-          NOTION_API_TOKEN: config.notionApiToken
+          NOTION_TOKEN: config.notionToken
         }
       })

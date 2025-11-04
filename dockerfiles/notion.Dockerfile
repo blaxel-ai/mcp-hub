@@ -25,6 +25,8 @@ WORKDIR /app
 
 # Copy built files from the builder stage
 COPY --from=builder /app/build ./build
+COPY --from=builder /app/bin ./bin
+COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/package.json /app/package-lock.json ./
 
 # Expose the port the app runs on
@@ -35,4 +37,4 @@ RUN npm ci --production --ignore-scripts
 COPY super-gateway ./super-gateway
 
 # Command to run the application
-ENTRYPOINT ["./super-gateway","--port","80","--stdio"]
+ENTRYPOINT ["./super-gateway","--transport", "http-stream", "--port","80","--stdio"]

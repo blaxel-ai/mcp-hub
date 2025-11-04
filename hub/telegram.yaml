@@ -1,5 +1,6 @@
 repository: https://github.com/qpd-v/mcp-communicator-telegram
 dockerfile: "@mcp-hub"
+transport: http-stream
 displayName: Telegram
 branch: main
 url: https://core.telegram.org/bots#how-do-i-create-a-bot
