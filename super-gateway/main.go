@@ -7,6 +7,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -64,6 +66,43 @@ type Gateway struct {
 	stdinWriter        *bufio.Writer
 	stdoutScanner      *bufio.Scanner
 	stderrScanner      *bufio.Scanner
+}
+
+// rewriteOAuthURL replaces http://localhost:12849 in log messages with the appropriate public URL
+func rewriteOAuthURL(line string) string {
+	// Check if line contains any OAuth callback URLs (localhost:12849 or 127.0.0.1:12849)
+	hasLocalhost := strings.Contains(line, "localhost:12849")
+	has127 := strings.Contains(line, "127.0.0.1:12849")
+	hasEncoded := strings.Contains(line, "localhost%3A12849") || strings.Contains(line, "127.0.0.1%3A12849")
+
+	if !hasLocalhost && !has127 && !hasEncoded {
+		return line
+	}
+
+	// Check if BL_WORKSPACE environment variable is set
+	blWorkspace := os.Getenv("BL_WORKSPACE")
+	blName := os.Getenv("BL_NAME")
+
+	var replacement string
+	var encodedReplacement string
+	if blWorkspace != "" && blName != "" {
+		// Running in Blaxel infrastructure, use public URL
+		replacement = fmt.Sprintf("https://run.blaxel.ai/%s/functions/%s", blWorkspace, blName)
+		encodedReplacement = strings.ReplaceAll(strings.ReplaceAll(replacement, "://", "%3A%2F%2F"), "/", "%2F")
+	} else {
+		// Running locally, use localhost:80
+		replacement = "http://localhost:80"
+		encodedReplacement = "http%3A%2F%2Flocalhost%3A80"
+	}
+
+	// Replace all variants
+	result := line
+	result = strings.ReplaceAll(result, "http://localhost:12849", replacement)
+	result = strings.ReplaceAll(result, "http://127.0.0.1:12849", replacement)
+	result = strings.ReplaceAll(result, "http%3A%2F%2Flocalhost%3A12849", encodedReplacement)
+	result = strings.ReplaceAll(result, "http%3A%2F%2F127.0.0.1%3A12849", encodedReplacement)
+
+	return result
 }
 
 type Session struct {
@@ -176,7 +215,9 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 
 			var msg JSONRPCMessage
 			if err := json.Unmarshal([]byte(line), &msg); err != nil {
-				log.Printf("Failed to parse JSON from child: %s", line)
+				// Rewrite OAuth URLs in non-JSON output
+				rewrittenLine := rewriteOAuthURL(line)
+				log.Printf("Failed to parse JSON from child: %s", rewrittenLine)
 				continue
 			}
 
@@ -280,7 +321,10 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 	go func() {
 		defer close(stderrDone)
 		for g.stderrScanner.Scan() {
-			log.Printf("Child stderr: %s", g.stderrScanner.Text())
+			line := g.stderrScanner.Text()
+			// Rewrite OAuth URLs for proper routing
+			rewrittenLine := rewriteOAuthURL(line)
+			log.Printf("Child stderr: %s", rewrittenLine)
 		}
 	}()
 
@@ -705,23 +749,27 @@ func (g *Gateway) HandleHealth(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	var (
-		stdioCmd  []string
-		port      int
-		transport string
+		stdioCmd       []string
+		port           int
+		transport      string
+		authentication bool
 	)
 
 	// Show help if no arguments
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "Usage: %s --port <port> --transport <transport> --stdio <command> [args...]\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s --port <port> --transport <transport> [--authentication] --stdio <command> [args...]\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\nOptions:\n")
-		fmt.Fprintf(os.Stderr, "  --port <port>     Port to listen on (default: 8000)\n")
+		fmt.Fprintf(os.Stderr, "  --port <port>         Port to listen on (default: 8000)\n")
 		fmt.Fprintf(os.Stderr, "  --transport <transport> Connection transport: 'websocket' or 'http-stream' (default: websocket)\n")
-		fmt.Fprintf(os.Stderr, "  --stdio <command> MCP server command to run\n")
+		fmt.Fprintf(os.Stderr, "  --authentication      Enable OAuth callback proxy (forwards non-MCP requests to port 12849)\n")
+		fmt.Fprintf(os.Stderr, "  --stdio <command>     MCP server command to run\n")
 		fmt.Fprintf(os.Stderr, "\nExamples:\n")
 		fmt.Fprintf(os.Stderr, "  WebSocket transport:\n")
 		fmt.Fprintf(os.Stderr, "    %s --port 8000 --transport websocket --stdio npx -y @modelcontextprotocol/server-filesystem /path\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "  HTTP streaming transport:\n")
 		fmt.Fprintf(os.Stderr, "    %s --port 8000 --transport http-stream --stdio npx -y @modelcontextprotocol/server-filesystem /path\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "  With OAuth authentication (mcp-remote):\n")
+		fmt.Fprintf(os.Stderr, "    %s --port 8000 --transport http-stream --authentication --stdio mcp-remote https://example.com/mcp\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\nNote: Everything after --stdio is passed to the subprocess\n")
 		os.Exit(1)
 	}
@@ -730,6 +778,7 @@ func main() {
 	args := os.Args[1:]
 	portStr := "8000"
 	transport = "websocket"
+	authentication = false
 
 	// Find --port flag if present
 	for i := 0; i < len(args); i++ {
@@ -743,6 +792,14 @@ func main() {
 	for i := 0; i < len(args); i++ {
 		if args[i] == "--transport" && i+1 < len(args) {
 			transport = args[i+1]
+			break
+		}
+	}
+
+	// Find --authentication flag if present
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--authentication" {
+			authentication = true
 			break
 		}
 	}
@@ -844,19 +901,19 @@ func main() {
 		})
 	} else {
 		log.Printf("HTTP streaming endpoints:")
-		log.Printf("  - MCP endpoint: GET/POST http://localhost:%d/mcp", port)
+		log.Printf("  - MCP endpoint: POST http://localhost:%d/mcp", port)
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("/mcp", func(w http.ResponseWriter, r *http.Request) {
 			accept := r.Header.Get("Accept")
-			// Require Accept to i	ndicate support
+			// Require Accept to indicate support
 			if !strings.Contains(accept, "application/json") && !strings.Contains(accept, "text/event-stream") && r.Method == http.MethodPost {
 				http.Error(w, "Unsupported Accept header", http.StatusNotAcceptable)
 				return
 			}
 
 			if r.Method == http.MethodGet {
-				gateway.HandleHTTPStream(w, r)
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 				return
 			}
 			if r.Method == http.MethodPost {
@@ -865,17 +922,53 @@ func main() {
 			}
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		})
-		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path != "/" {
-				http.NotFound(w, r)
-				return
+
+		// Set up OAuth proxy if authentication flag is enabled
+		if authentication {
+			// Create a reverse proxy for OAuth callbacks (mcp-remote)
+			oauthProxyURL, _ := url.Parse("http://localhost:12849")
+			oauthProxy := httputil.NewSingleHostReverseProxy(oauthProxyURL)
+
+			// Customize the proxy to handle connection errors gracefully
+			defaultDirector := oauthProxy.Director
+			oauthProxy.Director = func(req *http.Request) {
+				defaultDirector(req)
+				log.Printf("Proxying OAuth request: %s %s", req.Method, req.URL.Path)
 			}
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]interface{}{
-				"transport": "http-stream",
-				"endpoint":  "/mcp",
+			oauthProxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+				log.Printf("OAuth proxy error for %s: %v", r.URL.Path, err)
+				http.NotFound(w, r)
+			}
+
+			mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/" {
+					// Root path returns server info
+					w.Header().Set("Content-Type", "application/json")
+					json.NewEncoder(w).Encode(map[string]interface{}{
+						"transport": "http-stream",
+						"endpoint":  "/mcp",
+					})
+					return
+				}
+
+				// All other paths are proxied to port 12849 for OAuth callbacks (mcp-remote)
+				oauthProxy.ServeHTTP(w, r)
 			})
-		})
+
+			log.Printf("  - OAuth callback proxy: http://localhost:%d/* -> http://localhost:12849/*", port)
+		} else {
+			mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path != "/" {
+					http.NotFound(w, r)
+					return
+				}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"transport": "http-stream",
+					"endpoint":  "/mcp",
+				})
+			})
+		}
 
 		handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			mux.ServeHTTP(w, r)

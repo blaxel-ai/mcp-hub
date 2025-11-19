@@ -65,11 +65,12 @@ jobs:
               fi
             done
           else
-            # Check if there are changes in internal or cmd folders
+            # Check if there are changes in internal or cmd or super-gateway folders
             if git diff --name-only HEAD^ HEAD | grep -q "internal/" || \
-               git diff --name-only HEAD^ HEAD | grep -q "cmd/"; then
-              # If there are changes in internal or cmd, include all servers (excluding disabled/coming soon)
-              echo "Changes detected in internal or cmd folders, including all servers (excluding disabled/coming soon)"
+               git diff --name-only HEAD^ HEAD | grep -q "cmd/" || \
+               git diff --name-only HEAD^ HEAD | grep -q "super-gateway/"; then
+              # If there are changes in internal or cmd or super-gateway, include all servers (excluding disabled/coming soon)
+              echo "Changes detected in internal or cmd or super-gateway folders, including all servers (excluding disabled/coming soon)"
               for server in $(echo $all_servers | jq -r '.[]'); do
                 # Check if the server is disabled or coming soon
                 if [ -f "${server}.yaml" ]; then
