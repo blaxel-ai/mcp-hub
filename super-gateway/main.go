@@ -844,7 +844,7 @@ func main() {
 		})
 	} else {
 		log.Printf("HTTP streaming endpoints:")
-		log.Printf("  - MCP endpoint: GET/POST http://localhost:%d/mcp", port)
+		log.Printf("  - MCP endpoint: POST http://localhost:%d/mcp", port)
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("/mcp", func(w http.ResponseWriter, r *http.Request) {
@@ -856,7 +856,7 @@ func main() {
 			}
 
 			if r.Method == http.MethodGet {
-				gateway.HandleHTTPStream(w, r)
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 				return
 			}
 			if r.Method == http.MethodPost {
