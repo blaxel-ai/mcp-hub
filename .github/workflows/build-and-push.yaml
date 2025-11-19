@@ -63,11 +63,12 @@ jobs:
               fi
             done
           else
-            # Check if there are changes in internal or cmd folders
+            # Check if there are changes in internal or cmd or super-gateway folders
             if git diff --name-only HEAD^ HEAD | grep -q "internal/" || \
-               git diff --name-only HEAD^ HEAD | grep -q "cmd/"; then
-              # If there are changes in internal or cmd, include all servers (excluding disabled/coming soon)
-              echo "Changes detected in internal or cmd folders, including all servers (excluding disabled/coming soon)"
+               git diff --name-only HEAD^ HEAD | grep -q "cmd/" || \
+               git diff --name-only HEAD^ HEAD | grep -q "super-gateway/"; then
+              # If there are changes in internal or cmd or super-gateway, include all servers (excluding disabled/coming soon)
+              echo "Changes detected in internal or cmd or super-gateway folders, including all servers (excluding disabled/coming soon)"
               for server in $(echo $all_servers | jq -r '.[]'); do
                 # Check if the server is disabled or coming soon
                 if [ -f "${server}.yaml" ]; then
@@ -212,11 +213,11 @@ jobs:
           #   {
           #     "url": "registry2.example.com:8443/path",
           #     "path": "blaxel",
-          #     "username": "user2", 
+          #     "username": "user2",
           #     "password": "pass2"
           #   }
           # ]
-          
+
           # Build push_to JSON array from registry configuration
           PUSH_TO_JSON=$(echo "$REGISTRY_CONFIG" | jq -c 'map({
             host: "",
@@ -226,7 +227,7 @@ jobs:
             password: .password,
             secure: true
           }) | @json' | jq -r)
-          
+
           # Build the JSON payload
           PAYLOAD=$(cat <<EOF
           {
@@ -245,18 +246,18 @@ jobs:
           }
           EOF
           )
-          
+
           echo "Invoking Lambda function: $LAMBDA_FUNCTION_NAME"
           echo "MCP Name: $MCP_NAME"
           echo "Image Tag: $IMAGE_TAG"
           echo "BL Type: $BL_TYPE"
           echo "Number of registries: $(echo "$REGISTRY_CONFIG" | jq 'length')"
           echo "Lambda Region: $LAMBDA_REGION"
-          
+
           # Show registry URLs without credentials
           echo "Target registries:"
           echo "$REGISTRY_CONFIG" | jq -r '.[].url'
-          
+
           # Invoke Lambda and capture response
           aws lambda invoke \
             --function-name "$LAMBDA_FUNCTION_NAME" \
@@ -268,11 +269,11 @@ jobs:
             --cli-read-timeout 900 \
             --cli-connect-timeout 60 \
             /tmp/response.json
-          
+
           # Check response
           if [ -f /tmp/response.json ]; then
             cat /tmp/response.json | jq '.'
-            
+
             # Check if build was successful
             SUCCESS=$(jq -r '.success // false' /tmp/response.json)
             if [ "$SUCCESS" != "true" ]; then
@@ -281,7 +282,7 @@ jobs:
               echo "Error: $MESSAGE"
               exit 1
             fi
-            
+
             echo "Build completed successfully"
           else
             echo "No response from Lambda"
