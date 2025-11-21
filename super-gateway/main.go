@@ -48,6 +48,8 @@ type SSEClient struct {
 // Gateway manages the MCP server subprocess and WebSocket connections
 type Gateway struct {
 	cmd                *exec.Cmd
+	cmdParts           []string
+	cmdMu              sync.Mutex
 	clients            map[string]*Client
 	clientsMu          sync.RWMutex
 	readinessReply     chan JSONRPCMessage
@@ -66,6 +68,9 @@ type Gateway struct {
 	stdinWriter        *bufio.Writer
 	stdoutScanner      *bufio.Scanner
 	stderrScanner      *bufio.Scanner
+	restartCount       int
+	maxRestarts        int
+	shouldRestart      bool
 }
 
 // rewriteOAuthURL replaces http://localhost:12849 in log messages with the appropriate public URL
@@ -112,13 +117,15 @@ type Session struct {
 
 func NewGateway() *Gateway {
 	return &Gateway{
-		clients:    make(map[string]*Client),
-		sseClients: make(map[string]*SSEClient),
-		waiters:    make(map[string]chan []byte),
-		sessions:   make(map[string]Session),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		broadcast:  make(chan []byte),
+		clients:       make(map[string]*Client),
+		sseClients:    make(map[string]*SSEClient),
+		waiters:       make(map[string]chan []byte),
+		sessions:      make(map[string]Session),
+		register:      make(chan *Client),
+		unregister:    make(chan *Client),
+		broadcast:     make(chan []byte),
+		maxRestarts:   5,
+		shouldRestart: true,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true // Allow all origins for simplicity
@@ -130,41 +137,52 @@ func NewGateway() *Gateway {
 
 // StartMCPServer starts the MCP server subprocess
 func (g *Gateway) StartMCPServer(cmdParts []string) error {
+	g.cmdMu.Lock()
+	defer g.cmdMu.Unlock()
+
 	if len(cmdParts) == 0 {
 		return fmt.Errorf("empty command")
 	}
 
-	// Debug: Log exactly what we received
-	log.Printf("Received %d command parts:", len(cmdParts))
-	for i, part := range cmdParts {
-		log.Printf("  [%d]: %q", i, part)
-	}
+	// Store cmdParts for restart (only on first call)
+	if g.cmdParts == nil {
+		// Debug: Log exactly what we received
+		log.Printf("Received %d command parts:", len(cmdParts))
+		for i, part := range cmdParts {
+			log.Printf("  [%d]: %q", i, part)
+		}
 
-	// Handle the case where the entire command is passed as a single string
-	// This happens when Docker CMD is injected as a single argument
-	if len(cmdParts) == 1 && strings.Contains(cmdParts[0], " ") {
-		// Split the single string into command and arguments
-		// This handles cases like "node /app/build/index.js --tools=..."
-		cmdParts = strings.Fields(cmdParts[0])
-		log.Printf("Detected single string command, split into: %v", cmdParts)
-	} else if len(cmdParts) > 1 {
-		// Check if any argument (except the first) contains spaces and should be split
-		// This handles cases where arguments are incorrectly concatenated
-		newCmdParts := []string{cmdParts[0]} // Keep the command as-is
-		for i := 1; i < len(cmdParts); i++ {
-			if strings.Contains(cmdParts[i], " ") && !strings.HasPrefix(cmdParts[i], "--") {
-				// This argument contains spaces and isn't a flag, split it
-				log.Printf("Splitting argument [%d]: %q", i, cmdParts[i])
-				splitArgs := strings.Fields(cmdParts[i])
-				newCmdParts = append(newCmdParts, splitArgs...)
-			} else {
-				newCmdParts = append(newCmdParts, cmdParts[i])
+		// Handle the case where the entire command is passed as a single string
+		// This happens when Docker CMD is injected as a single argument
+		if len(cmdParts) == 1 && strings.Contains(cmdParts[0], " ") {
+			// Split the single string into command and arguments
+			// This handles cases like "node /app/build/index.js --tools=..."
+			cmdParts = strings.Fields(cmdParts[0])
+			log.Printf("Detected single string command, split into: %v", cmdParts)
+		} else if len(cmdParts) > 1 {
+			// Check if any argument (except the first) contains spaces and should be split
+			// This handles cases where arguments are incorrectly concatenated
+			newCmdParts := []string{cmdParts[0]} // Keep the command as-is
+			for i := 1; i < len(cmdParts); i++ {
+				if strings.Contains(cmdParts[i], " ") && !strings.HasPrefix(cmdParts[i], "--") {
+					// This argument contains spaces and isn't a flag, split it
+					log.Printf("Splitting argument [%d]: %q", i, cmdParts[i])
+					splitArgs := strings.Fields(cmdParts[i])
+					newCmdParts = append(newCmdParts, splitArgs...)
+				} else {
+					newCmdParts = append(newCmdParts, cmdParts[i])
+				}
+			}
+			if len(newCmdParts) != len(cmdParts) {
+				log.Printf("Arguments were split from %d to %d parts", len(cmdParts), len(newCmdParts))
+				cmdParts = newCmdParts
 			}
 		}
-		if len(newCmdParts) != len(cmdParts) {
-			log.Printf("Arguments were split from %d to %d parts", len(cmdParts), len(newCmdParts))
-			cmdParts = newCmdParts
-		}
+
+		g.cmdParts = cmdParts
+	} else {
+		// Use stored cmdParts for restart
+		cmdParts = g.cmdParts
 	}
 
 	log.Printf("Final command parts: %v", cmdParts)
@@ -339,7 +357,43 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 		} else {
 			log.Printf("MCP server exited normally")
 		}
-		os.Exit(1)
+
+		// Check if we should restart
+		if !g.shouldRestart {
+			log.Printf("Restart disabled, exiting...")
+			os.Exit(1)
+		}
+
+		// Check restart limit
+		if g.restartCount >= g.maxRestarts {
+			log.Printf("Max restart attempts (%d) reached, exiting...", g.maxRestarts)
+			os.Exit(1)
+		}
+
+		// Restart with exponential backoff
+		g.restartCount++
+		backoff := time.Duration(g.restartCount) * time.Second
+		if backoff > 30*time.Second {
+			backoff = 30 * time.Second
+		}
+
+		log.Printf("Restarting MCP server in %v (attempt %d/%d)...", backoff, g.restartCount, g.maxRestarts)
+		time.Sleep(backoff)
+
+		if err := g.StartMCPServer(nil); err != nil {
+			log.Printf("Failed to restart MCP server: %v", err)
+			os.Exit(1)
+		}
+
+		log.Printf("MCP server restarted successfully")
+
+		// Wait for the restarted server to be ready
+		if os.Getenv("SKIP_READINESS_CHECK") != "true" {
+			if err := g.WaitForReady(30 * time.Second); err != nil {
+				log.Printf("Warning: Restarted MCP server readiness check failed: %v", err)
+				log.Printf("Continuing anyway - server may not be fully initialized")
+			}
+		}
 	}()
 
 	return nil
@@ -879,6 +933,7 @@ func main() {
 	go func() {
 		<-sigChan
 		log.Println("Shutting down...")
+		gateway.shouldRestart = false
 		if gateway.cmd != nil && gateway.cmd.Process != nil {
 			_ = gateway.cmd.Process.Kill()
 		}
