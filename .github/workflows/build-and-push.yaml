@@ -27,6 +27,7 @@ env:
 jobs:
   generate-matrix:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       servers: ${{ steps.retrieve-servers.outputs.servers }}
     steps:
@@ -121,6 +122,7 @@ jobs:
           fi
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment: |-
       ${{
         github.ref_name == 'main' && 'prod'
@@ -176,6 +178,7 @@ jobs:
             -t ${{ env.TAG }}
   mk3-build:
     runs-on: codebuild-mcp-hub-${{ github.run_id }}-${{ github.run_attempt }}
+    timeout-minutes: 10
     environment: |-
       ${{
         github.ref_name == 'main' && 'prod'
