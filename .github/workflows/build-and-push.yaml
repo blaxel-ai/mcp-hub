@@ -39,6 +39,7 @@ jobs:
         id: retrieve-servers
         shell: bash
         run: |
+          set -euo pipefail
           cd hub
           if [[ ! -z "${{ inputs.mcp }}" ]]; then
             echo "servers=[\"${{ inputs.mcp }}\"]" >> $GITHUB_OUTPUT
@@ -148,6 +149,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Echo server
         run: |
+          set -euo pipefail
           echo "Server: ${{ matrix.server }}"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -168,9 +170,11 @@ jobs:
         run: go get .
       - name: Build super gateway
         run: |
+          set -euo pipefail
           make build-super-gateway
       - name: Build and push
         run: |
+          set -euo pipefail
           go run main.go import \
             -p \
             -r ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.BL_ENV }} \
@@ -212,5 +216,6 @@ jobs:
           LAMBDA_REGION: ${{ env.BL_ENV == 'prod' && secrets.LAMBDA_REGION_PROD || secrets.LAMBDA_REGION_DEV }}
           DEPOT_TOKEN: ${{ env.BL_ENV == 'prod' && secrets.DEPOT_TOKEN_PROD || secrets.DEPOT_TOKEN_DEV }}
         run: |
+          set -euo pipefail
           chmod +x ./scripts/mk3-build.sh
           ./scripts/mk3-build.sh
