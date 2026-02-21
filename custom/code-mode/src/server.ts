@@ -407,9 +407,9 @@ async function main() {
     console.log(`  Authentication: ${authKeys.join(", ")}`);
   }
   if (expectedAuthEnvs.length > 0 && authKeys.length === 0) {
-    throw new Error(
-      `No authentication environment variable set. The API reference defines the following auth schemes: ${expectedAuthEnvs.join(", ")}. ` +
-      `Set at least one of them before starting the server.`
+    console.warn(
+      `⚠ No authentication environment variable set. The API reference defines the following auth schemes: ${expectedAuthEnvs.join(", ")}. ` +
+      `The execute tool will most likely not be able to authenticate against the API.`
     );
   }
 
