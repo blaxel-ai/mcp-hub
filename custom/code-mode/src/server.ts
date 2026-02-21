@@ -467,14 +467,20 @@ async function main() {
     async ({ code, timeout = 30 }: { code: string; timeout?: number }) => {
       console.log(`[execute] called (timeout=${timeout}s): ${code.length > 1200000 ? code.slice(0, 1200000) + "…" : code}`);
       try {
+        const rawName = `code-mode-${process.env.BL_NAME || "local"}`;
+        const sandboxName = rawName.length > 48 ? rawName.slice(0, 48) : rawName;
         const sandbox = await SandboxInstance.createIfNotExists({
-          name: `code-mode-${process.env.BL_NAME || "local"}`,
+          name: sandboxName,
+          labels: {
+            "code-mode": "true",
+            "code-mode-name": process.env.BL_NAME ,
+          },
           lifecycle: {
             expirationPolicies: [
               {
                 type: "ttl-idle",
                 action: "delete",
-                value: "1h",
+                value: "10m",
               },
             ],
           },
