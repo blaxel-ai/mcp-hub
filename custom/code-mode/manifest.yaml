@@ -1,0 +1,16 @@
+apiVersion: blaxel.ai/v1alpha1
+kind: Function
+metadata:
+  displayName: Code mode
+  name: code-mode
+spec:
+  runtime:
+    type: mcp
+    image: blaxel/code-mode:latest
+    generation: mk3
+    memory: 2048
+    envs:
+      - name: OPENAPI_REFERENCE
+        value: ${OPENAPI_REFERENCE}
+      - name: AUTH_APIKEYAUTH
+        value: ${secrets.AUTH_APIKEYAUTH}
