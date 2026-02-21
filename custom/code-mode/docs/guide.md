@@ -69,13 +69,12 @@ Code Mode turns any OpenAPI spec into a two-tool MCP server: **search** lets an 
 
 ## Quick start with the Petstore API
 
-### 1. Create the manifest
+### 1. Deploy
 
-Create a file called `manifest.yaml`:
-
-```yaml
+```bash
+bl apply -f - <<EOF
 apiVersion: blaxel.ai/v1alpha1
-kind: MCP
+kind: Function
 metadata:
   displayName: Petstore Code Mode
   name: petstore-code-mode
@@ -83,26 +82,24 @@ spec:
   runtime:
     type: mcp
     image: blaxel/code-mode:latest
-    generation: mk3
     envs:
       - name: OPENAPI_REFERENCE
         value: https://petstore3.swagger.io/api/v3/openapi.json
+EOF
 ```
 
-### 2. Deploy
+### 2. Verify
 
 ```bash
-bl apply -f manifest.yaml
-```
-
-### 3. Verify
-
-```bash
+# Check status of deployment for your MCP
 bl get mcp petstore-code-mode
+# Get logs for your MCP (can take some time to appear)
 bl logs mcps petstore-code-mode
+# Retrieve MCP url for later
+bl get mcp petstore-code-mode -o json | jq -r '.[] | .metadata.url'
 ```
 
-Once status shows `DEPLOYED`, any agent in your workspace can use `petstore-code-mode` as a tool provider.
+Once status shows `DEPLOYED`, any agent can use `petstore-code-mode` as a tool provider (easy connection with MCP clients).
 
 ## Adding authentication
 
@@ -170,8 +167,9 @@ When an agent calls **execute**, the code runs inside an auto-scaling sandbox wi
 ## Useful commands
 
 ```bash
-bl get mcps                              # list all MCPs
-bl get mcp petstore-code-mode            # check deployment status
-bl delete mcp petstore-code-mode         # remove it
-bl logs mcp petstore-code-mode           # view logs
+bl get mcp # list all MCPs
+bl get mcp petstore-code-mode # check deployment status
+bl delete mcp petstore-code-mode # remove it
+bl logs mcp petstore-code-mode # view logs
+bl get mcp petstore-code-mode -o json | jq -r '.[] | .metadata.url' # Get URL for your MCP
 ```
