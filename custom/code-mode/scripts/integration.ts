@@ -1,7 +1,5 @@
 import { createFunction, getFunction, deleteFunction, settings } from "@blaxel/core";
-import { createMCPClient } from "@ai-sdk/mcp";
-import { generateText, stepCountIs } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { query } from "@anthropic-ai/claude-agent-sdk";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -63,57 +61,60 @@ async function main() {
   console.log(`Deployed! URL: ${deployed.metadata?.url}`);
 
   const mcpUrl = `${deployed.metadata.url}/mcp`;
-  console.log(`Connecting MCP client to ${mcpUrl}`);
+  console.log(`Connecting MCP to ${mcpUrl}`);
 
-  const client = await createMCPClient({
-    transport: {
-      type: "http",
-      url: mcpUrl,
-      headers: settings.headers,
-    },
-  });
+  let toolCallCount = 0;
+  let resultText = "";
 
   try {
-    const tools = await client.tools();
-    console.log(`Tools: ${Object.keys(tools).join(", ")}`);
+    for await (const message of query({
+      prompt: "List my agents, sandboxes and functions",
+      options: {
+        model: 'claude-sonnet-4-6',
+        maxTurns: 5,
+        mcpServers: {
+          "code-mode": {
+            type: "http",
+            url: mcpUrl,
+            headers: settings.headers as Record<string, string>,
+          },
+        },
+        allowedTools: ["mcp__code-mode__*"],
+      },
+    })) {
+      if (message.type === "system" && message.subtype === "init") {
+        console.log(`MCP servers: ${JSON.stringify(message.mcp_servers.map(s => ({ name: s.name, status: s.status })))}`);
+        const failed = message.mcp_servers.filter(s => s.status !== "connected");
+        if (failed.length > 0) {
+          throw new Error(`MCP servers failed to connect: ${JSON.stringify(failed)}`);
+        }
+      }
 
-    if (!tools.search || !tools.execute) {
-      throw new Error(`Expected search and execute tools, got: ${Object.keys(tools).join(", ")}`);
+      if (message.type === "assistant") {
+        for (const block of message.message.content) {
+          if (block.type === "tool_use") {
+            toolCallCount++;
+            console.log(`\n--- Tool call #${toolCallCount}: ${block.name} ---`);
+            console.log(`  input: ${JSON.stringify(block.input).slice(0, 200)}`);
+          }
+          if (block.type === "text") {
+            console.log(`  text: ${block.text.slice(0, 300)}${block.text.length > 300 ? "…" : ""}`);
+          }
+        }
+      }
+
+      if (message.type === "result" && message.subtype === "success") {
+        resultText = message.result;
+      }
     }
 
-    const { text, steps } = await generateText({
-      model: openai("gpt-5.2"),
-      tools,
-      stopWhen: stepCountIs(5),
-      prompt: "List my agents, sandboxes and functions",
-      onStepFinish({ stepNumber, finishReason, toolCalls, toolResults, text: stepText }) {
-        console.log(`\n--- Step ${stepNumber} (${finishReason}) ---`);
-        if (toolCalls.length > 0) {
-          for (const tc of toolCalls) {
-            console.log(`  tool: ${tc.toolName}(${JSON.stringify(tc.input).slice(0, 200)})`);
-          }
-        }
-        if (toolResults.length > 0) {
-          for (const tr of toolResults) {
-            const out = typeof tr.output === "string" ? tr.output : JSON.stringify(tr.output);
-            console.log(`  result: ${out.slice(0, 300)}${out.length > 300 ? "…" : ""}`);
-          }
-        }
-        if (stepText) {
-          console.log(`  text: ${stepText.slice(0, 300)}${stepText.length > 300 ? "…" : ""}`);
-        }
-      },
-    });
+    console.log(`\nAgent made ${toolCallCount} tool calls`);
+    console.log(`Final response:\n${resultText}`);
 
-    const toolCalls = steps.flatMap((s) => s.toolCalls);
-    console.log(`\nAgent made ${toolCalls.length} tool calls across ${steps.length} steps`);
-    console.log(`Final response:\n${text}`);
-
-    if (toolCalls.length === 0) {
+    if (toolCallCount === 0) {
       throw new Error("Agent made no tool calls");
     }
   } finally {
-    await client.close();
     console.log(`\nCleaning up: deleting function ${functionName}`);
     await deleteFunction({ path: { functionName } });
     console.log("Done.");

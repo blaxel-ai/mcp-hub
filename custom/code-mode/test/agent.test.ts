@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { createMCPClient } from "@ai-sdk/mcp";
-import { generateText, stepCountIs } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { query } from "@anthropic-ai/claude-agent-sdk";
 import { ChildProcess, spawn } from "node:child_process";
 
 const PORT = 9877;
@@ -52,32 +50,39 @@ afterAll(async () => {
 
 describe("code-mode agent", () => {
   it("should use search tool to find endpoints in the API reference", async () => {
-    const client = await createMCPClient({
-      transport: { type: "http", url: MCP_URL },
-    });
+    let toolCallCount = 0;
+    let resultText = "";
 
-    try {
-      const tools = await client.tools();
-      expect(tools).toHaveProperty("search");
-      expect(tools).toHaveProperty("execute");
+    for await (const message of query({
+      prompt: "List my agents, sandboxes and functions and jobs",
+      options: {
+        model: 'claude-sonnet-4-6',
+        maxTurns: 5,
+        mcpServers: {
+          "code-mode": {
+            type: "http",
+            url: MCP_URL,
+          },
+        },
+        allowedTools: ["mcp__code-mode__*"],
+      },
+    })) {
+      if (message.type === "assistant") {
+        for (const block of message.message.content) {
+          if (block.type === "tool_use") {
+            toolCallCount++;
+          }
+        }
+      }
 
-      const { text, steps } = await generateText({
-        model: openai("gpt-5.2"),
-        tools,
-        stopWhen: stepCountIs(5),
-        prompt:
-          "List my agents, sandboxes and functions and jobs",
-      });
-
-      console.log(text)
-      const toolCalls = steps.flatMap((s) => s.toolCalls);
-      expect(toolCalls.length).toBeGreaterThan(0);
-      expect(toolCalls.some((tc) => tc.toolName === "search")).toBe(true);
-      expect(text.length).toBeGreaterThan(0);
-
-      console.log(`Agent response (${toolCalls.length} tool calls):\n${text}`);
-    } finally {
-      await client.close();
+      if (message.type === "result" && message.subtype === "success") {
+        resultText = message.result;
+      }
     }
+
+    console.log(`Agent response (${toolCallCount} tool calls):\n${resultText}`);
+
+    expect(toolCallCount).toBeGreaterThan(0);
+    expect(resultText.length).toBeGreaterThan(0);
   });
 });

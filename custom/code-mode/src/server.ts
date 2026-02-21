@@ -428,16 +428,19 @@ async function main() {
     },
     async ({ code }) => {
       console.log(`[search] called: ${code.length > 120 ? code.slice(0, 120) + "…" : code}`);
+      const start = Date.now();
       try {
         const fn = new Function(
           "spec",
           `return (async () => { const __fn = ${code}; return await __fn(); })()`
         );
         const result = await fn(spec);
+        console.log(`[search] done in ${Date.now() - start}ms`);
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
         };
       } catch (err: any) {
+        console.log(`[search] failed in ${Date.now() - start}ms: ${err.message}`);
         return {
           content: [{ type: "text", text: `Error: ${err.message}` }],
           isError: true,
@@ -465,12 +468,15 @@ async function main() {
       },
     },
     async ({ code, timeout = 30 }: { code: string; timeout?: number }) => {
-      console.log(`[execute] called (timeout=${timeout}s): ${code.length > 1200000 ? code.slice(0, 1200000) + "…" : code}`);
+      console.log(`[execute] called (timeout=${timeout}s): ${code.length > 120 ? code.slice(0, 120) + "…" : code}`);
+      const start = Date.now();
       try {
         const rawName = `code-mode-${process.env.BL_NAME || "local"}`;
         const sandboxName = rawName.length > 48 ? rawName.slice(0, 48) : rawName;
+        console.log(`[execute] creating/reusing sandbox "${sandboxName}"...`);
         const sandbox = await SandboxInstance.createIfNotExists({
           name: sandboxName,
+          image: "blaxel/node:latest",
           labels: {
             "code-mode": "true",
             "code-mode-name": process.env.BL_NAME ,
@@ -485,6 +491,7 @@ async function main() {
             ],
           },
         });
+        console.log(`[execute] sandbox ready in ${Date.now() - start}ms`);
 
         const script = [
           `const fn = ${code};`,
@@ -500,12 +507,14 @@ async function main() {
         ].join("\n");
 
         const encoded = Buffer.from(script).toString("base64");
+        const execStart = Date.now();
         const result = await sandbox.process.exec({
           env: authEnvs,
           command: `node -e "eval(Buffer.from('${encoded}','base64').toString())"`,
           waitForCompletion: true,
           timeout,
         });
+        console.log(`[execute] exec finished in ${Date.now() - execStart}ms (exit=${result.exitCode}), total ${Date.now() - start}ms`);
 
         if (result.exitCode !== 0) {
           return {
@@ -522,6 +531,7 @@ async function main() {
           ],
         };
       } catch (err: any) {
+        console.log(`[execute] failed in ${Date.now() - start}ms: ${err.message}`);
         return {
           content: [{ type: "text", text: `Sandbox error: ${err.message}` }],
           isError: true,
