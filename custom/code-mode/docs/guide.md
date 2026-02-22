@@ -82,6 +82,7 @@ spec:
   runtime:
     type: mcp
     image: blaxel/code-mode:latest
+    memory: 2048
     envs:
       - name: OPENAPI_REFERENCE
         value: https://petstore3.swagger.io/api/v3/openapi.json
@@ -139,14 +140,35 @@ for await (const message of query({
       petstore: {
         type: "http",
         url: "<your-mcp-url>/mcp",
-        headers: { "x-blaxel-authorization": "Bearer <your-api-key>" },
+        headers: { "Authorization": `Bearer <your-api-key>` },
       },
     },
     allowedTools: ["mcp__petstore__*"],
   },
 })) {
+  if (message.type === "system" && message.subtype === "init") {
+    for (const s of message.mcp_servers) {
+      console.log(`MCP server "${s.name}": ${s.status}`);
+    }
+  }
+
+  if (message.type === "assistant") {
+    for (const block of message.message.content) {
+      if (block.type === "tool_use") {
+        console.log(`\n--- ${block.name} ---`);
+        console.log(`  input: ${JSON.stringify(block.input).slice(0, 200)}`);
+      }
+      if (block.type === "text") {
+        console.log(`  text: ${block.text.slice(0, 300)}${block.text.length > 300 ? "…" : ""}`);
+      }
+    }
+  }
+
   if (message.type === "result" && message.subtype === "success") {
-    console.log(message.result);
+    console.log(`\n${message.result}`);
+  }
+  if (message.type === "result" && message.subtype !== "success") {
+    console.error("Error:", message);
   }
 }
 ```
