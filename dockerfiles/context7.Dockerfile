@@ -7,14 +7,11 @@ WORKDIR /app
 
 RUN npm i -g pnpm
 
-# Copy the package.json and package-lock.json files
-COPY package.json ./
+# Copy all source files (monorepo needs workspace config + sub-package.json files for install)
+COPY . .
 
 # Install the dependencies
-RUN pnpm install --ignore-scripts
-
-# Copy the rest of the application source code
-COPY . .
+RUN pnpm install
 
 # Build the application
 RUN pnpm run build
@@ -25,15 +22,12 @@ FROM node:22-alpine
 # Set the working directory
 WORKDIR /app
 
-# Copy built files from the builder stage
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
-
-# Expose the port the app runs on
-# (This line is optional and depends on whether you want to specify a port to be exposed)
+# Copy built files from the MCP package in the monorepo
+COPY --from=builder /app/packages/mcp/dist ./dist
+COPY --from=builder /app/packages/mcp/package.json ./
 
 RUN npm install -g pnpm \
-  && pnpm install
+  && pnpm install --prod
 
 
 COPY super-gateway ./super-gateway
