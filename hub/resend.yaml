@@ -39,7 +39,7 @@ smithery:
       |-
       config => ({
         command:'node',
-        args:['build/index.js'],
+        args:['dist/index.js'],
         env:{
           RESEND_API_KEY:config.resendApiKey,
           SENDER_EMAIL_ADDRESS:config.senderEmailAddress,
