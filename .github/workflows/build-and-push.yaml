@@ -70,7 +70,8 @@ jobs:
             # Check if there are changes in internal or cmd or super-gateway folders
             if git diff --name-only HEAD^ HEAD | grep -q "internal/" || \
                git diff --name-only HEAD^ HEAD | grep -q "cmd/" || \
-               git diff --name-only HEAD^ HEAD | grep -q "super-gateway/"; then
+               git diff --name-only HEAD^ HEAD | grep -q "super-gateway/" || \
+               git diff --name-only HEAD^ HEAD | grep -q "dockerfiles/"; then
               # If there are changes in internal or cmd or super-gateway, include all servers (excluding disabled/coming soon)
               echo "Changes detected in internal or cmd or super-gateway folders, including all servers (excluding disabled/coming soon)"
               for server in $(echo $all_servers | jq -r '.[]'); do
@@ -89,7 +90,8 @@ jobs:
               # Otherwise, only include servers with specific changes (excluding disabled/coming soon)
               for server in $(echo $all_servers | jq -r '.[]'); do
                 if git diff --name-only HEAD^ HEAD | grep -q "hub/${server}.yaml" || \
-                   git diff --name-only HEAD^ HEAD | grep -q "hub/${server}/"; then
+                   git diff --name-only HEAD^ HEAD | grep -q "hub/${server}/" || \
+                   git diff --name-only HEAD^ HEAD | grep -q "dockerfiles/${server}.Dockerfile"; then
                   # Check if the server is disabled or coming soon
                   if [ -f "${server}.yaml" ]; then
                     disabled=$(grep -E "^disabled: true" "${server}.yaml" || true)
