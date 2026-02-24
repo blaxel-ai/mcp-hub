@@ -33,7 +33,7 @@ COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
 # (This line is optional and depends on whether you want to specify a port to be exposed)
 
 RUN npm install -g pnpm \
-  && pnpm install
+  && pnpm install --prod --ignore-scripts
 
 COPY super-gateway ./super-gateway
 
