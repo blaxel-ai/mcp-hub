@@ -26,14 +26,14 @@ FROM node:22-alpine
 WORKDIR /app
 
 # Copy built files from the builder stage
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/build ./build
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
 
 # Expose the port the app runs on
 # (This line is optional and depends on whether you want to specify a port to be exposed)
 
 RUN npm install -g pnpm \
-  && pnpm install
+  && pnpm install --prod --ignore-scripts
 
 COPY super-gateway ./super-gateway
 
