@@ -12,7 +12,7 @@ tmp
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Runtime data
-
+.DS_Store
 pids
 _.pid
 _.seed

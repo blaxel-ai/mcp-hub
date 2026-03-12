@@ -66,6 +66,7 @@ type Gateway struct {
 	broadcast          chan []byte
 	upgrader           websocket.Upgrader
 	stdinWriter        *bufio.Writer
+	stdinMu            sync.Mutex
 	stdoutScanner      *bufio.Scanner
 	stderrScanner      *bufio.Scanner
 	restartCount       int
@@ -413,6 +414,9 @@ func (g *Gateway) SendToMCP(msg JSONRPCMessage, clientID string) error {
 
 	log.Printf("Gateway → Child: %s", string(data))
 
+	g.stdinMu.Lock()
+	defer g.stdinMu.Unlock()
+
 	if _, err := g.stdinWriter.Write(append(data, '\n')); err != nil {
 		return fmt.Errorf("failed to write to stdin: %w", err)
 	}
@@ -459,11 +463,14 @@ func (g *Gateway) WaitForReady(timeout time.Duration) error {
 
 	// Send the first request immediately
 	log.Printf("Sending readiness check: %s", string(data))
-	if _, err := g.stdinWriter.Write(append(data, '\n')); err != nil {
-		return fmt.Errorf("failed to write readiness check: %w", err)
+	g.stdinMu.Lock()
+	_, writeErr := g.stdinWriter.Write(append(data, '\n'))
+	if writeErr == nil {
+		writeErr = g.stdinWriter.Flush()
 	}
-	if err := g.stdinWriter.Flush(); err != nil {
-		return fmt.Errorf("failed to flush readiness check: %w", err)
+	g.stdinMu.Unlock()
+	if writeErr != nil {
+		return fmt.Errorf("failed to write readiness check: %w", writeErr)
 	}
 
 	attempt := 1
@@ -481,11 +488,14 @@ func (g *Gateway) WaitForReady(timeout time.Duration) error {
 			// Retry sending the request
 			attempt++
 			log.Printf("Retrying readiness check (attempt %d)...", attempt)
-			if _, err := g.stdinWriter.Write(append(data, '\n')); err != nil {
-				return fmt.Errorf("failed to write readiness check: %w", err)
+			g.stdinMu.Lock()
+			_, writeErr := g.stdinWriter.Write(append(data, '\n'))
+			if writeErr == nil {
+				writeErr = g.stdinWriter.Flush()
 			}
-			if err := g.stdinWriter.Flush(); err != nil {
-				return fmt.Errorf("failed to flush readiness check: %w", err)
+			g.stdinMu.Unlock()
+			if writeErr != nil {
+				return fmt.Errorf("failed to write readiness check: %w", writeErr)
 			}
 
 		case <-timeoutTimer.C:
