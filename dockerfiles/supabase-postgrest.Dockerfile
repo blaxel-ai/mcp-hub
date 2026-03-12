@@ -21,9 +21,10 @@ RUN pnpm install --frozen-lockfile
 WORKDIR /app/packages/mcp-utils
 RUN pnpm run build
 
-# Build the postgrest package
+# Build the postgrest package (skip prebuild typecheck — upstream has type
+# incompatibilities with the newer @modelcontextprotocol/sdk)
 WORKDIR /app/packages/mcp-server-postgrest
-RUN pnpm run build
+RUN pnpm exec tsup --clean --no-dts
 
 # Use a separate runtime environment
 FROM node:22-alpine
