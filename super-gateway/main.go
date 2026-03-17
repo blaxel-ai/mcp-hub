@@ -726,6 +726,15 @@ func (g *Gateway) HandleHTTPMessage(w http.ResponseWriter, r *http.Request) {
 	g.waiters[key] = ch
 	g.waitersMu.Unlock()
 
+	// Determine timeout: use MCP_RESPONSE_TIMEOUT env var if set, otherwise default to 5 minutes.
+	// Tools that call external APIs (e.g. web search) can take significant time under concurrent load.
+	responseTimeout := 5 * time.Minute
+	if envTimeout := os.Getenv("MCP_RESPONSE_TIMEOUT"); envTimeout != "" {
+		if parsed, err := time.ParseDuration(envTimeout); err == nil {
+			responseTimeout = parsed
+		}
+	}
+
 	// Wait with a timeout to avoid hanging forever
 	select {
 	case data := <-ch:
@@ -749,7 +758,7 @@ func (g *Gateway) HandleHTTPMessage(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(data)
-	case <-time.After(30 * time.Second):
+	case <-time.After(responseTimeout):
 		g.waitersMu.Lock()
 		delete(g.waiters, key)
 		g.waitersMu.Unlock()
@@ -971,8 +980,8 @@ func main() {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/mcp", func(w http.ResponseWriter, r *http.Request) {
 			accept := r.Header.Get("Accept")
-			// Require Accept to indicate support
-			if !strings.Contains(accept, "application/json") && !strings.Contains(accept, "text/event-stream") && r.Method == http.MethodPost {
+			// Require Accept to indicate support (also accept wildcard */* and empty Accept)
+			if accept != "" && !strings.Contains(accept, "application/json") && !strings.Contains(accept, "text/event-stream") && !strings.Contains(accept, "*/*") && r.Method == http.MethodPost {
 				http.Error(w, "Unsupported Accept header", http.StatusNotAcceptable)
 				return
 			}
