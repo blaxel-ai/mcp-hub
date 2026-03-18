@@ -735,7 +735,11 @@ func (g *Gateway) HandleHTTPMessage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Wait with a timeout to avoid hanging forever
+	// Wait with a timeout to avoid hanging forever.
+	// Use time.NewTimer so we can stop it early and avoid leaking timers under high concurrency.
+	timer := time.NewTimer(responseTimeout)
+	defer timer.Stop()
+
 	select {
 	case data := <-ch:
 		w.Header().Set("Content-Type", "application/json")
@@ -758,11 +762,16 @@ func (g *Gateway) HandleHTTPMessage(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(data)
-	case <-time.After(responseTimeout):
+	case <-timer.C:
 		g.waitersMu.Lock()
 		delete(g.waiters, key)
 		g.waitersMu.Unlock()
 		http.Error(w, "Timeout waiting for response", http.StatusGatewayTimeout)
+	case <-r.Context().Done():
+		// Client disconnected — clean up the waiter so we don't leak goroutines/resources.
+		g.waitersMu.Lock()
+		delete(g.waiters, key)
+		g.waitersMu.Unlock()
 	}
 }
 
