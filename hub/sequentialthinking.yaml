@@ -1,3 +1,4 @@
+disabled: true
 repository: https://github.com/modelcontextprotocol/servers
 dockerfile: "@mcp-hub"
 transport: http-stream
