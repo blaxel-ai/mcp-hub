@@ -1,4 +1,5 @@
-repository: https://github.com/smithery-ai/reference-servers
+disabled: true
+repository: https://github.com/modelcontextprotocol/servers
 dockerfile: "@mcp-hub"
 transport: http-stream
 branch: main
