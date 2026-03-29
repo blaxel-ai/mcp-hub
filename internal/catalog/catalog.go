@@ -46,6 +46,7 @@ type Field struct {
 	Required    bool   `json:"required"`
 	Default     string `json:"default,omitempty"`
 	Hidden      bool   `json:"hidden,omitempty"`
+	Type        string `json:"type,omitempty"`
 }
 
 type OAuth struct {
@@ -152,6 +153,7 @@ func (c *Catalog) Load(name string, hub *hub.Repository, imageName string, smith
 			Required:    isRequired,
 			Hidden:      hidden[secret],
 			Default:     p.Default,
+			Type:        p.Type,
 		}
 	}
 
@@ -173,6 +175,7 @@ func (c *Catalog) Load(name string, hub *hub.Repository, imageName string, smith
 			Label:       ToLabel(name),
 			Required:    isRequired,
 			Default:     property.Default,
+			Type:        property.Type,
 		}
 	}
 
