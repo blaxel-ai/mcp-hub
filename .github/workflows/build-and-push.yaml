@@ -140,6 +140,7 @@ jobs:
       - generate-matrix
     if: needs.generate-matrix.outputs.servers != '[]'
     strategy:
+      fail-fast: false
       matrix:
         server: ${{ fromJson(needs.generate-matrix.outputs.servers )}}
     permissions:

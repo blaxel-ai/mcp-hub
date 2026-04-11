@@ -90,6 +90,7 @@ jobs:
     needs: generate-matrix
     if: needs.generate-matrix.outputs.mcps != '[]'
     strategy:
+      fail-fast: false
       matrix:
         mcp: ${{ fromJson(needs.generate-matrix.outputs.mcps) }}
     permissions:
