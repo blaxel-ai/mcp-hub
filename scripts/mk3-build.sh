@@ -170,7 +170,7 @@ for attempt in $(seq 1 $MAX_ATTEMPTS); do
             ;;
         FAILED)
             echo "Build failed"
-            aws batch describe-jobs --jobs "$JOB_ID" --region "$BATCH_REGION" | jq '.jobs[0] | {status, statusReason, container: .container}'
+            aws batch describe-jobs --jobs "$JOB_ID" --region "$BATCH_REGION" | jq '.jobs[0] | {status, statusReason, container: {exitCode: .container.exitCode, reason: .container.reason, logStreamName: .container.logStreamName}}'
             exit 1
             ;;
         SUBMITTED|PENDING|RUNNABLE|STARTING|RUNNING)
