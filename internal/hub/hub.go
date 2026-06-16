@@ -3,6 +3,8 @@ package hub
 import (
 	"errors"
 	"fmt"
+	"net"
+	neturl "net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -45,14 +47,86 @@ type Repository struct {
 	Secrets         []string                 `yaml:"secrets" mandatory:"false"`
 	HiddenSecrets   []string                 `yaml:"hiddenSecrets" mandatory:"false"`
 	OAuth           *OAuth                   `yaml:"oauth" mandatory:"false"`
+	HTTPUpstream    *HTTPUpstream            `yaml:"httpUpstream" mandatory:"false"`
 	Integration     string                   `yaml:"integration" mandatory:"false"`
 	Tags            []string                 `yaml:"tags"`
 	Categories      []string                 `yaml:"categories"`
 }
 
+type HTTPUpstream struct {
+	URL         string `yaml:"url"`
+	AllowedPath string `yaml:"allowedPath"`
+}
+
 type OAuth struct {
 	Type   string   `yaml:"type"`
 	Scopes []string `yaml:"scopes"`
+}
+
+func (h *HTTPUpstream) ValidateWithDefaultValues() error {
+	upstreamURL, err := h.parsedURL()
+	if err != nil {
+		return err
+	}
+	if h.AllowedPath == "" {
+		h.AllowedPath = upstreamURL.Path
+		if h.AllowedPath == "" {
+			h.AllowedPath = "/mcp"
+		}
+	}
+	if !strings.HasPrefix(h.AllowedPath, "/") {
+		return fmt.Errorf("httpUpstream.allowedPath must start with /")
+	}
+	if h.AllowedPath == "/" {
+		return fmt.Errorf("httpUpstream.allowedPath must not be /")
+	}
+	if strings.Contains(h.AllowedPath, "://") {
+		return fmt.Errorf("httpUpstream.allowedPath must be a path, not a URL")
+	}
+	return nil
+}
+
+func (h *HTTPUpstream) SuperGatewayArgs() ([]string, error) {
+	if h == nil {
+		return nil, nil
+	}
+	if err := h.ValidateWithDefaultValues(); err != nil {
+		return nil, err
+	}
+	return []string{
+		"--port", "80",
+		"--transport", "http-stream",
+		"--http-upstream", h.URL,
+		"--http-upstream-path", h.AllowedPath,
+		"--stdio",
+	}, nil
+}
+
+func (h *HTTPUpstream) parsedURL() (*neturl.URL, error) {
+	if h.URL == "" {
+		return nil, fmt.Errorf("httpUpstream.url is required")
+	}
+	upstreamURL, err := neturl.Parse(h.URL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid httpUpstream.url: %w", err)
+	}
+	if upstreamURL.Scheme != "http" {
+		return nil, fmt.Errorf("httpUpstream.url must use http scheme")
+	}
+	if upstreamURL.User != nil {
+		return nil, fmt.Errorf("httpUpstream.url must not include userinfo")
+	}
+	host := upstreamURL.Hostname()
+	if host == "" {
+		return nil, fmt.Errorf("httpUpstream.url must include a host")
+	}
+	if host != "localhost" {
+		ip := net.ParseIP(host)
+		if ip == nil || !ip.IsLoopback() {
+			return nil, fmt.Errorf("httpUpstream.url host must be loopback")
+		}
+	}
+	return upstreamURL, nil
 }
 
 func (h *Hub) Read(path string) error {
@@ -117,6 +191,15 @@ func (h *Hub) ValidateWithDefaultValues() error {
 				case reflect.Bool:
 					value.SetBool(defaultVal == "true")
 				}
+			}
+		}
+
+		if repository.HTTPUpstream != nil {
+			if err := repository.HTTPUpstream.ValidateWithDefaultValues(); err != nil {
+				errs = append(errs, fmt.Errorf("repository %s: %w", name, err))
+			}
+			if repository.Transport == "" {
+				repository.Transport = "http-stream"
 			}
 		}
 	}
