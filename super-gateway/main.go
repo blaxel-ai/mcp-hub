@@ -143,6 +143,9 @@ func ParseHTTPUpstreamConfig(rawURL, publicPath string) (*HTTPUpstreamConfig, er
 	if upstreamURL.User != nil {
 		return nil, fmt.Errorf("http upstream URL must not include userinfo")
 	}
+	if upstreamURL.RawQuery != "" || upstreamURL.Fragment != "" {
+		return nil, fmt.Errorf("http upstream URL must not include query or fragment")
+	}
 	host := upstreamURL.Hostname()
 	if host == "" {
 		return nil, fmt.Errorf("http upstream URL must include a host")
@@ -159,8 +162,8 @@ func ParseHTTPUpstreamConfig(rawURL, publicPath string) (*HTTPUpstreamConfig, er
 	if publicPath == "" {
 		publicPath = upstreamURL.Path
 	}
-	if !strings.HasPrefix(publicPath, "/") || strings.Contains(publicPath, "://") || publicPath == "/" {
-		return nil, fmt.Errorf("http upstream public path must be a non-root path starting with /")
+	if !strings.HasPrefix(publicPath, "/") || strings.Contains(publicPath, "://") || strings.ContainsAny(publicPath, "?#") || publicPath == "/" {
+		return nil, fmt.Errorf("http upstream public path must be a non-root path starting with / and must not include query or fragment")
 	}
 	return &HTTPUpstreamConfig{URL: upstreamURL, PublicPath: publicPath}, nil
 }
@@ -935,8 +938,8 @@ func (g *Gateway) HandleHTTPUpstream(config *HTTPUpstreamConfig) http.Handler {
 			stripPrivateResponseHeaders(response.Header)
 			return nil
 		},
-		ErrorHandler: func(w http.ResponseWriter, _ *http.Request, _ error) {
-			log.Printf("HTTP upstream proxy error")
+		ErrorHandler: func(w http.ResponseWriter, _ *http.Request, err error) {
+			log.Printf("HTTP upstream proxy error: %v", err)
 			http.Error(w, "HTTP upstream unavailable", http.StatusBadGateway)
 		},
 		FlushInterval: -1,

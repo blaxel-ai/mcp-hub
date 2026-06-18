@@ -80,8 +80,8 @@ func (h *HTTPUpstream) ValidateWithDefaultValues() error {
 	if h.AllowedPath == "/" {
 		return fmt.Errorf("httpUpstream.allowedPath must not be /")
 	}
-	if strings.Contains(h.AllowedPath, "://") {
-		return fmt.Errorf("httpUpstream.allowedPath must be a path, not a URL")
+	if strings.Contains(h.AllowedPath, "://") || strings.ContainsAny(h.AllowedPath, "?#") {
+		return fmt.Errorf("httpUpstream.allowedPath must be a path without query or fragment")
 	}
 	return nil
 }
@@ -115,6 +115,9 @@ func (h *HTTPUpstream) parsedURL() (*neturl.URL, error) {
 	}
 	if upstreamURL.User != nil {
 		return nil, fmt.Errorf("httpUpstream.url must not include userinfo")
+	}
+	if upstreamURL.RawQuery != "" || upstreamURL.Fragment != "" {
+		return nil, fmt.Errorf("httpUpstream.url must not include query or fragment")
 	}
 	host := upstreamURL.Hostname()
 	if host == "" {

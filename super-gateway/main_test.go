@@ -51,10 +51,31 @@ func TestParseHTTPUpstreamConfig(t *testing.T) {
 		}
 	})
 
+	t.Run("rejects query and fragment", func(t *testing.T) {
+		for _, rawURL := range []string{
+			"http://127.0.0.1:8081/mcp?token=secret",
+			"http://127.0.0.1:8081/mcp#secret",
+		} {
+			_, err := ParseHTTPUpstreamConfig(rawURL, "")
+			if err == nil || !strings.Contains(err.Error(), "query or fragment") {
+				t.Fatalf("%s: expected query or fragment error, got %v", rawURL, err)
+			}
+		}
+	})
+
 	t.Run("rejects root public path", func(t *testing.T) {
 		_, err := ParseHTTPUpstreamConfig("http://127.0.0.1:8081/mcp", "/")
 		if err == nil || !strings.Contains(err.Error(), "non-root") {
 			t.Fatalf("expected non-root path error, got %v", err)
+		}
+	})
+
+	t.Run("rejects public path query and fragment", func(t *testing.T) {
+		for _, publicPath := range []string{"/mcp?token=secret", "/mcp#secret"} {
+			_, err := ParseHTTPUpstreamConfig("http://127.0.0.1:8081/mcp", publicPath)
+			if err == nil || !strings.Contains(err.Error(), "query or fragment") {
+				t.Fatalf("%s: expected query or fragment error, got %v", publicPath, err)
+			}
 		}
 	})
 
