@@ -11,7 +11,7 @@ RUN npm i -g pnpm
 COPY . .
 
 # Install the dependencies
-RUN pnpm install
+RUN pnpm install --ignore-scripts
 
 # Build the application
 RUN pnpm run build
@@ -27,7 +27,7 @@ COPY --from=builder /app/packages/mcp/dist ./dist
 COPY --from=builder /app/packages/mcp/package.json ./
 
 RUN npm install -g pnpm \
-  && pnpm install --prod
+  && pnpm install --prod --ignore-scripts
 
 
 COPY super-gateway ./super-gateway
