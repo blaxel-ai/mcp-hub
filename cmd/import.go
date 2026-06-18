@@ -125,9 +125,14 @@ func processRepository(name string, repository *hub.Repository) (*catalog.Catalo
 	}
 
 	buildTo := fmt.Sprintf("%s/%s", strings.ToLower(registry), imageName)
+	superGatewayArgs, err := repository.HTTPUpstream.SuperGatewayArgs()
+	if err != nil {
+		return nil, fmt.Errorf("http upstream super-gateway args: %w", err)
+	}
+
 	if !skipBuild {
 		deps := manageDeps(repository)
-		if err := buildAndPushImage(cfg, name, repository.SmitheryPath, repoPath, strings.TrimSuffix(repository.Dockerfile, "/Dockerfile"), buildTo, deps); err != nil {
+		if err := buildAndPushImage(cfg, name, repository.SmitheryPath, repoPath, strings.TrimSuffix(repository.Dockerfile, "/Dockerfile"), buildTo, deps, superGatewayArgs); err != nil {
 			return nil, fmt.Errorf("build and push image: %w", err)
 		}
 	}
@@ -140,14 +145,14 @@ func processRepository(name string, repository *hub.Repository) (*catalog.Catalo
 	return &c, nil
 }
 
-func buildAndPushImage(cfg *smithery.SmitheryConfig, name string, smitheryPath string, repoPath string, dockerfileDir string, imageName string, deps []string) error {
+func buildAndPushImage(cfg *smithery.SmitheryConfig, name string, smitheryPath string, repoPath string, dockerfileDir string, imageName string, deps []string, superGatewayArgs []string) error {
 	dockerfilePath, err := docker.Inject(
 		context.Background(),
 		name,
 		repoPath,
 		dockerfileDir,
 		dockerfile,
-		cfg.ParsedCommand.Entrypoint(),
+		cfg.ParsedCommand.Entrypoint(superGatewayArgs),
 		deps,
 	)
 	if err != nil {

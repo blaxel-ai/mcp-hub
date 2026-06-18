@@ -27,8 +27,16 @@ type Command struct {
 	Env     map[string]string `json:"env"`
 }
 
-func (c *Command) Entrypoint() string {
-	entrypoint := []string{"\"./super-gateway\"", "\"--transport\"", "\"http-stream\"", "\"--port\"", "\"80\"", "\"--stdio\""}
+func (c *Command) Entrypoint(superGatewayArgs ...[]string) string {
+	args := []string{"--transport", "http-stream", "--port", "80", "--stdio"}
+	if len(superGatewayArgs) > 0 && len(superGatewayArgs[0]) > 0 {
+		args = superGatewayArgs[0]
+	}
+
+	entrypoint := []string{"\"./super-gateway\""}
+	for _, arg := range args {
+		entrypoint = append(entrypoint, fmt.Sprintf("%q", arg))
+	}
 	return strings.Join(entrypoint, ",")
 }
 

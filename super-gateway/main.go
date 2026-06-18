@@ -2,10 +2,13 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -119,6 +122,87 @@ func rewriteOAuthURL(line string) string {
 type Session struct {
 	ProtocolVersion string
 	CreatedAt       time.Time
+}
+
+type HTTPUpstreamConfig struct {
+	URL        *url.URL
+	PublicPath string
+}
+
+func ParseHTTPUpstreamConfig(rawURL, publicPath string) (*HTTPUpstreamConfig, error) {
+	if rawURL == "" {
+		return nil, nil
+	}
+	upstreamURL, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid http upstream URL: %w", err)
+	}
+	if upstreamURL.Scheme != "http" {
+		return nil, fmt.Errorf("http upstream URL must use http scheme")
+	}
+	if upstreamURL.User != nil {
+		return nil, fmt.Errorf("http upstream URL must not include userinfo")
+	}
+	if upstreamURL.RawQuery != "" || upstreamURL.Fragment != "" {
+		return nil, fmt.Errorf("http upstream URL must not include query or fragment")
+	}
+	host := upstreamURL.Hostname()
+	if host == "" {
+		return nil, fmt.Errorf("http upstream URL must include a host")
+	}
+	if host != "localhost" {
+		ip := net.ParseIP(host)
+		if ip == nil || !ip.IsLoopback() {
+			return nil, fmt.Errorf("http upstream host must be loopback")
+		}
+	}
+	if upstreamURL.Path == "" {
+		upstreamURL.Path = "/mcp"
+	}
+	if publicPath == "" {
+		publicPath = upstreamURL.Path
+	}
+	if !strings.HasPrefix(publicPath, "/") || strings.Contains(publicPath, "://") || strings.ContainsAny(publicPath, "?#") || publicPath == "/" {
+		return nil, fmt.Errorf("http upstream public path must be a non-root path starting with / and must not include query or fragment")
+	}
+	return &HTTPUpstreamConfig{URL: upstreamURL, PublicPath: publicPath}, nil
+}
+
+func newLoopbackHTTPClient(timeout time.Duration) *http.Client {
+	return &http.Client{Transport: newLoopbackHTTPTransport(), Timeout: timeout}
+}
+
+func newLoopbackHTTPTransport() *http.Transport {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.Proxy = nil
+	transport.DialContext = dialLoopbackOnly
+	return transport
+}
+
+func dialLoopbackOnly(ctx context.Context, network, address string) (net.Conn, error) {
+	host, port, err := net.SplitHostPort(address)
+	if err != nil {
+		return nil, err
+	}
+
+	dialer := &net.Dialer{}
+	if ip := net.ParseIP(host); ip != nil {
+		if !ip.IsLoopback() {
+			return nil, fmt.Errorf("refusing to dial non-loopback upstream host %s", host)
+		}
+		return dialer.DialContext(ctx, network, net.JoinHostPort(ip.String(), port))
+	}
+
+	addresses, err := net.DefaultResolver.LookupIPAddr(ctx, host)
+	if err != nil {
+		return nil, err
+	}
+	for _, address := range addresses {
+		if address.IP.IsLoopback() {
+			return dialer.DialContext(ctx, network, net.JoinHostPort(address.IP.String(), port))
+		}
+	}
+	return nil, fmt.Errorf("refusing to dial non-loopback upstream host %s", host)
 }
 
 func NewGateway() *Gateway {
@@ -515,6 +599,59 @@ func (g *Gateway) WaitForReady(timeout time.Duration) error {
 	}
 }
 
+func (g *Gateway) WaitForHTTPUpstreamReady(upstream *url.URL, timeout time.Duration) error {
+	log.Printf("Waiting for HTTP upstream MCP server to be ready (timeout: %v)...", timeout)
+
+	readinessMsg := JSONRPCMessage{
+		JSONRPC: "2.0",
+		ID:      "readiness-check",
+		Method:  "initialize",
+		Params:  json.RawMessage(`{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"super-gateway","version":"1.0.0"}}`),
+	}
+	data, err := json.Marshal(readinessMsg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal readiness check message: %w", err)
+	}
+
+	client := newLoopbackHTTPClient(5 * time.Second)
+	retryTicker := time.NewTicker(1 * time.Second)
+	defer retryTicker.Stop()
+	timeoutTimer := time.NewTimer(timeout)
+	defer timeoutTimer.Stop()
+
+	attempt := 0
+	for {
+		attempt++
+		request, err := http.NewRequest(http.MethodPost, upstream.String(), bytes.NewReader(data)) // #nosec G704 -- ParseHTTPUpstreamConfig and newLoopbackHTTPTransport enforce loopback-only HTTP with no proxy.
+		if err != nil {
+			return fmt.Errorf("failed to create readiness request: %w", err)
+		}
+		request.Header.Set("Content-Type", "application/json")
+		request.Header.Set("Accept", "application/json, text/event-stream")
+		request.Header.Set("MCP-Protocol-Version", "2024-11-05")
+
+		response, err := client.Do(request) // #nosec G704 -- request uses a loopback-only URL and transport refuses non-loopback dials.
+		if err == nil {
+			_, _ = io.Copy(io.Discard, response.Body)
+			_ = response.Body.Close()
+			if response.StatusCode >= 200 && response.StatusCode < 300 {
+				log.Printf("HTTP upstream MCP server is ready after %d attempt(s)", attempt)
+				return nil
+			}
+			log.Printf("HTTP upstream readiness attempt %d returned non-2xx status", attempt)
+		} else {
+			log.Printf("HTTP upstream readiness attempt %d failed: %v", attempt, err)
+		}
+
+		select {
+		case <-retryTicker.C:
+			continue
+		case <-timeoutTimer.C:
+			return fmt.Errorf("timeout waiting for HTTP upstream MCP server to be ready after %d attempt(s)", attempt)
+		}
+	}
+}
+
 // Run starts the gateway's main loop
 func (g *Gateway) Run() {
 	for {
@@ -786,6 +923,74 @@ func (g *Gateway) HandleHTTPMessage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (g *Gateway) HandleHTTPUpstream(config *HTTPUpstreamConfig) http.Handler {
+	proxy := &httputil.ReverseProxy{
+		Transport: newLoopbackHTTPTransport(),
+		Rewrite: func(proxyRequest *httputil.ProxyRequest) {
+			proxyRequest.SetURL(config.URL)
+			proxyRequest.Out.URL.Path = config.URL.Path
+			proxyRequest.Out.URL.RawPath = config.URL.RawPath
+			proxyRequest.Out.URL.RawQuery = joinRawQuery(config.URL.RawQuery, proxyRequest.In.URL.RawQuery)
+			proxyRequest.Out.Host = config.URL.Host
+			stripPrivateRequestHeaders(proxyRequest.Out.Header)
+		},
+		ModifyResponse: func(response *http.Response) error {
+			stripPrivateResponseHeaders(response.Header)
+			return nil
+		},
+		ErrorHandler: func(w http.ResponseWriter, _ *http.Request, err error) {
+			log.Printf("HTTP upstream proxy error: %v", err)
+			http.Error(w, "HTTP upstream unavailable", http.StatusBadGateway)
+		},
+		FlushInterval: -1,
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != config.PublicPath {
+			http.NotFound(w, r)
+			return
+		}
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		proxy.ServeHTTP(w, r)
+	})
+}
+
+func joinRawQuery(fixedQuery, incomingQuery string) string {
+	if fixedQuery == "" {
+		return incomingQuery
+	}
+	if incomingQuery == "" {
+		return fixedQuery
+	}
+	return fixedQuery + "&" + incomingQuery
+}
+
+func stripPrivateRequestHeaders(headers http.Header) {
+	stripPrivateHeaders(headers, []string{"Authorization", "Cookie", "Proxy-Authorization"})
+}
+
+func stripPrivateResponseHeaders(headers http.Header) {
+	stripPrivateHeaders(headers, []string{"Set-Cookie"})
+}
+
+func stripPrivateHeaders(headers http.Header, names []string) {
+	for _, header := range append([]string{
+		"Forwarded",
+		"X-Real-Ip",
+	}, names...) {
+		headers.Del(header)
+	}
+	for header := range headers {
+		canonical := http.CanonicalHeaderKey(header)
+		if strings.HasPrefix(canonical, "X-Forwarded-") || strings.HasPrefix(canonical, "X-Blaxel-") || strings.HasPrefix(canonical, "Cf-") {
+			headers.Del(header)
+		}
+	}
+}
+
 // readPump reads messages from the WebSocket connection
 func (c *Client) readPump(g *Gateway) {
 	defer func() {
@@ -842,10 +1047,12 @@ func (g *Gateway) HandleHealth(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	var (
-		stdioCmd       []string
-		port           int
-		transport      string
-		authentication bool
+		stdioCmd         []string
+		port             int
+		transport        string
+		authentication   bool
+		httpUpstreamRaw  string
+		httpUpstreamPath string
 	)
 
 	// Show help if no arguments
@@ -855,6 +1062,8 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  --port <port>         Port to listen on (default: 8000)\n")
 		fmt.Fprintf(os.Stderr, "  --transport <transport> Connection transport: 'websocket' or 'http-stream' (default: websocket)\n")
 		fmt.Fprintf(os.Stderr, "  --authentication      Enable OAuth callback proxy (forwards non-MCP requests to port 12849)\n")
+		fmt.Fprintf(os.Stderr, "  --http-upstream <url> Fixed loopback HTTP MCP upstream URL to proxy instead of stdio JSON-RPC\n")
+		fmt.Fprintf(os.Stderr, "  --http-upstream-path <path> Public MCP path to allow for HTTP upstream mode (default: upstream path)\n")
 		fmt.Fprintf(os.Stderr, "  --stdio <command>     MCP server command to run\n")
 		fmt.Fprintf(os.Stderr, "\nExamples:\n")
 		fmt.Fprintf(os.Stderr, "  WebSocket transport:\n")
@@ -863,6 +1072,8 @@ func main() {
 		fmt.Fprintf(os.Stderr, "    %s --port 8000 --transport http-stream --stdio npx -y @modelcontextprotocol/server-filesystem /path\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "  With OAuth authentication (mcp-remote):\n")
 		fmt.Fprintf(os.Stderr, "    %s --port 8000 --transport http-stream --authentication --stdio mcp-remote https://example.com/mcp\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "  Existing HTTP MCP upstream on loopback:\n")
+		fmt.Fprintf(os.Stderr, "    %s --port 8000 --transport http-stream --http-upstream http://127.0.0.1:8081/mcp --stdio go run ./cmd/dummy_mcp\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\nNote: Everything after --stdio is passed to the subprocess\n")
 		os.Exit(1)
 	}
@@ -893,6 +1104,22 @@ func main() {
 	for i := 0; i < len(args); i++ {
 		if args[i] == "--authentication" {
 			authentication = true
+			break
+		}
+	}
+
+	// Find --http-upstream flag if present
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--http-upstream" && i+1 < len(args) {
+			httpUpstreamRaw = args[i+1]
+			break
+		}
+	}
+
+	// Find --http-upstream-path flag if present
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--http-upstream-path" && i+1 < len(args) {
+			httpUpstreamPath = args[i+1]
 			break
 		}
 	}
@@ -932,6 +1159,17 @@ func main() {
 	// Everything after --stdio is the command and its arguments
 	stdioCmd = args[stdioIndex+1:]
 
+	httpUpstreamConfig, err := ParseHTTPUpstreamConfig(httpUpstreamRaw, httpUpstreamPath)
+	if err != nil {
+		log.Fatalf("Invalid HTTP upstream config: %v", err)
+	}
+	if httpUpstreamConfig != nil && transport != "http-stream" {
+		log.Fatal("--http-upstream requires --transport http-stream")
+	}
+	if httpUpstreamConfig != nil && authentication {
+		log.Fatal("--http-upstream cannot be combined with --authentication")
+	}
+
 	gateway := NewGateway()
 
 	// Start the MCP server
@@ -942,7 +1180,13 @@ func main() {
 	// Wait for MCP server to be ready (30 second timeout)
 	// Skip readiness check if SKIP_READINESS_CHECK env var is set
 	if os.Getenv("SKIP_READINESS_CHECK") != "true" {
-		if err := gateway.WaitForReady(30 * time.Second); err != nil {
+		var err error
+		if httpUpstreamConfig != nil {
+			err = gateway.WaitForHTTPUpstreamReady(httpUpstreamConfig.URL, 30*time.Second)
+		} else {
+			err = gateway.WaitForReady(30 * time.Second)
+		}
+		if err != nil {
 			log.Printf("Warning: MCP server readiness check failed: %v", err)
 			log.Printf("Continuing anyway - server may not be fully initialized")
 			// Don't fail, just warn - some servers have issues with stdio responses
@@ -995,27 +1239,37 @@ func main() {
 		})
 	} else {
 		log.Printf("HTTP streaming endpoints:")
-		log.Printf("  - MCP endpoint: POST http://localhost:%d/mcp", port)
 
 		mux := http.NewServeMux()
-		mux.HandleFunc("/mcp", func(w http.ResponseWriter, r *http.Request) {
-			accept := r.Header.Get("Accept")
-			// Require Accept to indicate support (also accept wildcard */* and empty Accept)
-			if accept != "" && !strings.Contains(accept, "application/json") && !strings.Contains(accept, "text/event-stream") && !strings.Contains(accept, "*/*") && r.Method == http.MethodPost {
-				http.Error(w, "Unsupported Accept header", http.StatusNotAcceptable)
-				return
-			}
+		if httpUpstreamConfig != nil {
+			log.Printf("  - MCP endpoint: configured HTTP upstream path")
+			mux.Handle(httpUpstreamConfig.PublicPath, gateway.HandleHTTPUpstream(httpUpstreamConfig))
+		} else {
+			log.Printf("  - MCP endpoint: POST http://localhost:%d/mcp", port)
+			mux.HandleFunc("/mcp", func(w http.ResponseWriter, r *http.Request) {
+				accept := r.Header.Get("Accept")
+				// Require Accept to indicate support (also accept wildcard */* and empty Accept)
+				if accept != "" && !strings.Contains(accept, "application/json") && !strings.Contains(accept, "text/event-stream") && !strings.Contains(accept, "*/*") && r.Method == http.MethodPost {
+					http.Error(w, "Unsupported Accept header", http.StatusNotAcceptable)
+					return
+				}
 
-			if r.Method == http.MethodGet {
+				if r.Method == http.MethodGet {
+					http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+					return
+				}
+				if r.Method == http.MethodPost {
+					gateway.HandleHTTPMessage(w, r)
+					return
+				}
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-				return
-			}
-			if r.Method == http.MethodPost {
-				gateway.HandleHTTPMessage(w, r)
-				return
-			}
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		})
+			})
+		}
+
+		mcpEndpoint := "/mcp"
+		if httpUpstreamConfig != nil {
+			mcpEndpoint = httpUpstreamConfig.PublicPath
+		}
 
 		// Set up OAuth proxy if authentication flag is enabled
 		if authentication {
@@ -1040,7 +1294,7 @@ func main() {
 					w.Header().Set("Content-Type", "application/json")
 					json.NewEncoder(w).Encode(map[string]interface{}{
 						"transport": "http-stream",
-						"endpoint":  "/mcp",
+						"endpoint":  mcpEndpoint,
 					})
 					return
 				}
@@ -1059,7 +1313,7 @@ func main() {
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(map[string]interface{}{
 					"transport": "http-stream",
-					"endpoint":  "/mcp",
+					"endpoint":  mcpEndpoint,
 				})
 			})
 		}

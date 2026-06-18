@@ -54,9 +54,10 @@ type OAuth struct {
 }
 
 type Entrypoint struct {
-	Command string            `json:"command"`
-	Args    []string          `json:"args"`
-	Env     map[string]string `json:"env"`
+	Command          string            `json:"command"`
+	Args             []string          `json:"args"`
+	Env              map[string]string `json:"env"`
+	SuperGatewayArgs []string          `json:"superGatewayArgs,omitempty"`
 }
 
 type Catalog struct {
@@ -188,7 +189,16 @@ func (c *Catalog) Load(name string, hub *hub.Repository, imageName string, smith
 		hub.Integration = name
 	}
 	if hub.Transport == "" {
-		hub.Transport = "websocket"
+		if hub.HTTPUpstream != nil {
+			hub.Transport = "http-stream"
+		} else {
+			hub.Transport = "websocket"
+		}
+	}
+
+	superGatewayArgs, err := hub.HTTPUpstream.SuperGatewayArgs()
+	if err != nil {
+		return fmt.Errorf("http upstream super-gateway args: %w", err)
 	}
 
 	artifact := Artifact{
@@ -207,9 +217,10 @@ func (c *Catalog) Load(name string, hub *hub.Repository, imageName string, smith
 			OAuth:   oauth,
 		},
 		Entrypoint: Entrypoint{
-			Command: smithery.ParsedCommand.Command,
-			Args:    smithery.ParsedCommand.Args,
-			Env:     smithery.ParsedCommand.Env,
+			Command:          smithery.ParsedCommand.Command,
+			Args:             smithery.ParsedCommand.Args,
+			Env:              smithery.ParsedCommand.Env,
+			SuperGatewayArgs: superGatewayArgs,
 		},
 		Enterprise:    hub.Enterprise,
 		ComingSoon:    hub.ComingSoon,
