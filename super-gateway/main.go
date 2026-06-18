@@ -22,6 +22,11 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// maxScannerTokenSize is the maximum size of a single line read from the child
+// MCP server's stdout/stderr. Large JSON-RPC payloads (e.g. tools/list) can far
+// exceed bufio.Scanner's 64KB default, so we allow up to 16MB per line.
+const maxScannerTokenSize = 16 * 1024 * 1024
+
 // JSONRPCMessage represents a JSON-RPC 2.0 message
 type JSONRPCMessage struct {
 	JSONRPC string          `json:"jsonrpc"`
@@ -205,12 +210,18 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 		return fmt.Errorf("failed to create stdout pipe: %w", err)
 	}
 	g.stdoutScanner = bufio.NewScanner(stdout)
+	// The default bufio.Scanner buffer caps lines at 64KB, which is too small for
+	// large JSON-RPC payloads such as tools/list responses from some MCP servers
+	// (e.g. SigNoz). Raise the max token size so those lines are not dropped with
+	// a "token too long" error.
+	g.stdoutScanner.Buffer(make([]byte, 0, 1024*1024), maxScannerTokenSize)
 
 	stderr, err := g.cmd.StderrPipe()
 	if err != nil {
 		return fmt.Errorf("failed to create stderr pipe: %w", err)
 	}
 	g.stderrScanner = bufio.NewScanner(stderr)
+	g.stderrScanner.Buffer(make([]byte, 0, 1024*1024), maxScannerTokenSize)
 
 	// Start the process
 	if err := g.cmd.Start(); err != nil {
