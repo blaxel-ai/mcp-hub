@@ -1,0 +1,42 @@
+repository: https://github.com/SigNoz/signoz-mcp-server
+dockerfile: "@mcp-hub"
+transport: http-stream
+displayName: SigNoz
+branch: main
+url: https://signoz.io
+icon: https://avatars.githubusercontent.com/u/76905799?s=200&v=4
+description: Observability platform for metrics, traces, logs, alerts and dashboards
+longDescription: >-
+  SigNoz is an open-source observability platform. The SigNoz MCP server provides
+  seamless access to SigNoz observability data through AI assistants and LLMs. Query
+  metrics, traces, logs, alerts, dashboards, and services using natural language.
+secrets:
+  - signozApiKey
+categories:
+  - observability
+  - monitoring
+smithery:
+  startCommand:
+    type: stdio
+    configSchema:
+      type: object
+      required:
+        - signozUrl
+        - signozApiKey
+      properties:
+        signozUrl:
+          type: string
+          description: The URL of your SigNoz instance.
+        signozApiKey:
+          type: string
+          description: The API key for accessing SigNoz.
+    commandFunction:
+      |-
+      (config) => ({
+        command: './signoz-mcp-server',
+        args: [],
+        env: {
+          SIGNOZ_URL: config.signozUrl,
+          SIGNOZ_API_KEY: config.signozApiKey
+        }
+      })

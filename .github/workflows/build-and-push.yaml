@@ -32,7 +32,7 @@ jobs:
       servers: ${{ steps.retrieve-servers.outputs.servers }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 2  # Fetch last 2 commits to compare changes
       - name: Retrieve hub servers
@@ -125,7 +125,7 @@ jobs:
           fi
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     environment: |-
       ${{
         github.ref_name == 'main' && 'prod'
@@ -139,7 +139,9 @@ jobs:
     needs:
       - generate-matrix
     if: needs.generate-matrix.outputs.servers != '[]'
+    # Do not cancel the other servers when one fails: each server is independent.
     strategy:
+      fail-fast: false
       matrix:
         server: ${{ fromJson(needs.generate-matrix.outputs.servers )}}
     permissions:
@@ -148,23 +150,23 @@ jobs:
       id-token: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Echo server
         run: |
           set -euo pipefail
           echo "Server: ${{ matrix.server }}"
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - name: Log into registry ${{ env.REGISTRY }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup Go 1.21.x
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           # Semantic version range syntax or exact version of Go
           go-version: "1.23.3"
@@ -183,9 +185,70 @@ jobs:
             -r ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.BL_ENV }} \
             -m ${{ matrix.server }} \
             -t ${{ env.TAG }}
+      # Only reached when every previous step succeeded. The marker artifact lets
+      # the downstream jobs run for the servers that published successfully.
+      - name: Mark publish success
+        run: |
+          set -euo pipefail
+          mkdir -p publish-success
+          echo "ok" > "publish-success/${{ matrix.server }}"
+      - name: Upload publish success marker
+        uses: actions/upload-artifact@v7
+        with:
+          name: publish-success-${{ matrix.server }}
+          path: publish-success/${{ matrix.server }}
+          retention-days: 1
+  collect-publish-success:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs:
+      - generate-matrix
+      - publish
+    # Always run so the output is valid JSON ('[]' when nothing published),
+    # otherwise the downstream matrix would receive an empty string.
+    if: always()
+    outputs:
+      servers: ${{ steps.collect.outputs.servers }}
+    steps:
+      - name: Download publish success markers
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          pattern: publish-success-*
+          path: markers
+          merge-multiple: true
+      - name: Collect successful servers
+        id: collect
+        shell: bash
+        run: |
+          set -euo pipefail
+          servers=()
+          if [ -d markers ]; then
+            for f in markers/*; do
+              [ -e "$f" ] || continue
+              servers+=("$(basename "$f")")
+            done
+          fi
+          if [ ${#servers[@]} -eq 0 ]; then
+            echo "No servers published successfully"
+            echo "servers=[]" >> $GITHUB_OUTPUT
+          else
+            servers_json="["
+            for server in "${servers[@]}"; do
+              if [ "$servers_json" != "[" ]; then
+                servers_json="$servers_json,"
+              fi
+              servers_json="$servers_json\"$server\""
+            done
+            servers_json="$servers_json]"
+            echo "Servers that published successfully: $servers_json"
+            echo "servers=$servers_json" >> $GITHUB_OUTPUT
+          fi
   mk3-build:
     runs-on: codebuild-mcp-hub-${{ github.run_id }}-${{ github.run_attempt }}
-    timeout-minutes: 10
+    # Batch jobs can sit in RUNNABLE for a while (16 vCPU Fargate tasks, limited
+    # concurrency), so allow more than the AWS-side poll budget in mk3-build.sh.
+    timeout-minutes: 45
     environment: |-
       ${{
         github.ref_name == 'main' && 'prod'
@@ -196,14 +259,15 @@ jobs:
       BL_API_URL: ${{ vars.BL_API_URL }}
       BL_ADMIN_USERNAME: ${{ secrets.BL_ADMIN_USERNAME }}
       BL_ADMIN_PASSWORD: ${{ secrets.BL_ADMIN_PASSWORD }}
-    needs: [generate-matrix, publish]
-    if: always() && needs.generate-matrix.outputs.servers != '[]' && needs.publish.result == 'success'
+    needs: [collect-publish-success]
+    if: always() && needs.collect-publish-success.outputs.servers != '[]'
     strategy:
+      fail-fast: false
       matrix:
-        server: ${{ fromJson(needs.generate-matrix.outputs.servers )}}
+        server: ${{ fromJson(needs.collect-publish-success.outputs.servers )}}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Build mk3 image
         env:
           MCP_NAME: ${{ matrix.server }}
@@ -223,9 +287,67 @@ jobs:
           set -euo pipefail
           chmod +x ./scripts/mk3-build.sh
           ./scripts/mk3-build.sh
+      # Only reached when the mk3 build succeeded for this server.
+      - name: Mark mk3 success
+        run: |
+          set -euo pipefail
+          mkdir -p mk3-success
+          echo "ok" > "mk3-success/${{ matrix.server }}"
+      - name: Upload mk3 success marker
+        uses: actions/upload-artifact@v7
+        with:
+          name: mk3-success-${{ matrix.server }}
+          path: mk3-success/${{ matrix.server }}
+          retention-days: 1
+  collect-mk3-success:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs:
+      - collect-publish-success
+      - mk3-build
+    # Always run so the output is valid JSON ('[]' when nothing built),
+    # otherwise the downstream matrix would receive an empty string.
+    if: always()
+    outputs:
+      servers: ${{ steps.collect.outputs.servers }}
+    steps:
+      - name: Download mk3 success markers
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          pattern: mk3-success-*
+          path: markers
+          merge-multiple: true
+      - name: Collect successful servers
+        id: collect
+        shell: bash
+        run: |
+          set -euo pipefail
+          servers=()
+          if [ -d markers ]; then
+            for f in markers/*; do
+              [ -e "$f" ] || continue
+              servers+=("$(basename "$f")")
+            done
+          fi
+          if [ ${#servers[@]} -eq 0 ]; then
+            echo "No servers built mk3 successfully"
+            echo "servers=[]" >> $GITHUB_OUTPUT
+          else
+            servers_json="["
+            for server in "${servers[@]}"; do
+              if [ "$servers_json" != "[" ]; then
+                servers_json="$servers_json,"
+              fi
+              servers_json="$servers_json\"$server\""
+            done
+            servers_json="$servers_json]"
+            echo "Servers that built mk3 successfully: $servers_json"
+            echo "servers=$servers_json" >> $GITHUB_OUTPUT
+          fi
   update-catalog:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     environment: |-
       ${{
         github.ref_name == 'main' && 'prod'
@@ -236,16 +358,17 @@ jobs:
       BL_API_URL: ${{ vars.BL_API_URL }}
       BL_ADMIN_USERNAME: ${{ secrets.BL_ADMIN_USERNAME }}
       BL_ADMIN_PASSWORD: ${{ secrets.BL_ADMIN_PASSWORD }}
-    needs: [generate-matrix, mk3-build]
-    if: always() && needs.generate-matrix.outputs.servers != '[]' && needs.mk3-build.result == 'success'
+    needs: [collect-mk3-success]
+    if: always() && needs.collect-mk3-success.outputs.servers != '[]'
     strategy:
+      fail-fast: false
       matrix:
-        server: ${{ fromJson(needs.generate-matrix.outputs.servers )}}
+        server: ${{ fromJson(needs.collect-mk3-success.outputs.servers )}}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup Go 1.21.x
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: "1.23.3"
       - name: Install dependencies

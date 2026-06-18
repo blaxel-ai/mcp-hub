@@ -5,7 +5,7 @@ FROM node:22-alpine AS builder
 # Set the working directory inside the container
 WORKDIR /app
 
-RUN npm i -g pnpm
+RUN npm i -g pnpm@10.15.0
 
 # Copy all source files (monorepo needs workspace config + sub-package.json files for install)
 COPY . .
@@ -26,7 +26,7 @@ WORKDIR /app
 COPY --from=builder /app/packages/mcp/dist ./dist
 COPY --from=builder /app/packages/mcp/package.json ./
 
-RUN npm install -g pnpm \
+RUN npm install -g pnpm@10.15.0 \
   && pnpm install --prod
 
 
