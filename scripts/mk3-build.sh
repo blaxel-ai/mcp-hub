@@ -151,8 +151,9 @@ fi
 echo "Batch job submitted: $JOB_ID"
 echo "Waiting for job to complete..."
 
-# Poll for job completion
-MAX_ATTEMPTS=180
+# Poll for job completion. 240 * 10s = 40min, kept under the 45min GitHub job
+# timeout so the script can exit with Batch diagnostics before being hard-cancelled.
+MAX_ATTEMPTS=240
 POLL_INTERVAL=10
 for attempt in $(seq 1 $MAX_ATTEMPTS); do
     JOB_STATUS=$(aws batch describe-jobs \
@@ -183,7 +184,10 @@ for attempt in $(seq 1 $MAX_ATTEMPTS); do
     esac
 
     if [ $attempt -eq $MAX_ATTEMPTS ]; then
-        echo "Error: Job did not complete within timeout"
+        echo "Error: Job did not complete within timeout (last status: $JOB_STATUS)"
+        # Dump status reason to explain why the job never started (e.g. stuck in
+        # RUNNABLE due to insufficient Fargate/compute capacity).
+        aws batch describe-jobs --jobs "$JOB_ID" --region "$BATCH_REGION" | jq '.jobs[0] | {status, statusReason, container: {reason: .container.reason, logStreamName: .container.logStreamName}}'
         exit 1
     fi
 done

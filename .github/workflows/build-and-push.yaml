@@ -125,7 +125,7 @@ jobs:
           fi
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     environment: |-
       ${{
         github.ref_name == 'main' && 'prod'
@@ -246,7 +246,9 @@ jobs:
           fi
   mk3-build:
     runs-on: codebuild-mcp-hub-${{ github.run_id }}-${{ github.run_attempt }}
-    timeout-minutes: 10
+    # Batch jobs can sit in RUNNABLE for a while (16 vCPU Fargate tasks, limited
+    # concurrency), so allow more than the AWS-side poll budget in mk3-build.sh.
+    timeout-minutes: 45
     environment: |-
       ${{
         github.ref_name == 'main' && 'prod'
@@ -345,7 +347,7 @@ jobs:
           fi
   update-catalog:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     environment: |-
       ${{
         github.ref_name == 'main' && 'prod'
