@@ -35,7 +35,7 @@ jobs:
       mcps: ${{ steps.discover.outputs.mcps }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 2
 
@@ -99,26 +99,26 @@ jobs:
       packages: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Echo MCP
         run: echo "Building custom MCP - ${{ matrix.mcp }}"
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Log into registry ${{ env.REGISTRY }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: custom/${{ matrix.mcp }}
           push: true
@@ -138,7 +138,7 @@ jobs:
           echo "ok" > "build-success/${{ matrix.mcp }}"
 
       - name: Upload build success marker
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: build-success-${{ matrix.mcp }}
           path: build-success/${{ matrix.mcp }}
@@ -150,12 +150,14 @@ jobs:
     needs:
       - generate-matrix
       - build-and-push
-    if: always() && needs.generate-matrix.outputs.mcps != '[]'
+    # Always run so the output is valid JSON ('[]' when nothing built),
+    # otherwise the downstream matrix would receive an empty string.
+    if: always()
     outputs:
       mcps: ${{ steps.collect.outputs.mcps }}
     steps:
       - name: Download build success markers
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           pattern: build-success-*
@@ -210,7 +212,7 @@ jobs:
         mcp: ${{ fromJson(needs.collect-build-success.outputs.mcps) }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Build mk3 image
         env:
