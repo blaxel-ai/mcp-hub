@@ -86,7 +86,7 @@ jobs:
 
   build-and-push:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     needs: generate-matrix
     if: needs.generate-matrix.outputs.mcps != '[]'
     # Do not cancel the other MCPs when one fails: each MCP is independent.
@@ -193,7 +193,9 @@ jobs:
 
   mk3-build:
     runs-on: codebuild-mcp-hub-${{ github.run_id }}-${{ github.run_attempt }}
-    timeout-minutes: 10
+    # Batch jobs can sit in RUNNABLE for a while (16 vCPU Fargate tasks, limited
+    # concurrency), so allow more than the AWS-side poll budget in mk3-build.sh.
+    timeout-minutes: 45
     environment: |-
       ${{
         github.ref_name == 'main' && 'prod'
