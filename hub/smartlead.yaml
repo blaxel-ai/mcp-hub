@@ -37,3 +37,6 @@ smithery:
           SKIP_READINESS_CHECK:true
         }
       })
+autoDownload:
+  regions: []
+  hostClass: ""

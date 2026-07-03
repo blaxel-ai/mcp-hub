@@ -33,3 +33,6 @@ smithery:
           DISCORD_TOKEN: config.discordToken
         }
       })
+autoDownload:
+  regions: []
+  hostClass: ""

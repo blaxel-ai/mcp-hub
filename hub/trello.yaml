@@ -44,3 +44,6 @@ smithery:
           TRELLO_BOARD_ID: config.trelloBoardId
         }
       })
+autoDownload:
+  regions: []
+  hostClass: ""

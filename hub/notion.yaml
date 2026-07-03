@@ -34,3 +34,6 @@ smithery:
           NOTION_TOKEN: config.notionToken
         }
       })
+autoDownload:
+  regions: []
+  hostClass: ""

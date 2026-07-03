@@ -37,3 +37,7 @@ smithery:
           SLACK_TEAM_ID: config.teamId
         }
       })
+
+autoDownload:
+  regions: []
+  hostClass: ""

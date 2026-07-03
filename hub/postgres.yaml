@@ -33,3 +33,6 @@ smithery:
         command: 'node',
         args: ['dist/index.js', config.postgresConnectionString]
       })
+autoDownload:
+  regions: []
+  hostClass: ""

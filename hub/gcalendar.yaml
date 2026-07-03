@@ -11,3 +11,7 @@ disabled: true
 comingSoon: true
 categories:
   - calendar
+
+autoDownload:
+  regions: []
+  hostClass: ""

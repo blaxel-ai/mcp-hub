@@ -11,3 +11,7 @@ longDescription: Google Docs integration
 comingSoon: true
 categories:
   - documents
+
+autoDownload:
+  regions: []
+  hostClass: ""

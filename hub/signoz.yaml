@@ -40,3 +40,7 @@ smithery:
           SIGNOZ_API_KEY: config.signozApiKey
         }
       })
+
+autoDownload:
+  regions: []
+  hostClass: ""

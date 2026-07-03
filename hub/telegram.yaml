@@ -38,3 +38,6 @@ smithery:
           CHAT_ID: config.chatId
         }
       })
+autoDownload:
+  regions: []
+  hostClass: ""

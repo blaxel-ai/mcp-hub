@@ -47,3 +47,6 @@ smithery:
           MYSHOPIFY_DOMAIN: config.myshopifyDomain
         }
       })
+autoDownload:
+  regions: []
+  hostClass: ""

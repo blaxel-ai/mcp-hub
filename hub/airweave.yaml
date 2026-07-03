@@ -44,3 +44,6 @@ smithery:
           AIRWEAVE_BASE_URL:config.airweaveBaseUrl || 'https://api.airweave.ai'
         }
       })
+autoDownload:
+  regions: []
+  hostClass: ""

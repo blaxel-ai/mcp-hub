@@ -58,3 +58,6 @@ smithery:
           SNOWFLAKE_SCHEMA: config.snowflakeSchema
         }
       })
+autoDownload:
+  regions: []
+  hostClass: ""

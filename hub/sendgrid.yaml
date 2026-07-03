@@ -33,3 +33,6 @@ smithery:
           SENDGRID_API_KEY: config.sendgridApiKey
         }
       })
+autoDownload:
+  regions: []
+  hostClass: ""

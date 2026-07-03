@@ -39,3 +39,6 @@ smithery:
           '$readOnly? "--read-only" : ""',
         ]
       })
+autoDownload:
+  regions: []
+  hostClass: ""

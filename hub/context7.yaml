@@ -27,3 +27,6 @@ smithery:
         command:'node',args:['/app/dist/index.js'],
         env:{}
       })
+autoDownload:
+  regions: []
+  hostClass: ""

@@ -212,6 +212,23 @@ fi
 REGISTRY_URL=$(echo "$SRC_REGISTRY" | cut -d'/' -f1)
 MK2="$SRC_REGISTRY/$BL_ENV/$MCP_NAME:$IMAGE_TAG"
 MK3="blaxel/$BL_ENV/$MCP_NAME:$IMAGE_TAG"
+
+# Read autoDownload config from hub YAML manifest if present
+AUTO_DOWNLOAD_JSON="null"
+MANIFEST_FILE="hub/$MCP_NAME.yaml"
+if [ -f "$MANIFEST_FILE" ]; then
+    AUTO_DOWNLOAD_JSON=$(python3 -c "
+import yaml, json, sys
+with open('$MANIFEST_FILE') as f:
+    data = yaml.safe_load(f)
+ad = data.get('autoDownload')
+if ad is not None:
+    print(json.dumps(ad))
+else:
+    print('null')
+" 2>/dev/null || echo "null")
+fi
+
 # Prepare the JSON payload for the API
 API_PAYLOAD=$(jq -n \
   --arg registry "$REGISTRY_URL" \
@@ -224,6 +241,7 @@ API_PAYLOAD=$(jq -n \
   --arg bucket "$IMAGE_BUCKET_MK3" \
   --arg mk2 "$MK2" \
   --arg mk3 "$MK3" \
+  --argjson autoDownload "$AUTO_DOWNLOAD_JSON" \
   '{
     registry: $registry,
     workspace: $workspace,
@@ -235,7 +253,7 @@ API_PAYLOAD=$(jq -n \
     bucket: $bucket,
     mk2: $mk2,
     mk3: $mk3
-  }')
+  } + (if $autoDownload != null then {autoDownload: $autoDownload} else {} end)')
 
 echo "Calling Blaxel API to register image..."
 echo "URL: $BL_API_URL/admin/images"

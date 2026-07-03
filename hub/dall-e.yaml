@@ -32,3 +32,7 @@ smithery:
           API_KEY:config.apiKey
         }
       })
+
+autoDownload:
+  regions: []
+  hostClass: ""

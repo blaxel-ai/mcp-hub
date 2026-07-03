@@ -43,3 +43,7 @@ smithery:
           AUTH_TOKEN: config.authToken
         }
       })
+
+autoDownload:
+  regions: []
+  hostClass: ""

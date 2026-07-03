@@ -51,3 +51,7 @@ smithery:
           CLIENT_SECRET: config.clientSecret
         }
       })
+
+autoDownload:
+  regions: []
+  hostClass: ""

@@ -38,3 +38,6 @@ smithery:
           env
         }
       }
+autoDownload:
+  regions: []
+  hostClass: ""

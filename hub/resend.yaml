@@ -46,3 +46,6 @@ smithery:
           REPLY_TO_EMAIL_ADDRESSES:config.replyToEmailAddresses
         }
       })
+autoDownload:
+  regions: []
+  hostClass: ""

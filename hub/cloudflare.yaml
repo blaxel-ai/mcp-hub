@@ -39,3 +39,7 @@ smithery:
           ACCOUNT_ID:config.accountId
         }
       })
+
+autoDownload:
+  regions: []
+  hostClass: ""

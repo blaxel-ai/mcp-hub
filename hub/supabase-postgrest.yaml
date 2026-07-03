@@ -44,3 +44,6 @@ smithery:
           '--schema', config.supabaseSchema
         ]
       })
+autoDownload:
+  regions: []
+  hostClass: ""

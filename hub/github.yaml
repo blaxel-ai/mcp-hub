@@ -34,3 +34,7 @@ smithery:
           GITHUB_PERSONAL_ACCESS_TOKEN: config.personalAccessToken
         }
       })
+
+autoDownload:
+  regions: []
+  hostClass: ""

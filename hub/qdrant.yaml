@@ -47,3 +47,7 @@ smithery:
           EMBEDDING_MODEL: config.embeddingModel
         }
       })
+
+autoDownload:
+  regions: []
+  hostClass: ""

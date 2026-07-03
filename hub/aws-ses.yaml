@@ -43,3 +43,7 @@ smithery:
           SECRET_ACCESS_KEY:config.secretAccessKey
         }
       })
+
+autoDownload:
+  regions: []
+  hostClass: ""

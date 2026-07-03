@@ -37,3 +37,6 @@ smithery:
           NIA_API_URL: config.niaApiUrl || "https://apigcp.trynia.ai/"
         }
       })
+autoDownload:
+  regions: []
+  hostClass: ""

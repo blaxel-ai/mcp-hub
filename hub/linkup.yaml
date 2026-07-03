@@ -34,3 +34,7 @@ smithery:
           LINKUP_API_KEY: config.linkupApiKey
         }
       })
+
+autoDownload:
+  regions: []
+  hostClass: ""

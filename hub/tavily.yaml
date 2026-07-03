@@ -33,3 +33,6 @@ smithery:
           TAVILY_API_KEY: config.tavilyApiKey
         }
       })
+autoDownload:
+  regions: []
+  hostClass: ""

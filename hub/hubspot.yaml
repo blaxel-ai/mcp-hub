@@ -33,3 +33,6 @@ smithery:
           PRIVATE_APP_ACCESS_TOKEN:config.hubspotPrivateAppAccessToken
         }
       })
+autoDownload:
+  regions: []
+  hostClass: ""

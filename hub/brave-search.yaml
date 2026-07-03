@@ -32,3 +32,7 @@ smithery:
           BRAVE_API_KEY:config.braveApiKey
         }
       })
+
+autoDownload:
+  regions: []
+  hostClass: ""
