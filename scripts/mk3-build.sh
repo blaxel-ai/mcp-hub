@@ -219,14 +219,14 @@ MANIFEST_FILE="hub/$MCP_NAME.yaml"
 if [ -f "$MANIFEST_FILE" ]; then
     AUTO_DOWNLOAD_JSON=$(python3 -c "
 import yaml, json, sys
-with open('$MANIFEST_FILE') as f:
+with open(sys.argv[1]) as f:
     data = yaml.safe_load(f)
 ad = data.get('autoDownload')
 if ad is not None:
     print(json.dumps(ad))
 else:
     print('null')
-" 2>/dev/null || echo "null")
+" "$MANIFEST_FILE" 2>/dev/null || echo "null")
 fi
 
 # Prepare the JSON payload for the API
