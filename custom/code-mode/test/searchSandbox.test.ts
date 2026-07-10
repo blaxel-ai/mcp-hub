@@ -49,6 +49,14 @@ describe("evaluateSearch (spec traversal)", () => {
     const result = await evaluateSearch(spec, "() => undefined");
     expect(result).toBeNull();
   });
+
+  it("normalises unserializable returns (function) to null without an opaque error", async () => {
+    expect(await evaluateSearch(spec, "() => () => 1")).toBeNull();
+  });
+
+  it("surfaces a clear error (not an opaque internal one) for BigInt returns", async () => {
+    await expect(evaluateSearch(spec, "() => 10n")).rejects.toThrow(/BigInt/i);
+  });
 });
 
 describe("evaluateSearch (isolation / credential theft prevention)", () => {

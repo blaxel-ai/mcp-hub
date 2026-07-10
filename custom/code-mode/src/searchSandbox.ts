@@ -61,7 +61,11 @@ export async function evaluateSearch(
       const spec = JSON.parse(__specJson);
       const __fn = (${code});
       const __result = await __fn();
-      return JSON.stringify(__result === undefined ? null : __result);
+      // JSON.stringify yields undefined for values with no JSON representation
+      // (functions, Symbol, BigInt). Always return a string so the host can
+      // read it back with getString().
+      const __json = JSON.stringify(__result === undefined ? null : __result);
+      return __json === undefined ? "null" : __json;
     })()`;
 
     const promiseHandle = unwrap(vm, vm.evalCode(wrapped));
