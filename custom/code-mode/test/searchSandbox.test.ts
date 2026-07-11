@@ -100,4 +100,12 @@ describe("evaluateSearch (isolation / credential theft prevention)", () => {
       evaluateSearch(spec, "() => { while (true) {} }", 200),
     ).rejects.toThrow();
   });
+
+  it("rejects a never-settling promise within the timeout (no unbounded await)", async () => {
+    const start = Date.now();
+    await expect(
+      evaluateSearch(spec, "() => new Promise(() => {})", 200),
+    ).rejects.toThrow(/timed out/i);
+    expect(Date.now() - start).toBeLessThan(2_000);
+  });
 });

@@ -84,13 +84,44 @@ export async function evaluateSearch(
       if (pending.value <= 0) break;
     }
 
-    const valueHandle = unwrap(vm, await resolved);
+    // `resolved` only settles once the guest promise settles. A payload that
+    // returns a never-settling promise (e.g. `() => new Promise(() => {})`)
+    // schedules no jobs, so the drain loop above exits immediately and the
+    // interrupt handler never fires (no guest code is running). Bound the await
+    // by the same wall-clock deadline so such payloads cannot hold the request
+    // open indefinitely and exhaust host resources.
+    const valueHandle = unwrap(vm, await withDeadline(resolved, deadline, timeoutMs));
     const json = vm.getString(valueHandle);
     valueHandle.dispose();
     return json === undefined ? null : JSON.parse(json);
   } finally {
     vm.dispose();
     runtime.dispose();
+  }
+}
+
+/**
+ * Races a promise against the evaluation deadline, rejecting if the deadline
+ * passes first. This guarantees the host request cannot hang on a guest promise
+ * that never settles. The timer is cleared as soon as `promise` settles so it
+ * never keeps the event loop alive.
+ */
+async function withDeadline<T>(
+  promise: Promise<T>,
+  deadline: number,
+  timeoutMs: number,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`search evaluation timed out after ${timeoutMs}ms`)),
+      Math.max(0, deadline - Date.now()),
+    );
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 
