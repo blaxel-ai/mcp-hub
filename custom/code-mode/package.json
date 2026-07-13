@@ -13,20 +13,20 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.2.50",
-    "@blaxel/core": "^0.2.66",
-    "@blaxel/telemetry": "^0.2.66",
-    "@modelcontextprotocol/sdk": "^1.20.0",
-    "express": "^4.21.2",
-    "yaml": "^2.8.2",
-    "zod": "^3.24.4"
+    "@anthropic-ai/claude-agent-sdk": "^0.2.141",
+    "@blaxel/core": "^0.2.95",
+    "@blaxel/telemetry": "^0.2.95",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "express": "^4.22.2",
+    "yaml": "^2.9.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
-    "@types/node": "^22.10.5",
-    "dotenv": "^17.3.1",
-    "tsx": "^4.19.4",
-    "typescript": "^5.8.3",
-    "vitest": "^4.0.18"
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.20.0",
+    "dotenv": "^17.4.2",
+    "tsx": "^4.23.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
   }
 }
