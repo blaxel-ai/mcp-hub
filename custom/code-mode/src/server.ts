@@ -7,6 +7,7 @@ import { z } from "zod";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
+import { evaluateSearch } from "./searchSandbox.js";
 
 /** Checks whether a string looks like an HTTP(S) URL. */
 function isUrl(value: string): boolean {
@@ -430,11 +431,7 @@ async function main() {
       console.log(`[search] called: ${code.length > 120 ? code.slice(0, 120) + "…" : code}`);
       const start = Date.now();
       try {
-        const fn = new Function(
-          "spec",
-          `return (async () => { const __fn = ${code}; return await __fn(); })()`
-        );
-        const result = await fn(spec);
+        const result = await evaluateSearch(spec, code);
         console.log(`[search] done in ${Date.now() - start}ms`);
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],

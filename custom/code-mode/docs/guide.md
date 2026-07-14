@@ -160,7 +160,7 @@ Configure an Api Key:
 
 ## How it works under the hood
 
-When an agent calls **search**, Code Mode evaluates a JavaScript function against the in-memory OpenAPI spec — no network calls, instant results. All `$ref` pointers are pre-resolved so the agent sees fully expanded schemas.
+When an agent calls **search**, Code Mode evaluates a JavaScript function against the in-memory OpenAPI spec — no network calls, instant results. The function runs inside an isolated QuickJS (WASM) interpreter whose only exposed value is the `spec` object: it has no access to the host process, environment variables, filesystem, network, `require`, or dynamic `import()`, so a `search` call can never read server credentials or run host commands. All `$ref` pointers are pre-resolved so the agent sees fully expanded schemas.
 
 When an agent calls **execute**, the code runs inside an auto-scaling sandbox with a 10-minute idle TTL. Auth env vars are injected automatically. The agent typically does a search first to find the right endpoint, then executes a fetch call.
 
