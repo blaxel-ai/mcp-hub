@@ -16,6 +16,11 @@
 		"form-data": "^4.0.4",
 		"typescript": "^5.9.3"
 	},
+	"pnpm": {
+		"overrides": {
+			"@modelcontextprotocol/sdk": "1.29.0"
+		}
+	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.1085.0",
 		"@aws-sdk/client-ses": "^3.1085.0",
