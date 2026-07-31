@@ -68,7 +68,7 @@ func runStart(cmd *cobra.Command, args []string) {
 		envKeys = append(envKeys, key)
 		err := checkEnvironmentVariable(artifact, key, artifact.Entrypoint.Env[key])
 		if err != nil {
-			log.Printf(err.Error())
+			log.Printf("%s", err.Error())
 			os.Exit(1)
 		}
 	}
