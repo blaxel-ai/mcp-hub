@@ -16,7 +16,7 @@
     "@anthropic-ai/claude-agent-sdk": "^0.2.141",
     "@blaxel/core": "^0.2.95",
     "@blaxel/telemetry": "^0.2.95",
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "express": "^4.22.2",
     "quickjs-emscripten": "0.32.0",
     "yaml": "^2.9.0",
