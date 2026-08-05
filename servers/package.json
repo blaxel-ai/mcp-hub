@@ -2,18 +2,21 @@
 	"name": "edge-gw-mcp-hub",
 	"version": "0.0.1",
 	"private": true,
+	"packageManager": "pnpm@10.34.5",
 	"engines": {
 		"node": ">=22"
 	},
 	"scripts": {
 		"build": "tsc",
 		"dev": "tsc --watch",
-		"cf-typegen": "wrangler types"
+		"cf-typegen": "wrangler types",
+		"test": "node --test test/*.test.js"
 	},
 	"devDependencies": {
 		"@types/node": "^24.13.3",
 		"dotenv": "^16.6.1",
 		"form-data": "^4.0.4",
+		"ip-address": "10.3.1",
 		"typescript": "^5.9.3"
 	},
 	"pnpm": {
