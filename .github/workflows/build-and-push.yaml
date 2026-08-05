@@ -68,9 +68,14 @@ jobs:
             done
           else
             # Check if there are changes in internal or cmd or super-gateway folders
+            # servers/ is in this list because every hub server's image is built
+            # from it: a change there (a dependency bump, a toolchain pin) affects
+            # all of them, and without this a fix for a broken build never triggers
+            # a rebuild -- the publish job is simply skipped, which reads as green.
             if git diff --name-only HEAD^ HEAD | grep -q "internal/" || \
                git diff --name-only HEAD^ HEAD | grep -q "cmd/" || \
                git diff --name-only HEAD^ HEAD | grep -q "super-gateway/" || \
+               git diff --name-only HEAD^ HEAD | grep -q "servers/" || \
                git diff --name-only HEAD^ HEAD | grep -q "dockerfiles/"; then
               # If there are changes in internal or cmd or super-gateway, include all servers (excluding disabled/coming soon)
               echo "Changes detected in internal or cmd or super-gateway folders, including all servers (excluding disabled/coming soon)"
