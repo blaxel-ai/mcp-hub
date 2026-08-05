@@ -34,11 +34,22 @@ smithery:
           type: string
           description: Your AgentMail API Key
     commandFunction:
-      # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+      # Upstream (agentmail-to/agentmail-mcp) was restructured into a pnpm
+      # monorepo: the old `dist/index.js` entrypoint no longer exists, and
+      # what used to live there (packages/server) is now AgentMail's own
+      # hosted, Clerk-authenticated HTTP server (mcp.agentmail.to) - it opens
+      # its own HTTP listener rather than speaking stdio, so it cannot be
+      # wrapped by super-gateway's stdio model at all, and it needs Clerk/
+      # console-JWT secrets we don't have to run standalone.
+      #
+      # The upstream package meant for exactly our use case is
+      # packages/npm-stdio-bridge, published to npm as `agentmail-mcp`: a
+      # small stdio<->HTTP bridge that authenticates to the hosted server
+      # with AGENTMAIL_API_KEY, same as before. See dockerfiles/agentmail.Dockerfile.
       |-
       (config) => ({
-        command: 'node',
-        args: ['dist/index.js'],
+        command: 'agentmail-mcp',
+        args: [],
         env: {
           AGENTMAIL_API_KEY: config.agentmailApiKey
         }

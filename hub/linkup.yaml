@@ -1,4 +1,4 @@
-repository: https://github.com/LinkupPlatform/python-mcp-server
+repository: https://github.com/LinkupPlatform/linkup-mcp-server
 dockerfile: "@mcp-hub"
 transport: http-stream
 displayName: Linkup
@@ -26,10 +26,17 @@ smithery:
           type: string
           description: Your Linkup API Key
     commandFunction:
+      # Upstream's original Python server (LinkupPlatform/python-mcp-server,
+      # the `mcp-search-linkup` PyPI package) was archived 2025-10-27 in
+      # favor of a TypeScript rewrite: LinkupPlatform/linkup-mcp-server,
+      # published to npm as `linkup-mcp-server`. Its published bin runs
+      # dist/stdio.js directly (stdio mode) and reads the same
+      # LINKUP_API_KEY env var the old server did. See
+      # dockerfiles/linkup.Dockerfile.
       |-
       config => ({
-        command: 'uv',
-        args: ['run', '--offline', '--frozen', '--no-sync', 'mcp-search-linkup'],
+        command: 'linkup-mcp-server',
+        args: [],
         env: {
           LINKUP_API_KEY: config.linkupApiKey
         }
