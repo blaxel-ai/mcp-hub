@@ -51,8 +51,18 @@ jobs:
         # base branch today (confirmed locally, and in production: every
         # servers/-path server has failed to build/publish since 2026-07-31,
         # see build-and-push run 30595040877). That is a pre-existing, unrelated
-        # regression from a prior AWS SDK client bump, not something this
-        # dependency PR introduces or is responsible for fixing.
+        # regression, not something this dependency PR introduces or is
+        # responsible for fixing.
+        #
+        # Root cause is TypeScript itself, not the AWS SDK client bump commit
+        # 62ee158 originally suspected: reverting @aws-sdk/client-s3 and
+        # -client-ses to their pre-62ee158 version (^3.738.0) while keeping
+        # typescript at 5.9.3 still OOMs identically, but reverting only
+        # typescript to 5.7.3 (keeping the new AWS SDK clients) fixes it in
+        # ~1.2s. Bisected the regression window against TypeScript's own
+        # nightly builds to 5.8.0-dev.20241205 (clean) -> 5.8.0-dev.20241207
+        # (OOMs) - see the PR description for the full writeup.
+        #
         # continue-on-error keeps this step (and the Test step after it)
         # running instead of skipped; the annotation step below makes the
         # failure loud instead of just quietly non-blocking.
@@ -64,7 +74,7 @@ jobs:
       - name: Annotate known pre-existing build failure
         if: steps.build.outcome == 'failure'
         run: |
-          echo "::warning title=servers build fails (pre-existing%2C not from this PR)::tsc OOMs type-checking servers/'s combined SDK surface (aws-sdk, openai, twilio, qdrant, mcp). Reproduces identically on the unmodified base branch. Most likely trigger: the @aws-sdk/client-s3 / @aws-sdk/client-ses bump ^3.738.0 -> ^3.1085.0 in commit 62ee158 (weekly safe npm updates). This has been blocking all 13 servers/-path MCP server image builds since 2026-07-31 (build-and-push run 30595040877). Fix needed: bisect/pin a working AWS SDK client version, or split servers/tsconfig.json so each hub server type-checks independently, then remove continue-on-error from the Build step above."
+          echo "::warning title=servers build fails (pre-existing%2C not from this PR)::tsc OOMs type-checking servers/'s combined SDK surface (aws-sdk, openai, twilio, qdrant, mcp). Reproduces identically on the unmodified base branch. Root cause is TypeScript 5.8+ (bisected regression window: 5.8.0-dev.20241205 good, 5.8.0-dev.20241207 OOMs), NOT the @aws-sdk/client-s3 / @aws-sdk/client-ses bump in commit 62ee158 - reverting just the AWS SDK clients still OOMs, reverting just typescript to 5.7.3 fixes it in ~1.2s. This has been blocking all 13 servers/-path MCP server image builds since 2026-07-31 (build-and-push run 30595040877). Fix needed: pin typescript to a working 5.7.x, or split servers/tsconfig.json so each hub server type-checks independently, then remove continue-on-error from the Build step above."
       - name: Test
         run: pnpm run test
 
