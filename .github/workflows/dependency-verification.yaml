@@ -64,7 +64,7 @@ jobs:
       - name: Annotate known pre-existing build failure
         if: steps.build.outcome == 'failure'
         run: |
-          echo "::warning title=servers build fails (pre-existing, not from this PR)::tsc OOMs type-checking servers/'s combined SDK surface (aws-sdk, openai, twilio, qdrant, mcp). Reproduces identically on the unmodified base branch. Most likely trigger: the @aws-sdk/client-s3 / @aws-sdk/client-ses bump ^3.738.0 -> ^3.1085.0 in commit 62ee158 (weekly safe npm updates). This has been blocking all 13 servers/-path MCP server image builds since 2026-07-31 (build-and-push run 30595040877). Fix needed: bisect/pin a working AWS SDK client version, or split servers/tsconfig.json so each hub server type-checks independently, then remove continue-on-error from the Build step above."
+          echo "::warning title=servers build fails (pre-existing%2C not from this PR)::tsc OOMs type-checking servers/'s combined SDK surface (aws-sdk, openai, twilio, qdrant, mcp). Reproduces identically on the unmodified base branch. Most likely trigger: the @aws-sdk/client-s3 / @aws-sdk/client-ses bump ^3.738.0 -> ^3.1085.0 in commit 62ee158 (weekly safe npm updates). This has been blocking all 13 servers/-path MCP server image builds since 2026-07-31 (build-and-push run 30595040877). Fix needed: bisect/pin a working AWS SDK client version, or split servers/tsconfig.json so each hub server type-checks independently, then remove continue-on-error from the Build step above."
       - name: Test
         run: pnpm run test
 
