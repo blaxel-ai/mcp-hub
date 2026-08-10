@@ -51,6 +51,22 @@
 // well under a "few hundred MB" memory concern. The timeout is a hang
 // detector, not a performance benchmark: min-of-3 runs guards against a
 // single slow tick reading as a false pass.
+//
+// Considered and rejected: an n-vs-2n scaling-ratio assertion instead of an
+// absolute bound (theoretically machine-speed independent). Measured it
+// directly (best of 5, ms) before deciding:
+//   n=35,000/70,000:   3.15.0 ratio ~3.90x   3.15.1 ratio ~2.06x
+//   n=70,000/140,000:  3.15.0 ratio ~4.14x   3.15.1 ratio ~2.13x
+// A doubling ratio is capped near the O(n^2)-vs-O(n) exponents themselves
+// (~4x vs ~2x), so any threshold between them gets only a ~1.3-1.5x margin
+// on each side - tighter than the absolute bound above, not looser. A
+// bigger multiplier widens it (10x-input ratio measured at ~83-95x
+// vulnerable vs ~4.75-9.25x fixed, still only ~3-4x margins either side of
+// a threshold) but the fixed side's baseline is then only 10-30ms, noisy
+// enough on a shared runner that the ratio itself swings 2x across repeats,
+// and the vulnerable side's 10x-larger pathological input costs 9-18s per
+// run instead of ~9s. The absolute bound above already passed on the real
+// GitHub Actions runner (PR #125, verify-tests, 2026-08-10) - kept it.
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const yaml = require("js-yaml");
