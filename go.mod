@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/dop251/goja v0.0.0-20250125213203-5ef83b82af17
-	github.com/go-git/go-git/v5 v5.19.0
+	github.com/go-git/go-git/v5 v5.19.2
 	github.com/joho/godotenv v1.5.1
 	github.com/spf13/cobra v1.8.1
 	gopkg.in/yaml.v2 v2.4.0
