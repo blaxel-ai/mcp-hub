@@ -1,9 +1,10 @@
 name: Dependency verification
-# Runs build + tests for the npm sub-projects (servers/, tests/) and the
-# root Go module on dependency bump PRs, so a bumped lockfile/go.mod is
-# proven to install, compile and pass its smoke tests before merge. Not
-# wired into branch protection: it produces evidence, it does not gate the
-# merge button.
+# Runs build + tests for the npm sub-projects (servers/, tests/), the
+# root Go module and the super-gateway Go module (a separate go.mod, see
+# verify-super-gateway below) on dependency bump PRs, so a bumped
+# lockfile/go.mod is proven to install, compile and pass its smoke tests
+# before merge. Not wired into branch protection: it produces evidence, it
+# does not gate the merge button.
 on:
   pull_request:
     # `edited` matters: the job re-evaluates when a title is fixed after opening.
@@ -11,10 +12,10 @@ on:
     paths:
       - "servers/**"
       - "tests/**"
+      - "super-gateway/**"
       - "go.mod"
       - "go.sum"
       - "**/*.go"
-      - "!super-gateway/**"
   workflow_dispatch:
 
 permissions:
@@ -52,6 +53,45 @@ jobs:
           go mod tidy
           git diff --exit-code go.mod go.sum
 
+  verify-super-gateway:
+    # super-gateway/ is its own Go module (module supergateway, separate
+    # go.mod/go.sum from the repo root) and was previously excluded from this
+    # workflow's trigger paths entirely, so a dependency PR touching only
+    # super-gateway/go.mod got zero PR-time signal. It ships in production
+    # (built via `make build-super-gateway` / `make run`) despite having no
+    # workflow of its own anywhere in this repo.
+    # Dependency PRs only: this remediation, Dependabot's own PRs, or an explicit label.
+    if: >-
+      contains(github.event.pull_request.title, 'Dependabot') ||
+      startsWith(github.event.pull_request.title, 'chore(deps)') ||
+      startsWith(github.head_ref, 'cploujoux/devin/dependabot-') ||
+      startsWith(github.head_ref, 'dependabot/') ||
+      contains(github.event.pull_request.labels.*.name, 'dependencies') ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: super-gateway
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup Go
+        # Same toolchain pin as verify-go above, for consistency across the
+        # repo's two Go modules.
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version: "1.25.3"
+      - name: Build
+        run: go build ./...
+      - name: Vet
+        run: go vet ./...
+      - name: Test
+        run: go test ./...
+      - name: Verify go.mod/go.sum are tidy
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
 
   verify-servers:
     # Dependency PRs only: this remediation, Dependabot's own PRs, or an explicit label.
