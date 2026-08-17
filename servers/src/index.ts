@@ -65,7 +65,7 @@ program
 		});
 	}
     // Start receiving messages on stdin and sending messages on stdout
-    const transport = new StdioServerTransport();
+    const transport = new StdioServerTransport({ maxBufferSize: Infinity });
     await server.connect(transport);
 })
 
