@@ -1167,9 +1167,12 @@ func main() {
 		<-sigChan
 		log.Println("Shutting down...")
 		gateway.shouldRestart.Store(false)
+		// Wait for an in-flight child replacement before selecting the process to stop.
+		gateway.cmdMu.Lock()
 		if gateway.cmd != nil && gateway.cmd.Process != nil {
 			_ = gateway.cmd.Process.Kill()
 		}
+		gateway.cmdMu.Unlock()
 		os.Exit(0)
 	}()
 
