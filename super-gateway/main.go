@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -60,8 +61,8 @@ type Gateway struct {
 	cmdMu              sync.Mutex
 	clients            map[string]*Client
 	clientsMu          sync.RWMutex
-	readinessReply     chan JSONRPCMessage
-	readinessReplyMu   sync.Mutex
+	initialization     *stdioInitialization
+	initializationMu   sync.Mutex
 	sseClients         map[string]*SSEClient
 	sseClientsMu       sync.RWMutex
 	defaultSSEClientID string
@@ -79,7 +80,7 @@ type Gateway struct {
 	stderrScanner      *bufio.Scanner
 	restartCount       int
 	maxRestarts        int
-	shouldRestart      bool
+	shouldRestart      atomic.Bool
 }
 
 // rewriteOAuthURL replaces http://localhost:12849 in log messages with the appropriate public URL
@@ -206,16 +207,15 @@ func dialLoopbackOnly(ctx context.Context, network, address string) (net.Conn, e
 }
 
 func NewGateway() *Gateway {
-	return &Gateway{
-		clients:       make(map[string]*Client),
-		sseClients:    make(map[string]*SSEClient),
-		waiters:       make(map[string]chan []byte),
-		sessions:      make(map[string]Session),
-		register:      make(chan *Client),
-		unregister:    make(chan *Client),
-		broadcast:     make(chan []byte),
-		maxRestarts:   5,
-		shouldRestart: true,
+	gateway := &Gateway{
+		clients:     make(map[string]*Client),
+		sseClients:  make(map[string]*SSEClient),
+		waiters:     make(map[string]chan []byte),
+		sessions:    make(map[string]Session),
+		register:    make(chan *Client),
+		unregister:  make(chan *Client),
+		broadcast:   make(chan []byte),
+		maxRestarts: 5,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true // Allow all origins for simplicity
@@ -223,6 +223,8 @@ func NewGateway() *Gateway {
 			Subprotocols: []string{"mcp"}, // Add MCP subprotocol support
 		},
 	}
+	gateway.shouldRestart.Store(true)
+	return gateway
 }
 
 // StartMCPServer starts the MCP server subprocess
@@ -230,7 +232,7 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 	g.cmdMu.Lock()
 	defer g.cmdMu.Unlock()
 
-	if len(cmdParts) == 0 {
+	if len(cmdParts) == 0 && len(g.cmdParts) == 0 {
 		return fmt.Errorf("empty command")
 	}
 
@@ -287,7 +289,7 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create stdin pipe: %w", err)
 	}
-	g.stdinWriter = bufio.NewWriter(stdin)
+	stdinWriter := bufio.NewWriter(stdin)
 
 	stdout, err := g.cmd.StdoutPipe()
 	if err != nil {
@@ -311,6 +313,15 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 	if err := g.cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start command: %w", err)
 	}
+
+	// A restarted child must negotiate again; never reuse its predecessor's result.
+	g.initializationMu.Lock()
+	g.stdinMu.Lock()
+	g.stdinWriter = stdinWriter
+	g.stdinMu.Unlock()
+	initialization := newStdioInitialization(stdinWriter)
+	g.initialization = initialization
+	g.initializationMu.Unlock()
 
 	log.Printf("Started MCP server with PID: %d", g.cmd.Process.Pid)
 
@@ -339,19 +350,13 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 				log.Printf("Child → Gateway: %s", line)
 			}
 
-			// Check if this is a response to our readiness check
-			if msg.ID != nil {
-				if idStr, ok := msg.ID.(string); ok && idStr == "readiness-check" {
-					g.readinessReplyMu.Lock()
-					if g.readinessReply != nil {
-						select {
-						case g.readinessReply <- msg:
-						default:
-						}
-					}
-					g.readinessReplyMu.Unlock()
-					continue
+			// Initialization belongs to this child process, not to a downstream client.
+			if msg.ID == "readiness-check" {
+				select {
+				case initialization.reply <- msg:
+				default:
 				}
+				continue
 			}
 
 			// In the Node.js version, it sends using wsTransport?.send(jsonMsg, jsonMsg.id)
@@ -447,6 +452,7 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 		// Wait for both stdout and stderr goroutines to finish reading
 		<-stdoutDone
 		<-stderrDone
+		close(initialization.exited)
 
 		if err := g.cmd.Wait(); err != nil {
 			log.Printf("MCP server exited with error: %v", err)
@@ -455,7 +461,7 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 		}
 
 		// Check if we should restart
-		if !g.shouldRestart {
+		if !g.shouldRestart.Load() {
 			log.Printf("Restart disabled, exiting...")
 			os.Exit(1)
 		}
@@ -497,6 +503,24 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 
 // SendToMCP sends a message to the MCP server
 func (g *Gateway) SendToMCP(msg JSONRPCMessage, clientID string) error {
+	if msg.Method == "initialize" && msg.ID != nil {
+		if err := validateInitializeParams(msg.Params); err != nil {
+			return g.deliverInitialization(JSONRPCMessage{
+				JSONRPC: "2.0", ID: msg.ID,
+				Error: map[string]interface{}{"code": -32602, "message": err.Error()},
+			}, clientID)
+		}
+		reply, err := g.initializeStdio(30 * time.Second)
+		if err != nil {
+			return err
+		}
+		reply.ID = msg.ID
+		return g.deliverInitialization(reply, clientID)
+	}
+	// The gateway completes the shared child's handshake itself.
+	if msg.Method == "notifications/initialized" && msg.ID == nil {
+		return nil
+	}
 	// Modify the ID to include the client ID
 	if msg.ID != nil {
 		msg.ID = fmt.Sprintf("%s:%v", clientID, msg.ID)
@@ -519,84 +543,16 @@ func (g *Gateway) SendToMCP(msg JSONRPCMessage, clientID string) error {
 	return g.stdinWriter.Flush()
 }
 
-// WaitForReady waits for the MCP server to be ready by sending a tools/list request
+// WaitForReady initializes the shared stdio child exactly once.
 func (g *Gateway) WaitForReady(timeout time.Duration) error {
-	log.Printf("Waiting for MCP server to be ready (timeout: %v)...", timeout)
-
-	// Create a channel to receive the readiness reply
-	g.readinessReplyMu.Lock()
-	g.readinessReply = make(chan JSONRPCMessage, 1)
-	g.readinessReplyMu.Unlock()
-
-	defer func() {
-		g.readinessReplyMu.Lock()
-		close(g.readinessReply)
-		g.readinessReply = nil
-		g.readinessReplyMu.Unlock()
-	}()
-
-	// Prepare the initialize request
-	readinessMsg := JSONRPCMessage{
-		JSONRPC: "2.0",
-		ID:      "readiness-check",
-		Method:  "initialize",
-		Params:  json.RawMessage(`{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"super-gateway","version":"1.0.0"}}`),
-	}
-
-	data, err := json.Marshal(readinessMsg)
+	reply, err := g.initializeStdio(timeout)
 	if err != nil {
-		return fmt.Errorf("failed to marshal readiness check message: %w", err)
+		return err
 	}
-
-	// Create a ticker for retries every 1 second
-	retryTicker := time.NewTicker(1 * time.Second)
-	defer retryTicker.Stop()
-
-	// Create a timeout timer
-	timeoutTimer := time.NewTimer(timeout)
-	defer timeoutTimer.Stop()
-
-	// Send the first request immediately
-	log.Printf("Sending readiness check: %s", string(data))
-	g.stdinMu.Lock()
-	_, writeErr := g.stdinWriter.Write(append(data, '\n'))
-	if writeErr == nil {
-		writeErr = g.stdinWriter.Flush()
+	if reply.Error != nil {
+		return fmt.Errorf("MCP server returned error during initialization: %v", reply.Error)
 	}
-	g.stdinMu.Unlock()
-	if writeErr != nil {
-		return fmt.Errorf("failed to write readiness check: %w", writeErr)
-	}
-
-	attempt := 1
-
-	for {
-		select {
-		case reply := <-g.readinessReply:
-			if reply.Error != nil {
-				return fmt.Errorf("MCP server returned error during readiness check: %v", reply.Error)
-			}
-			log.Printf("MCP server is ready! Received initialize response after %d attempt(s)", attempt)
-			return nil
-
-		case <-retryTicker.C:
-			// Retry sending the request
-			attempt++
-			log.Printf("Retrying readiness check (attempt %d)...", attempt)
-			g.stdinMu.Lock()
-			_, writeErr := g.stdinWriter.Write(append(data, '\n'))
-			if writeErr == nil {
-				writeErr = g.stdinWriter.Flush()
-			}
-			g.stdinMu.Unlock()
-			if writeErr != nil {
-				return fmt.Errorf("failed to write readiness check: %w", writeErr)
-			}
-
-		case <-timeoutTimer.C:
-			return fmt.Errorf("timeout waiting for MCP server to be ready after %d attempt(s)", attempt)
-		}
-	}
+	return nil
 }
 
 func (g *Gateway) WaitForHTTPUpstreamReady(upstream *url.URL, timeout time.Duration) error {
@@ -847,32 +803,35 @@ func (g *Gateway) HandleHTTPMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Register before sending: the child or an intercepted response may reply immediately.
+	isRequest := msg.Method != "" && msg.ID != nil
+	var ch chan []byte
+	if isRequest {
+		key := clientID + ":" + fmt.Sprintf("%v", msg.ID)
+		ch = make(chan []byte, 1)
+		g.waitersMu.Lock()
+		g.waiters[key] = ch
+		g.waitersMu.Unlock()
+		defer func() {
+			g.waitersMu.Lock()
+			if g.waiters[key] == ch {
+				delete(g.waiters, key)
+			}
+			g.waitersMu.Unlock()
+		}()
+	}
+
 	if err := g.SendToMCP(msg, clientID); err != nil {
 		log.Printf("Failed to send message to MCP from client %s: %v", clientID, err)
 		http.Error(w, "Failed to process message", http.StatusInternalServerError)
 		return
 	}
 
-	// Per spec: if input is response/notification, return 202 Accepted with no body
-	if msg.Method == "" && msg.ID != nil {
-		// JSON-RPC response: 202 with no body
+	// Responses and notifications do not have a response to wait for.
+	if !isRequest {
 		w.WriteHeader(http.StatusAccepted)
 		return
 	}
-	if msg.Method != "" && msg.ID == nil {
-		// JSON-RPC notification: 202 with no body
-		w.WriteHeader(http.StatusAccepted)
-		return
-	}
-
-	// If input is a request (method+id), we must return either application/json or SSE stream
-	// For simplicity, we return application/json by waiting for the child's response.
-	// Create a waiter for this specific response
-	key := clientID + ":" + fmt.Sprintf("%v", msg.ID)
-	ch := make(chan []byte, 1)
-	g.waitersMu.Lock()
-	g.waiters[key] = ch
-	g.waitersMu.Unlock()
 
 	// Determine timeout: use MCP_RESPONSE_TIMEOUT env var if set, otherwise default to 5 minutes.
 	// Tools that call external APIs (e.g. web search) can take significant time under concurrent load.
@@ -891,35 +850,26 @@ func (g *Gateway) HandleHTTPMessage(w http.ResponseWriter, r *http.Request) {
 	select {
 	case data := <-ch:
 		w.Header().Set("Content-Type", "application/json")
-		// On initialize, generate and attach a session id (if not already present)
-		if strings.EqualFold(msg.Method, "initialize") {
-			// Attach session and protocol version for future requests
-			sessionId := clientID
-			if sessionId == "" {
-				sessionId = uuid.New().String()
-			}
-			// Extract protocolVersion from request params
-			var params struct {
+		// Only a successful initialization establishes a session, using the negotiated version.
+		if msg.Method == "initialize" {
+			var response JSONRPCMessage
+			var result struct {
 				ProtocolVersion string `json:"protocolVersion"`
 			}
-			_ = json.Unmarshal(msg.Params, &params)
-			g.sessionsMu.Lock()
-			g.sessions[sessionId] = Session{ProtocolVersion: params.ProtocolVersion, CreatedAt: time.Now()}
-			g.sessionsMu.Unlock()
-			w.Header().Set("Mcp-Session-Id", sessionId)
+			if json.Unmarshal(data, &response) == nil && response.Error == nil &&
+				json.Unmarshal(response.Result, &result) == nil && result.ProtocolVersion != "" {
+				g.sessionsMu.Lock()
+				g.sessions[clientID] = Session{ProtocolVersion: result.ProtocolVersion, CreatedAt: time.Now()}
+				g.sessionsMu.Unlock()
+				w.Header().Set("Mcp-Session-Id", clientID)
+			}
 		}
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(data)
 	case <-timer.C:
-		g.waitersMu.Lock()
-		delete(g.waiters, key)
-		g.waitersMu.Unlock()
 		http.Error(w, "Timeout waiting for response", http.StatusGatewayTimeout)
 	case <-r.Context().Done():
-		// Client disconnected — clean up the waiter so we don't leak goroutines/resources.
-		g.waitersMu.Lock()
-		delete(g.waiters, key)
-		g.waitersMu.Unlock()
+		// The deferred cleanup removes the waiter when the client disconnects.
 	}
 }
 
@@ -1216,10 +1166,13 @@ func main() {
 	go func() {
 		<-sigChan
 		log.Println("Shutting down...")
-		gateway.shouldRestart = false
+		gateway.shouldRestart.Store(false)
+		// Wait for an in-flight child replacement before selecting the process to stop.
+		gateway.cmdMu.Lock()
 		if gateway.cmd != nil && gateway.cmd.Process != nil {
 			_ = gateway.cmd.Process.Kill()
 		}
+		gateway.cmdMu.Unlock()
 		os.Exit(0)
 	}()
 
