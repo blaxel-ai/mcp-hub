@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -63,32 +64,61 @@ func (state *stdioInitialization) completedResult() (JSONRPCMessage, error) {
 
 func (g *Gateway) runInitialization(state *stdioInitialization) {
 	defer close(state.done)
-	request := JSONRPCMessage{JSONRPC: "2.0", ID: "readiness-check", Method: "initialize", Params: json.RawMessage(`{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"super-gateway","version":"1.0.0"}}`)}
-	if state.err = g.writeInitialization(state, request); state.err != nil {
-		return
-	}
-	// Never retry initialize on a live process: a slow response does not imply
-	// that the first request was ignored. Bound the single in-flight handshake.
-	timer := time.NewTimer(30 * time.Second)
-	defer timer.Stop()
-	select {
-	case state.result = <-state.reply:
-		if state.result.Error != nil {
+	// Keep the existing version first for compatibility. Only an explicit
+	// version rejection permits trying another version, never a slow response.
+	versions := []string{"2024-11-05", "2025-11-25", "2025-06-18", "2025-03-26"}
+	for _, version := range versions {
+		params, _ := json.Marshal(map[string]interface{}{
+			"protocolVersion": version,
+			"capabilities":    map[string]interface{}{},
+			"clientInfo":      map[string]string{"name": "super-gateway", "version": "1.0.0"},
+		})
+		request := JSONRPCMessage{JSONRPC: "2.0", ID: "readiness-check", Method: "initialize", Params: params}
+		if state.err = g.writeInitialization(state, request); state.err != nil {
 			return
 		}
-		var result struct {
-			ProtocolVersion string `json:"protocolVersion"`
-		}
-		if err := json.Unmarshal(state.result.Result, &result); err != nil || result.ProtocolVersion == "" {
-			state.err = fmt.Errorf("invalid MCP initialize result")
+		// Callers have their own deadlines. This one worker belongs to the child
+		// lifetime, allowing its original response to arrive after readiness times
+		// out without ever sending duplicate initialize requests.
+		select {
+		case state.result = <-state.reply:
+			if state.result.Error != nil {
+				if isProtocolVersionRejection(state.result.Error) {
+					continue
+				}
+				return
+			}
+			var result struct {
+				ProtocolVersion string `json:"protocolVersion"`
+			}
+			if err := json.Unmarshal(state.result.Result, &result); err != nil || result.ProtocolVersion == "" {
+				state.err = fmt.Errorf("invalid MCP initialize result")
+				return
+			}
+			state.err = g.writeInitialization(state, JSONRPCMessage{JSONRPC: "2.0", Method: "notifications/initialized"})
+			return
+		case <-state.exited:
+			state.err = fmt.Errorf("MCP server exited during initialization")
 			return
 		}
-		state.err = g.writeInitialization(state, JSONRPCMessage{JSONRPC: "2.0", Method: "notifications/initialized"})
-	case <-state.exited:
-		state.err = fmt.Errorf("MCP server exited during initialization")
-	case <-timer.C:
-		state.err = fmt.Errorf("timeout waiting for MCP server initialization")
 	}
+}
+
+func isProtocolVersionRejection(value interface{}) bool {
+	data, err := json.Marshal(value)
+	if err != nil {
+		return false
+	}
+	var rpcError struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	}
+	if json.Unmarshal(data, &rpcError) != nil || rpcError.Code != -32602 {
+		return false
+	}
+	message := strings.ToLower(rpcError.Message)
+	return strings.Contains(message, "protocol") && strings.Contains(message, "version") &&
+		(strings.Contains(message, "unsupported") || strings.Contains(message, "not supported"))
 }
 
 func (g *Gateway) writeInitialization(state *stdioInitialization, msg JSONRPCMessage) error {

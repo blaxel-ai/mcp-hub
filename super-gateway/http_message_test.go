@@ -79,7 +79,7 @@ func TestHTTPInitializeSessionUsesSuccessfulResponse(t *testing.T) {
 			t.Setenv("MCP_RESPONSE_TIMEOUT", "10ms")
 			g := NewGateway()
 			g.stdinWriter = bufio.NewWriter(immediateReplyWriter{gateway: g, response: tt.response})
-			request := httptest.NewRequest(http.MethodPost, "/message", strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26"}}`))
+			request := httptest.NewRequest(http.MethodPost, "/message", strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}`))
 			request.Header.Set("X-Client-ID", "client")
 			recorder := httptest.NewRecorder()
 			g.HandleHTTPMessage(recorder, request)

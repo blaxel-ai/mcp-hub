@@ -108,7 +108,7 @@ func TestConcurrentInitializeWithoutReadiness(t *testing.T) {
 			if i%2 == 0 {
 				id = float64(i)
 			}
-			if err := g.SendToMCP(JSONRPCMessage{JSONRPC: "2.0", ID: id, Method: "initialize"}, clientID); err != nil {
+			if err := g.SendToMCP(JSONRPCMessage{JSONRPC: "2.0", ID: id, Method: "initialize", Params: json.RawMessage(`{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1"}}`)}, clientID); err != nil {
 				t.Error(err)
 				return
 			}

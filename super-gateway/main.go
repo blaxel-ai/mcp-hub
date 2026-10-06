@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -79,7 +80,7 @@ type Gateway struct {
 	stderrScanner      *bufio.Scanner
 	restartCount       int
 	maxRestarts        int
-	shouldRestart      bool
+	shouldRestart      atomic.Bool
 }
 
 // rewriteOAuthURL replaces http://localhost:12849 in log messages with the appropriate public URL
@@ -206,16 +207,15 @@ func dialLoopbackOnly(ctx context.Context, network, address string) (net.Conn, e
 }
 
 func NewGateway() *Gateway {
-	return &Gateway{
-		clients:       make(map[string]*Client),
-		sseClients:    make(map[string]*SSEClient),
-		waiters:       make(map[string]chan []byte),
-		sessions:      make(map[string]Session),
-		register:      make(chan *Client),
-		unregister:    make(chan *Client),
-		broadcast:     make(chan []byte),
-		maxRestarts:   5,
-		shouldRestart: true,
+	gateway := &Gateway{
+		clients:     make(map[string]*Client),
+		sseClients:  make(map[string]*SSEClient),
+		waiters:     make(map[string]chan []byte),
+		sessions:    make(map[string]Session),
+		register:    make(chan *Client),
+		unregister:  make(chan *Client),
+		broadcast:   make(chan []byte),
+		maxRestarts: 5,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true // Allow all origins for simplicity
@@ -223,6 +223,8 @@ func NewGateway() *Gateway {
 			Subprotocols: []string{"mcp"}, // Add MCP subprotocol support
 		},
 	}
+	gateway.shouldRestart.Store(true)
+	return gateway
 }
 
 // StartMCPServer starts the MCP server subprocess
@@ -459,7 +461,7 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 		}
 
 		// Check if we should restart
-		if !g.shouldRestart {
+		if !g.shouldRestart.Load() {
 			log.Printf("Restart disabled, exiting...")
 			os.Exit(1)
 		}
@@ -502,6 +504,12 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 // SendToMCP sends a message to the MCP server
 func (g *Gateway) SendToMCP(msg JSONRPCMessage, clientID string) error {
 	if msg.Method == "initialize" && msg.ID != nil {
+		if err := validateInitializeParams(msg.Params); err != nil {
+			return g.deliverInitialization(JSONRPCMessage{
+				JSONRPC: "2.0", ID: msg.ID,
+				Error: map[string]interface{}{"code": -32602, "message": err.Error()},
+			}, clientID)
+		}
 		reply, err := g.initializeStdio(30 * time.Second)
 		if err != nil {
 			return err
@@ -1158,7 +1166,7 @@ func main() {
 	go func() {
 		<-sigChan
 		log.Println("Shutting down...")
-		gateway.shouldRestart = false
+		gateway.shouldRestart.Store(false)
 		if gateway.cmd != nil && gateway.cmd.Process != nil {
 			_ = gateway.cmd.Process.Kill()
 		}
