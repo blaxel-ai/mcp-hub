@@ -6,14 +6,14 @@
   "packageManager": "pnpm@10.34.5",
   "pnpm": {
     "overrides": {
-      "fast-uri": "3.1.7",
-      "ip-address": "10.3.1",
+      "fast-uri": "3.1.8",
+      "ip-address": "10.7.1",
       "js-yaml": "3.15.2",
-      "hono": "4.13.5",
+      "hono": "4.13.7",
       "@hono/node-server": "2.0.10",
       "qs": "6.16.0",
       "browserslist": "4.28.7",
-      "brace-expansion": "1.1.18"
+      "brace-expansion": "1.1.21"
     }
   },
   "scripts": {
@@ -24,7 +24,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.30.0"
+    "@modelcontextprotocol/sdk": "^1.31.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
@@ -32,8 +32,8 @@
     "@types/jest": "^29.5.14",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.20.1",
-    "fast-uri": "3.1.7",
-    "ip-address": "10.3.1",
+    "fast-uri": "3.1.8",
+    "ip-address": "10.7.1",
     "js-yaml": "3.15.2"
   }
 }
