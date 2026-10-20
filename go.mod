@@ -2,6 +2,8 @@ module github.com/blaxel-ai/mcp-hub
 
 go 1.25.0
 
+toolchain go1.27.3
+
 require (
 	github.com/dop251/goja v0.0.0-20250125213203-5ef83b82af17
 	github.com/go-git/go-git/v5 v5.19.2
