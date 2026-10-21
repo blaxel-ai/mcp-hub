@@ -3,32 +3,18 @@
 // Regression test for follow-redirects 1.16.1 (GHSA-8r9p-f939-6h3c, GHSA-q3jh-wrc6-jgq8):
 // credential headers must be stripped when a redirect leaves the origin, also for custom
 // `sensitiveHeaders` names containing `^` and for array-form headers. follow-redirects reaches
-// this project through axios, so it is loaded through axios to exercise the copy axios uses.
+// this project through twilio -> axios, so it is loaded through that chain.
 // Both servers listen on loopback; a different port is a different origin for follow-redirects.
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const http = require("node:http");
-const { existsSync, readdirSync, realpathSync } = require("node:fs");
 const { createRequire } = require("node:module");
-const { join } = require("node:path");
 
-// axios can be a direct dependency or only a transitive one (pnpm then keeps it under .pnpm/).
-function findAxios() {
-	const req = createRequire(__filename);
-	for (const base of req.resolve.paths("axios") ?? []) {
-		if (existsSync(join(base, "axios", "package.json"))) return join(base, "axios");
-		const store = join(base, ".pnpm");
-		if (!existsSync(store)) continue;
-		const entry = readdirSync(store).filter((name) => name.startsWith("axios@")).sort().pop();
-		if (entry) return join(store, entry, "node_modules", "axios");
-	}
-	return null;
-}
-
+// Load follow-redirects through the axios twilio resolves (servers/src/twilio's default
+// RequestClient), the same copy axios.test.js checks.
 function loadFollowRedirects() {
-	const dir = findAxios();
-	const req = dir ? createRequire(join(realpathSync(dir), "package.json")) : createRequire(__filename);
-	return req("follow-redirects");
+	const fromTwilio = createRequire(require.resolve("twilio"));
+	return createRequire(fromTwilio.resolve("axios/package.json"))("follow-redirects");
 }
 
 async function listen(handler) {

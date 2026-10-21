@@ -18,6 +18,7 @@ async function listen(handler) {
 
 test("a cross-origin 307 does not forward the API key or the request body", async () => {
 	const received = [];
+	let originHits = 0;
 	const target = await listen((req, res) => {
 		let body = "";
 		req.on("data", (chunk) => (body += chunk));
@@ -28,6 +29,7 @@ test("a cross-origin 307 does not forward the API key or the request body", asyn
 		});
 	});
 	const origin = await listen((req, res) => {
+		originHits++;
 		req.resume();
 		res.writeHead(307, { location: `http://127.0.0.1:${target.address().port}/mcp` });
 		res.end();
@@ -43,6 +45,8 @@ test("a cross-origin 307 does not forward the API key or the request body", asyn
 		target.close();
 		origin.close();
 	}
+	// Guards against a vacuous pass: the client must actually have hit the redirecting origin.
+	assert.ok(originHits > 0, "the client never reached the MCP server");
 	for (const request of received) {
 		assert.equal(request.key, undefined, "the API key reached the other origin");
 		assert.ok(!request.body.includes("initialize"), "the request body reached the other origin");
