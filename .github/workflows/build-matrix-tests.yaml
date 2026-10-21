@@ -1,0 +1,22 @@
+name: Build matrix tests
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/build-and-push.yaml"
+      - ".github/workflows/build-matrix-tests.yaml"
+      - "tests/workflows/**"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install matrix script dependencies
+        run: sudo apt-get update && sudo apt-get install -y tree jq
+      - name: Test production matrix selection
+        run: python3 -B -m unittest discover -s tests/workflows -p 'test_*.py' -v

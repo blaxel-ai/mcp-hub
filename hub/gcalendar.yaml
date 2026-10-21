@@ -1,3 +1,10 @@
+# repository: 404 as of this writing. smithery-ai/reference-servers no
+# longer exists (the smithery-ai org itself is still active - 37 other
+# repos - this specific one is just gone, not renamed within it; checked).
+# Been disabled+comingSoon since this entry's introduction (Feb 2025) so
+# nothing was ever actually built from it - this doesn't change that. No
+# maintained successor identified; left as a visible-but-disabled catalogue
+# placeholder rather than deleted, since it may be referenced by name.
 repository: https://github.com/smithery-ai/reference-servers.git
 smitheryPath: src/gcalendar/smithery.yaml
 dockerfile: src/gcalendar/Dockerfile

@@ -1,5 +1,19 @@
+# Disabled since 2026-03-19 (commit 5cf0981, "TMP: Disable pg + seq") for an
+# unrelated reason at the time. It has stayed disabled ever since, and
+# should: `src/postgres` no longer exists in modelcontextprotocol/servers -
+# it moved to modelcontextprotocol/servers-archived ("Reference MCP servers
+# that are no longer maintained", archived/read-only since 2025-05-28), and
+# the published npm package (@modelcontextprotocol/server-postgres) is
+# marked "DEPRECATED - Package no longer supported" as of this writing.
+# Pointed `repository:` at the archived repo below so it's at least truthful
+# about where the (unmaintained) source lives, rather than pointing at a
+# repository that no longer has this server at all. Not re-enabling: the
+# code is unmaintained and may not have received a security patch in a long
+# time. Not deleting the catalogue entry either - customers may still
+# reference it by name - so it stays visible-but-disabled until someone
+# picks a maintained Postgres MCP server to replace it with.
 disabled: true
-repository: https://github.com/modelcontextprotocol/servers
+repository: https://github.com/modelcontextprotocol/servers-archived
 dockerfile: "@mcp-hub"
 transport: http-stream
 branch: main

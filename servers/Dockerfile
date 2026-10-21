@@ -4,7 +4,12 @@ COPY . /app
 WORKDIR /app
 # Pinned: pnpm 11 stopped reading the `pnpm.overrides` field from package.json
 # (moved to pnpm-workspace.yaml), which turns `--frozen-lockfile` below into a
-# hard config-mismatch error against this repo's current lockfile/config shape.
+# hard config-mismatch error against this repo's current lockfile/config
+# shape. #114 (merged separately to main) pinned to pnpm@9 for the same
+# underlying incident; kept 10.34.5 here instead - it matches this project's
+# own `packageManager` field (also 10.34.5) and every local verification in
+# this PR (pnpm why, --frozen-lockfile installs, the new smoke tests) was
+# run against that exact version via corepack.
 RUN npm install -g pnpm@10.34.5
 RUN pnpm install --frozen-lockfile --ignore-scripts
 # tsc's type-check across this module's combined SDK surface (aws-sdk,

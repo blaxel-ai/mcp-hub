@@ -3,7 +3,10 @@ export const payload: ((previousResult: Record<string, any>) => {
   arguments: Record<string, any>;
 })[] = [
   () => ({
-    name: "search-web",
+    // Renamed from "search-web" when upstream (LinkupPlatform) replaced the
+    // archived Python server (python-mcp-server / mcp-search-linkup) with
+    // linkup-mcp-server (TypeScript, npm). Same query/depth args shape.
+    name: "linkup-search",
     arguments: {
       query: "How does the new EU AI Act affect startups?",
       depth: "standard",
