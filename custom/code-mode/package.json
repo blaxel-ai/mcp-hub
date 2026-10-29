@@ -14,8 +14,8 @@
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.141",
-    "@blaxel/core": "^0.2.95",
-    "@blaxel/telemetry": "^0.2.95",
+    "@blaxel/core": "^0.3.32",
+    "@blaxel/telemetry": "^0.3.32",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "express": "^4.22.2",
     "quickjs-emscripten": "0.32.0",
