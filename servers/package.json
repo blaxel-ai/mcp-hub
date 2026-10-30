@@ -1,52 +1,53 @@
 {
-	"name": "edge-gw-mcp-hub",
-	"version": "0.0.1",
-	"private": true,
-	"packageManager": "pnpm@10.34.5",
-	"engines": {
-		"node": ">=22"
-	},
-	"scripts": {
-		"build": "tsc",
-		"dev": "tsc --watch",
-		"cf-typegen": "wrangler types",
-		"test": "node --test test/*.test.js"
-	},
-	"devDependencies": {
-		"@types/node": "^24.13.3",
-		"dotenv": "^16.6.1",
-		"fast-uri": "3.1.8",
-		"form-data": "^4.0.4",
-		"ip-address": "10.7.1",
-		"typescript": "5.7.3"
-	},
-	"pnpm": {
-		"overrides": {
-			"@modelcontextprotocol/sdk": "1.32.1",
-			"fast-uri": "3.1.8",
-			"ip-address": "10.7.1",
-			"hono": "4.13.11",
-			"follow-redirects": "1.16.1",
-			"@hono/node-server": "2.0.10",
-			"undici": "6.28.1",
-			"qs": "6.16.0"
-		}
-	},
-	"dependencies": {
-		"@aws-sdk/client-s3": "^3.1085.0",
-		"@aws-sdk/client-ses": "^3.1085.0",
-		"@modelcontextprotocol/sdk": "^1.31.0",
-		"@modelcontextprotocol/server-github": "^0.6.2",
-		"@qdrant/js-client-rest": "^1.19.0",
-		"chalk": "^5.6.2",
-		"commander": "^13.1.0",
-		"form-data": "^4.0.6",
-		"mime": "^4.1.0",
-		"openai": "^7.4.0",
-		"postgres": "^3.4.9",
-		"ts-node": "^10.9.2",
-		"twilio": "^5.13.1",
-		"zod": "^3.25.76",
-		"zod-to-json-schema": "^3.25.2"
-	}
+  "name": "edge-gw-mcp-hub",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "cf-typegen": "wrangler types",
+    "test": "node --test test/*.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "dotenv": "^16.6.1",
+    "fast-uri": "3.1.8",
+    "form-data": "^4.0.4",
+    "ip-address": "10.7.1",
+    "typescript": "5.7.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "@modelcontextprotocol/sdk": "1.32.1",
+      "fast-uri": "3.1.9",
+      "ip-address": "10.7.4",
+      "hono": "4.13.11",
+      "follow-redirects": "1.16.1",
+      "@hono/node-server": "2.1.3",
+      "undici": "6.29.1",
+      "qs": "6.16.1",
+      "body-parser@>=2.0.0 <2.4.0": "2.4.0"
+    }
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1085.0",
+    "@aws-sdk/client-ses": "^3.1085.0",
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "@modelcontextprotocol/server-github": "^0.6.2",
+    "@qdrant/js-client-rest": "^1.19.0",
+    "chalk": "^5.6.2",
+    "commander": "^13.1.0",
+    "form-data": "^4.0.6",
+    "mime": "^4.1.0",
+    "openai": "^7.4.0",
+    "postgres": "^3.4.9",
+    "ts-node": "^10.9.2",
+    "twilio": "^5.13.1",
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.25.2"
+  }
 }
