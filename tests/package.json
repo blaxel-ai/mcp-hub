@@ -6,16 +6,18 @@
   "packageManager": "pnpm@10.34.5",
   "pnpm": {
     "overrides": {
-      "fast-uri": "3.1.8",
-      "ip-address": "10.7.1",
+      "fast-uri": "3.1.9",
+      "ip-address": "10.7.4",
       "js-yaml": "3.15.2",
       "hono": "4.13.11",
       "@modelcontextprotocol/sdk": "1.32.1",
-      "@hono/node-server": "2.0.10",
-      "qs": "6.16.0",
+      "@hono/node-server": "2.1.3",
+      "qs": "6.16.1",
       "browserslist": "4.28.7",
       "brace-expansion": "1.1.21",
-      "js-yaml@3>argparse": "2.0.1"
+      "js-yaml@3>argparse": "2.0.1",
+      "body-parser@>=2.0.0 <2.4.0": "2.4.0",
+      "zod@>=4.0.0 <4.6.6": "4.6.6"
     }
   },
   "scripts": {
