@@ -1,0 +1,61 @@
+name: MCP runtime smoke
+# Builds the servers/ image the way `mcp-hub import` does (super-gateway binary injected, same Dockerfile), runs it on
+# the runner with the CI-only test-echo server, and drives it with the MCP SDK client: initialize, tools/list,
+# concurrent tools/call. Nothing is pushed: no registry login, no Blaxel credentials. A dependency bump that breaks
+# the MCP SDKs, super-gateway or the image fails here before merge. The Dependabot sweeper requires this check to
+# auto-merge its mcp-hub PRs.
+on:
+  pull_request:
+    paths:
+      - "servers/**"
+      - "tests/**"
+      - "super-gateway/**"
+      - ".github/workflows/mcp-runtime-smoke.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mcp-runtime-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup Go
+        # Same toolchain as dependency-verification.yaml.
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version: "1.27.3"
+      - name: Build super-gateway and inject it, as internal/docker/inject.go does
+        run: make build-super-gateway && cp bin/super-gateway servers/super-gateway
+      - name: Build the servers image (not pushed)
+        run: docker build -t mcp-hub-servers:smoke servers
+      - name: Start the test-echo server
+        run: |
+          docker run -d --name smoke -p 1400:80 mcp-hub-servers:smoke node dist/index.js start test-echo
+          for i in $(seq 1 30); do
+            curl -s -o /dev/null http://localhost:1400/ && exit 0
+            sleep 1
+          done
+          docker logs smoke; exit 1
+      - name: Setup pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          package_json_file: tests/package.json
+      - name: Setup Node.js 23
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "23"
+          cache: pnpm
+          cache-dependency-path: tests/pnpm-lock.yaml
+      - name: Install the test client
+        working-directory: tests
+        run: pnpm install --frozen-lockfile
+      - name: Drive the server with the MCP SDK client
+        working-directory: tests
+        run: node src/smoke.mjs http://localhost:1400
+      - name: Server logs
+        if: always()
+        run: docker logs smoke 2>&1 | tail -n 100 || true
