@@ -11,8 +11,15 @@ import { infos as linearInfos, list as linearList, call as linearToolCall } from
 import { infos as qdrantInfos, list as qdrantList, call as qdrantToolCall } from './qdrant';
 import { infos as slackInfos, list as slackList, call as slackToolCall } from './slack';
 import { infos as twilioInfos, list as twilioList, call as twilioToolCall } from './twilio';
+import { infos as testEchoInfos, list as testEchoList, call as testEchoCall } from './test-echo';
 
 export const mcpServers: Record<string, Record<string, Function>> = {
+	// CI only (mcp-runtime-smoke.yaml): no hub/ entry, so it is never imported, pushed or registered on Blaxel.
+	'test-echo': {
+		list: testEchoList,
+		call: testEchoCall,
+		infos: testEchoInfos,
+	},
 	'brave-search': {
 		list: braveList,
 		call: braveToolCall,
