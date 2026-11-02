@@ -26,7 +26,10 @@ WORKDIR /app
 COPY --from=builder /app/packages/mcp/dist ./dist
 COPY --from=builder /app/packages/mcp/package.json ./
 
+# Upstream devDependencies use pnpm `catalog:` from the root workspace file, which is not copied here; a prod
+# install does not need them.
 RUN npm install -g pnpm@10.15.0 \
+  && npm pkg delete devDependencies \
   && pnpm install --prod
 
 
