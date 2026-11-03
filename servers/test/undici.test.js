@@ -41,5 +41,6 @@ test("QdrantClient getCollections() round-trips through the bumped undici", asyn
 		server.close();
 	}
 	const undiciVersion = createRequire(require.resolve("@qdrant/js-client-rest"))("undici/package.json").version;
-	assert.equal(undiciVersion, "6.28.1");
+	const [major, minor, patch] = undiciVersion.split(".").map(Number);
+	assert.ok(major === 6 && (minor > 29 || (minor === 29 && patch >= 1)), `undici ${undiciVersion} is below the 6.29.1 security floor`);
 });
