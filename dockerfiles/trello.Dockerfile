@@ -12,7 +12,7 @@ RUN apk add --no-cache python3 make g++
 COPY package.json bun.lock ./
 
 # Install all dependencies (including dev dependencies)
-RUN bun install --frozen
+RUN bun install --frozen-lockfile
 
 # Copy the rest of the code
 COPY . .
@@ -32,7 +32,7 @@ COPY --from=builder /app/package.json ./
 COPY --from=builder /app/bun.lock ./
 
 # Install only production dependencies without running scripts
-RUN bun install --production --frozen
+RUN bun install --production --frozen-lockfile
 
 # The environment variables should be passed at runtime, not baked into the image
 # They can be provided via docker run -e or docker compose environment section
