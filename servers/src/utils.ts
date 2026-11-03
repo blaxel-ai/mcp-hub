@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 function transformInZodSchema(properties: any): z.ZodRawShape {
-	const schema: z.ZodRawShape = {};
+	const schema: Record<string, z.ZodType> = {};
 	for (const key in properties) {
 		const zodType = toZodType(properties[key].type, properties[key].properties);
 		schema[key] = properties[key].required ? zodType : zodType.optional();

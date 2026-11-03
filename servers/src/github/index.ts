@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import { z } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import {
 	GitHubAuthenticationError,
@@ -19,6 +18,27 @@ import * as issues from './operations/issues';
 import * as pulls from './operations/pulls';
 import * as repository from './operations/repository';
 import * as search from './operations/search';
+
+// Draft-07 input schema in the shape zod-to-json-schema produced for zod 3: every object closed
+// (additionalProperties: false) and the `$schema` key last. zod 4 ships its own converter.
+function closeObjects(node: any): any {
+	if (Array.isArray(node)) return node.map(closeObjects);
+	if (node === null || typeof node !== 'object') return node;
+	const out: Record<string, any> = {};
+	for (const [key, value] of Object.entries(node)) {
+		if (key === '$schema') continue;
+		out[key] = key === 'properties'
+			? Object.fromEntries(Object.entries(value as object).map(([k, v]) => [k, closeObjects(v)]))
+			: closeObjects(value);
+	}
+	if (out.type === 'object' && out.properties && out.additionalProperties === undefined) out.additionalProperties = false;
+	return out;
+}
+
+function inputSchemaOf(schema: z.ZodType) {
+	const json: any = z.toJSONSchema(schema, { target: 'draft-7', io: 'input' });
+	return { ...closeObjects(json), $schema: json.$schema };
+}
 
 function formatGitHubError(error: GitHubError): string {
 	let message = `GitHub API Error: ${error.message}`;
@@ -71,142 +91,142 @@ export async function list() {
 			{
 				name: 'create_branch',
 				description: 'Create a new branch in a GitHub repository',
-				inputSchema: zodToJsonSchema(branches.CreateBranchSchema),
+				inputSchema: inputSchemaOf(branches.CreateBranchSchema),
 			},
 			{
 				name: 'create_branch_from_ref',
 				description: 'Create a new branch in a GitHub repository from a reference branch',
-				inputSchema: zodToJsonSchema(branches.CreateBranchFromRefSchema),
+				inputSchema: inputSchemaOf(branches.CreateBranchFromRefSchema),
 			},
 			{
 				name: 'update_branch',
 				description: 'Update a branch in a GitHub repository',
-				inputSchema: zodToJsonSchema(branches.UpdateBranchSchema),
+				inputSchema: inputSchemaOf(branches.UpdateBranchSchema),
 			},
 			{
 				name: 'get_branch_sha',
 				description: 'Get the SHA of a branch in a GitHub repository',
-				inputSchema: zodToJsonSchema(branches.GetBranchSHA),
+				inputSchema: inputSchemaOf(branches.GetBranchSHA),
 			},
 			{
 				name: 'list_commits',
 				description: 'Get list of commits of a branch in a GitHub repository',
-				inputSchema: zodToJsonSchema(commits.ListCommitsSchema),
+				inputSchema: inputSchemaOf(commits.ListCommitsSchema),
 			},
 			{
 				name: 'create_or_update_file',
 				description: 'Create or update a single file in a GitHub repository',
-				inputSchema: zodToJsonSchema(files.CreateOrUpdateFileSchema),
+				inputSchema: inputSchemaOf(files.CreateOrUpdateFileSchema),
 			},
 			{
 				name: 'get_file_contents',
 				description: 'Get the contents of a file or directory from a GitHub repository',
-				inputSchema: zodToJsonSchema(files.GetFileContentsSchema),
+				inputSchema: inputSchemaOf(files.GetFileContentsSchema),
 			},
 			{
 				name: 'push_files',
 				description: 'Push multiple files to a GitHub repository in a single commit',
-				inputSchema: zodToJsonSchema(files.PushFilesSchema),
+				inputSchema: inputSchemaOf(files.PushFilesSchema),
 			},
 			{
 				name: 'create_issue',
 				description: 'Create a new issue in a GitHub repository',
-				inputSchema: zodToJsonSchema(issues.CreateIssueSchema),
+				inputSchema: inputSchemaOf(issues.CreateIssueSchema),
 			},
 			{
 				name: 'list_issues',
 				description: 'List issues in a GitHub repository with filtering options',
-				inputSchema: zodToJsonSchema(issues.ListIssuesOptionsSchema),
+				inputSchema: inputSchemaOf(issues.ListIssuesOptionsSchema),
 			},
 			{
 				name: 'update_issue',
 				description: 'Update an existing issue in a GitHub repository',
-				inputSchema: zodToJsonSchema(issues.UpdateIssueOptionsSchema),
+				inputSchema: inputSchemaOf(issues.UpdateIssueOptionsSchema),
 			},
 			{
 				name: 'add_issue_comment',
 				description: 'Add a comment to an existing issue',
-				inputSchema: zodToJsonSchema(issues.IssueCommentSchema),
+				inputSchema: inputSchemaOf(issues.IssueCommentSchema),
 			},
 			{
 				name: 'get_issue',
 				description: 'Get details of a specific issue in a GitHub repository.',
-				inputSchema: zodToJsonSchema(issues.GetIssueSchema),
+				inputSchema: inputSchemaOf(issues.GetIssueSchema),
 			},
 			{
 				name: 'search_repositories',
 				description: 'Search for GitHub repositories',
-				inputSchema: zodToJsonSchema(repository.SearchRepositoriesSchema),
+				inputSchema: inputSchemaOf(repository.SearchRepositoriesSchema),
 			},
 			{
 				name: 'create_repository',
 				description: 'Create a new GitHub repository in your account',
-				inputSchema: zodToJsonSchema(repository.CreateRepositoryOptionsSchema),
+				inputSchema: inputSchemaOf(repository.CreateRepositoryOptionsSchema),
 			},
 			{
 				name: 'fork_repository',
 				description: 'Fork a GitHub repository to your account or specified organization',
-				inputSchema: zodToJsonSchema(repository.ForkRepositorySchema),
+				inputSchema: inputSchemaOf(repository.ForkRepositorySchema),
 			},
 			{
 				name: 'create_pull_request',
 				description: 'Create a new pull request in a GitHub repository',
-				inputSchema: zodToJsonSchema(pulls.CreatePullRequestSchema),
+				inputSchema: inputSchemaOf(pulls.CreatePullRequestSchema),
 			},
 			{
 				name: 'get_pull_request',
 				description: 'Get details of a specific pull request in a GitHub repository',
-				inputSchema: zodToJsonSchema(pulls.GetPullRequestReviewsSchema),
+				inputSchema: inputSchemaOf(pulls.GetPullRequestReviewsSchema),
 			},
 			{
 				name: 'list_pull_requests',
 				description: 'List pull requests in a GitHub repository',
-				inputSchema: zodToJsonSchema(pulls.ListPullRequestsSchema),
+				inputSchema: inputSchemaOf(pulls.ListPullRequestsSchema),
 			},
 			{
 				name: 'create_pull_request_review',
 				description: 'Create a review for a pull request',
-				inputSchema: zodToJsonSchema(pulls.CreatePullRequestReviewSchema),
+				inputSchema: inputSchemaOf(pulls.CreatePullRequestReviewSchema),
 			},
 			{
 				name: 'merge_pull_request',
 				description: 'Merge a pull request',
-				inputSchema: zodToJsonSchema(pulls.MergePullRequestSchema),
+				inputSchema: inputSchemaOf(pulls.MergePullRequestSchema),
 			},
 			{
 				name: 'get_pull_request_files',
 				description: 'Get the files changed in a pull request',
-				inputSchema: zodToJsonSchema(pulls.GetPullRequestFilesSchema),
+				inputSchema: inputSchemaOf(pulls.GetPullRequestFilesSchema),
 			},
 			{
 				name: 'get_pull_request_comments',
 				description: 'Get comments on a pull request',
-				inputSchema: zodToJsonSchema(pulls.GetPullRequestCommentsSchema),
+				inputSchema: inputSchemaOf(pulls.GetPullRequestCommentsSchema),
 			},
 			{
 				name: 'get_pull_request_reviews',
 				description: 'Get reviews for a pull request',
-				inputSchema: zodToJsonSchema(pulls.GetPullRequestReviewsSchema),
+				inputSchema: inputSchemaOf(pulls.GetPullRequestReviewsSchema),
 			},
 			{
 				name: 'get_pull_request_status',
 				description: 'Get the status of a pull request',
-				inputSchema: zodToJsonSchema(pulls.GetPullRequestStatusSchema),
+				inputSchema: inputSchemaOf(pulls.GetPullRequestStatusSchema),
 			},
 			{
 				name: 'search_code',
 				description: 'Search for code across GitHub repositories',
-				inputSchema: zodToJsonSchema(search.SearchCodeSchema),
+				inputSchema: inputSchemaOf(search.SearchCodeSchema),
 			},
 			{
 				name: 'search_issues',
 				description: 'Search for issues and pull requests across GitHub repositories',
-				inputSchema: zodToJsonSchema(search.SearchIssuesSchema),
+				inputSchema: inputSchemaOf(search.SearchIssuesSchema),
 			},
 			{
 				name: 'search_users',
 				description: 'Search for users on GitHub',
-				inputSchema: zodToJsonSchema(search.SearchUsersSchema),
+				inputSchema: inputSchemaOf(search.SearchUsersSchema),
 			},
 		],
 	};
