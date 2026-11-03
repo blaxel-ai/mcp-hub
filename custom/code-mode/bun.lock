@@ -6,13 +6,13 @@
       "name": "code-mode-mcp",
       "dependencies": {
         "@anthropic-ai/claude-agent-sdk": "^0.2.141",
-        "@blaxel/core": "^0.3.32",
-        "@blaxel/telemetry": "^0.3.32",
+        "@blaxel/core": "^0.3.34",
+        "@blaxel/telemetry": "^0.3.34",
         "@modelcontextprotocol/sdk": "^1.29.0",
         "express": "^4.22.2",
         "quickjs-emscripten": "0.32.0",
         "yaml": "^2.9.0",
-        "zod": "^3.25.76",
+        "zod": "^4.6.6",
       },
       "devDependencies": {
         "@types/express": "^5.0.6",
@@ -65,9 +65,9 @@
 
     "@babel/runtime": ["@babel/runtime@7.29.7", "", {}, "sha512-Nq8OhGWiZIZGV6hLHoyAKLLcJihP/xFeBMGJoUrxTX2psI8dCifzLhZISFb+VWS3wFMRDmCGw5R+dOySCqPLhw=="],
 
-    "@blaxel/core": ["@blaxel/core@0.3.32", "", { "dependencies": { "@hey-api/client-fetch": "^0.10.0", "@modelcontextprotocol/sdk": "^1.20.0", "archiver": "^7.0.1", "axios": "^1.9.0", "dockerfile-ast": "^0.7.1", "dotenv": "^17.4.2", "form-data": "^4.0.2", "jwt-decode": "^4.0.0", "smol-toml": "^1.8.0", "uuid": "^11.1.0", "ws": "^8.18.2", "yaml": "^2.7.1", "zod": "^3.25.0 || ^4.0.0" } }, "sha512-RkQn7/LlcUb8xfko+DXcciEsDuEG1xZ5kEqBFawwtmpvZ+uLtDjK1pRhqJ1Q8MAiYXly+HfyRbQVC4Ykudv3bw=="],
+    "@blaxel/core": ["@blaxel/core@0.3.34", "", { "dependencies": { "@hey-api/client-fetch": "^0.10.0", "@modelcontextprotocol/sdk": "^1.20.0", "archiver": "^7.0.1", "axios": "^1.9.0", "dockerfile-ast": "^0.7.1", "dotenv": "^17.4.2", "form-data": "^4.0.2", "jwt-decode": "^4.0.0", "smol-toml": "^1.8.0", "uuid": "^11.1.0", "ws": "^8.18.2", "yaml": "^2.7.1", "zod": "^3.25.0 || ^4.6.6" } }, "sha512-h3s6PFbRCbAhuhrJ6FbCvMsVscXBTayjwHKyETjRZIIAY03HBbVq3CtpVXgfbJoG1fZpmWjJDLsMOaB9U+/Rlw=="],
 
-    "@blaxel/telemetry": ["@blaxel/telemetry@0.3.32", "", { "dependencies": { "@ai-sdk/anthropic": "^2.0.39", "@ai-sdk/cerebras": "^1.0.27", "@ai-sdk/google": "^2.0.25", "@ai-sdk/groq": "^2.0.26", "@ai-sdk/openai": "^2.0.57", "@blaxel/core": "0.3.32", "@opentelemetry/api": "^1.9.0", "@opentelemetry/api-logs": "^0.200.0", "@opentelemetry/exporter-logs-otlp-http": "^0.200.0", "@opentelemetry/exporter-metrics-otlp-http": "^0.200.0", "@opentelemetry/exporter-trace-otlp-http": "^0.200.0", "@opentelemetry/instrumentation": "^0.200.0", "@opentelemetry/instrumentation-http": "^0.200.0", "@opentelemetry/resources": "^2.0.0", "@opentelemetry/sdk-logs": "^0.200.0", "@opentelemetry/sdk-metrics": "^2.0.0", "@opentelemetry/sdk-trace-base": "^2.0.0", "@opentelemetry/sdk-trace-node": "^2.0.0", "ai": "^5.0.82" } }, "sha512-/BAUj2e322w28ewCmGyd3AZ8TNSVilNChE29cT6zDgYIdOaYpvt9iGDr7Hf+LjEqp1SWj8klScJwrAnTywOjQA=="],
+    "@blaxel/telemetry": ["@blaxel/telemetry@0.3.34", "", { "dependencies": { "@ai-sdk/anthropic": "^2.0.39", "@ai-sdk/cerebras": "^1.0.27", "@ai-sdk/google": "^2.0.25", "@ai-sdk/groq": "^2.0.26", "@ai-sdk/openai": "^2.0.57", "@blaxel/core": "0.3.34", "@opentelemetry/api": "^1.9.0", "@opentelemetry/api-logs": "^0.200.0", "@opentelemetry/exporter-logs-otlp-http": "^0.200.0", "@opentelemetry/exporter-metrics-otlp-http": "^0.200.0", "@opentelemetry/exporter-trace-otlp-http": "^0.200.0", "@opentelemetry/instrumentation": "^0.200.0", "@opentelemetry/instrumentation-http": "^0.200.0", "@opentelemetry/resources": "^2.0.0", "@opentelemetry/sdk-logs": "^0.200.0", "@opentelemetry/sdk-metrics": "^2.0.0", "@opentelemetry/sdk-trace-base": "^2.0.0", "@opentelemetry/sdk-trace-node": "^2.0.0", "ai": "^5.0.82" } }, "sha512-TlqLO08R43kp+h9xRHAw0XAGPjJRPNROa2a3roUTmBeoL9sce0tcBTMdfSs0rvN+ifQsuyUbuyAeA8AbUCiP9w=="],
 
     "@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.28.1", "", { "os": "aix", "cpu": "ppc64" }, "sha512-Svl7tq8k/08+p6CXPpRjQ1fKX+1odH/BQbb48fV6fj3CWHhsoIOoY87w1oHXm0qEpkIK3ZfVgp0hed3XBXzXMQ=="],
 
@@ -827,7 +827,7 @@
 
     "zip-stream": ["zip-stream@6.0.1", "", { "dependencies": { "archiver-utils": "^5.0.0", "compress-commons": "^6.0.2", "readable-stream": "^4.0.0" } }, "sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA=="],
 
-    "zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
+    "zod": ["zod@4.6.7", "", {}, "sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg=="],
 
     "zod-to-json-schema": ["zod-to-json-schema@3.25.1", "", { "peerDependencies": { "zod": "^3.25 || ^4" } }, "sha512-pM/SU9d3YAggzi6MtR4h7ruuQlqKtad8e9S0fmxcMi+ueAK5Korys/aWcV9LIIHTVbj01NdzxcnXSN+O74ZIVA=="],
 
