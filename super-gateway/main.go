@@ -1067,7 +1067,11 @@ func (c *Client) writePump() {
 
 // HandleHealth provides a health check endpoint
 func (g *Gateway) HandleHealth(w http.ResponseWriter, r *http.Request) {
-	if g.cmd == nil || g.cmd.ProcessState != nil {
+	// The health port is served before the first child starts.
+	g.cmdMu.Lock()
+	cmd := g.cmd
+	g.cmdMu.Unlock()
+	if cmd == nil || cmd.ProcessState != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte("MCP server not running"))
 		return
@@ -1202,11 +1206,20 @@ func main() {
 		log.Fatal("--http-upstream cannot be combined with --authentication")
 	}
 
-	// Claim the ports before spawning the MCP child so a duplicate launch is
-	// detected at once rather than after the readiness timeout.
-	listeners := claimPortsOrDeferToRunningGateway(port)
-
 	gateway := NewGateway()
+
+	// Claim the ports and serve the health port before spawning the MCP child,
+	// so a duplicate launch is detected at once rather than after the
+	// readiness timeout.
+	listeners := claimPortsOrDeferToRunningGateway(port, healthPortFree(port, httpUpstreamConfig))
+	if listeners.health != nil {
+		go func() {
+			log.Printf("Health check endpoint listening on port %d", port+1)
+			if err := http.Serve(listeners.health, newHealthMux(gateway, port)); err != nil {
+				log.Printf("Health server stopped: %v", err)
+			}
+		}()
+	}
 
 	// Start the MCP server
 	if err := gateway.StartMCPServer(stdioCmd); err != nil {
@@ -1235,18 +1248,6 @@ func main() {
 
 	// Start the gateway's main loop
 	go gateway.Run()
-
-	// Start health check on separate port (port + 1) like Node.js version
-	if listeners.health != nil {
-		go func() {
-			healthMux := http.NewServeMux()
-			healthMux.HandleFunc("/health", gateway.HandleHealth)
-			log.Printf("Health check endpoint listening on port %d", port+1)
-			if err := http.Serve(listeners.health, healthMux); err != nil {
-				log.Printf("Health server stopped: %v", err)
-			}
-		}()
-	}
 
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
