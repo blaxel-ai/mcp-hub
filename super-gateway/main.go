@@ -1202,6 +1202,10 @@ func main() {
 		log.Fatal("--http-upstream cannot be combined with --authentication")
 	}
 
+	// Claim the ports before spawning the MCP child so a duplicate launch is
+	// detected at once rather than after the readiness timeout.
+	listeners := claimPortsOrDeferToRunningGateway(port)
+
 	gateway := NewGateway()
 
 	// Start the MCP server
@@ -1233,14 +1237,16 @@ func main() {
 	go gateway.Run()
 
 	// Start health check on separate port (port + 1) like Node.js version
-	go func() {
-		healthMux := http.NewServeMux()
-		healthMux.HandleFunc("/health", gateway.HandleHealth)
-		log.Printf("Health check endpoint listening on port %d", port+1)
-		if err := http.ListenAndServe(fmt.Sprintf(":%d", port+1), healthMux); err != nil {
-			log.Printf("Failed to start health server: %v", err)
-		}
-	}()
+	if listeners.health != nil {
+		go func() {
+			healthMux := http.NewServeMux()
+			healthMux.HandleFunc("/health", gateway.HandleHealth)
+			log.Printf("Health check endpoint listening on port %d", port+1)
+			if err := http.Serve(listeners.health, healthMux); err != nil {
+				log.Printf("Health server stopped: %v", err)
+			}
+		}()
+	}
 
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
@@ -1358,7 +1364,7 @@ func main() {
 		})
 	}
 
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), handler); err != nil {
+	if err := http.Serve(listeners.main, handler); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
