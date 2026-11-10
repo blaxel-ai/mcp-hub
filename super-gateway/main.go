@@ -245,32 +245,7 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 			log.Printf("  [%d]: %q", i, part)
 		}
 
-		// Handle the case where the entire command is passed as a single string
-		// This happens when Docker CMD is injected as a single argument
-		if len(cmdParts) == 1 && strings.Contains(cmdParts[0], " ") {
-			// Split the single string into command and arguments
-			// This handles cases like "node /app/build/index.js --tools=..."
-			cmdParts = strings.Fields(cmdParts[0])
-			log.Printf("Detected single string command, split into: %v", cmdParts)
-		} else if len(cmdParts) > 1 {
-			// Check if any argument (except the first) contains spaces and should be split
-			// This handles cases where arguments are incorrectly concatenated
-			newCmdParts := []string{cmdParts[0]} // Keep the command as-is
-			for i := 1; i < len(cmdParts); i++ {
-				if strings.Contains(cmdParts[i], " ") && !strings.HasPrefix(cmdParts[i], "--") {
-					// This argument contains spaces and isn't a flag, split it
-					log.Printf("Splitting argument [%d]: %q", i, cmdParts[i])
-					splitArgs := strings.Fields(cmdParts[i])
-					newCmdParts = append(newCmdParts, splitArgs...)
-				} else {
-					newCmdParts = append(newCmdParts, cmdParts[i])
-				}
-			}
-			if len(newCmdParts) != len(cmdParts) {
-				log.Printf("Arguments were split from %d to %d parts", len(cmdParts), len(newCmdParts))
-				cmdParts = newCmdParts
-			}
-		}
+		cmdParts = normalizeCommandParts(cmdParts)
 
 		g.cmdParts = cmdParts
 	} else {
@@ -1116,42 +1091,46 @@ func main() {
 	transport = "websocket"
 	authentication = false
 
+	// Gateway flags come only before --stdio; everything after it belongs to
+	// the subprocess, including any gateway flags of a nested gateway command.
+	flagArgs := gatewayFlagArgs(args)
+
 	// Find --port flag if present
-	for i := 0; i < len(args); i++ {
-		if args[i] == "--port" && i+1 < len(args) {
-			portStr = args[i+1]
+	for i := 0; i < len(flagArgs); i++ {
+		if flagArgs[i] == "--port" && i+1 < len(flagArgs) {
+			portStr = flagArgs[i+1]
 			break
 		}
 	}
 
 	// Find --transport flag if present
-	for i := 0; i < len(args); i++ {
-		if args[i] == "--transport" && i+1 < len(args) {
-			transport = args[i+1]
+	for i := 0; i < len(flagArgs); i++ {
+		if flagArgs[i] == "--transport" && i+1 < len(flagArgs) {
+			transport = flagArgs[i+1]
 			break
 		}
 	}
 
 	// Find --authentication flag if present
-	for i := 0; i < len(args); i++ {
-		if args[i] == "--authentication" {
+	for i := 0; i < len(flagArgs); i++ {
+		if flagArgs[i] == "--authentication" {
 			authentication = true
 			break
 		}
 	}
 
 	// Find --http-upstream flag if present
-	for i := 0; i < len(args); i++ {
-		if args[i] == "--http-upstream" && i+1 < len(args) {
-			httpUpstreamRaw = args[i+1]
+	for i := 0; i < len(flagArgs); i++ {
+		if flagArgs[i] == "--http-upstream" && i+1 < len(flagArgs) {
+			httpUpstreamRaw = flagArgs[i+1]
 			break
 		}
 	}
 
 	// Find --http-upstream-path flag if present
-	for i := 0; i < len(args); i++ {
-		if args[i] == "--http-upstream-path" && i+1 < len(args) {
-			httpUpstreamPath = args[i+1]
+	for i := 0; i < len(flagArgs); i++ {
+		if flagArgs[i] == "--http-upstream-path" && i+1 < len(flagArgs) {
+			httpUpstreamPath = flagArgs[i+1]
 			break
 		}
 	}
@@ -1201,6 +1180,10 @@ func main() {
 	if httpUpstreamConfig != nil && authentication {
 		log.Fatal("--http-upstream cannot be combined with --authentication")
 	}
+
+	// When the platform hands us a command that runs this gateway again,
+	// supervise its MCP server directly instead of nesting gateways.
+	stdioCmd = resolveStdioCommand(stdioCmd)
 
 	gateway := NewGateway()
 
