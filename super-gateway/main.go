@@ -245,32 +245,7 @@ func (g *Gateway) StartMCPServer(cmdParts []string) error {
 			log.Printf("  [%d]: %q", i, part)
 		}
 
-		// Handle the case where the entire command is passed as a single string
-		// This happens when Docker CMD is injected as a single argument
-		if len(cmdParts) == 1 && strings.Contains(cmdParts[0], " ") {
-			// Split the single string into command and arguments
-			// This handles cases like "node /app/build/index.js --tools=..."
-			cmdParts = strings.Fields(cmdParts[0])
-			log.Printf("Detected single string command, split into: %v", cmdParts)
-		} else if len(cmdParts) > 1 {
-			// Check if any argument (except the first) contains spaces and should be split
-			// This handles cases where arguments are incorrectly concatenated
-			newCmdParts := []string{cmdParts[0]} // Keep the command as-is
-			for i := 1; i < len(cmdParts); i++ {
-				if strings.Contains(cmdParts[i], " ") && !strings.HasPrefix(cmdParts[i], "--") {
-					// This argument contains spaces and isn't a flag, split it
-					log.Printf("Splitting argument [%d]: %q", i, cmdParts[i])
-					splitArgs := strings.Fields(cmdParts[i])
-					newCmdParts = append(newCmdParts, splitArgs...)
-				} else {
-					newCmdParts = append(newCmdParts, cmdParts[i])
-				}
-			}
-			if len(newCmdParts) != len(cmdParts) {
-				log.Printf("Arguments were split from %d to %d parts", len(cmdParts), len(newCmdParts))
-				cmdParts = newCmdParts
-			}
-		}
+		cmdParts = normalizeCommandParts(cmdParts)
 
 		g.cmdParts = cmdParts
 	} else {
@@ -1067,11 +1042,7 @@ func (c *Client) writePump() {
 
 // HandleHealth provides a health check endpoint
 func (g *Gateway) HandleHealth(w http.ResponseWriter, r *http.Request) {
-	// The health port is served before the first child starts.
-	g.cmdMu.Lock()
-	cmd := g.cmd
-	g.cmdMu.Unlock()
-	if cmd == nil || cmd.ProcessState != nil {
+	if g.cmd == nil || g.cmd.ProcessState != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte("MCP server not running"))
 		return
@@ -1206,20 +1177,11 @@ func main() {
 		log.Fatal("--http-upstream cannot be combined with --authentication")
 	}
 
-	gateway := NewGateway()
+	// When the platform hands us a command that already runs its own gateway,
+	// step aside instead of wrapping it a second time.
+	execNestedGateway(stdioCmd)
 
-	// Claim the ports and serve the health port before spawning the MCP child,
-	// so a duplicate launch is detected at once rather than after the
-	// readiness timeout.
-	listeners := claimPortsOrDeferToRunningGateway(port, healthPortFree(port, httpUpstreamConfig))
-	if listeners.health != nil {
-		go func() {
-			log.Printf("Health check endpoint listening on port %d", port+1)
-			if err := http.Serve(listeners.health, newHealthMux(gateway, port)); err != nil {
-				log.Printf("Health server stopped: %v", err)
-			}
-		}()
-	}
+	gateway := NewGateway()
 
 	// Start the MCP server
 	if err := gateway.StartMCPServer(stdioCmd); err != nil {
@@ -1248,6 +1210,16 @@ func main() {
 
 	// Start the gateway's main loop
 	go gateway.Run()
+
+	// Start health check on separate port (port + 1) like Node.js version
+	go func() {
+		healthMux := http.NewServeMux()
+		healthMux.HandleFunc("/health", gateway.HandleHealth)
+		log.Printf("Health check endpoint listening on port %d", port+1)
+		if err := http.ListenAndServe(fmt.Sprintf(":%d", port+1), healthMux); err != nil {
+			log.Printf("Failed to start health server: %v", err)
+		}
+	}()
 
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
@@ -1365,7 +1337,7 @@ func main() {
 		})
 	}
 
-	if err := http.Serve(listeners.main, handler); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), handler); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
