@@ -1177,9 +1177,9 @@ func main() {
 		log.Fatal("--http-upstream cannot be combined with --authentication")
 	}
 
-	// When the platform hands us a command that already runs its own gateway,
-	// step aside instead of wrapping it a second time.
-	execNestedGateway(stdioCmd)
+	// When the platform hands us a command that runs this gateway again,
+	// supervise its MCP server directly instead of nesting gateways.
+	stdioCmd = resolveStdioCommand(stdioCmd)
 
 	gateway := NewGateway()
 
