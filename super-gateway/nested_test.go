@@ -11,28 +11,38 @@ const selfPath = "/app/super-gateway"
 
 func isSelfStub(path string) bool { return path == selfPath }
 
-func TestRunsNestedGateway(t *testing.T) {
+func TestUnwrapNestedGateway(t *testing.T) {
 	cases := []struct {
 		name string
 		cmd  []string
-		want bool
+		want []string
 	}{
-		{"plain stdio server", []string{"./signoz-mcp-server"}, false},
-		{"node server", []string{"node", "/app/build/index.js", "--tools=web_search_exa"}, false},
-		{"platform wrapper around this gateway", []string{platformWrapper, "/app", selfPath, "--port", "80", "--transport", "http-stream", "--stdio", "./signoz-mcp-server"}, true},
-		{"this gateway directly", []string{selfPath, "--port", "80", "--stdio", "node", "index.js"}, true},
-		{"this gateway without --stdio", []string{selfPath, "--help"}, false},
-		{"another binary named super-gateway", []string{"/tmp/evil/super-gateway", "--port", "80", "--stdio", "x"}, false},
-		{"wrapper at another path", []string{"/tmp/metamorph-wrapper", "/app", selfPath, "--stdio", "x"}, false},
-		{"wrapper around another binary", []string{platformWrapper, "/app", "/tmp/evil/super-gateway", "--stdio", "x"}, false},
-		{"gateway named only in an argument value", []string{"node", "index.js", "--name", selfPath, "--stdio"}, false},
-		{"truncated wrapper command", []string{platformWrapper, "/app"}, false},
-		{"empty", nil, false},
+		{"plain stdio server", []string{"./signoz-mcp-server"}, nil},
+		{"node server", []string{"node", "/app/build/index.js", "--tools=web_search_exa"}, nil},
+		{"platform wrapper around this gateway", []string{platformWrapper, "/app", selfPath, "--port", "80", "--transport", "http-stream", "--stdio", "./signoz-mcp-server"}, []string{"./signoz-mcp-server"}},
+		{"this gateway directly", []string{selfPath, "--port", "80", "--stdio", "node", "index.js"}, []string{"node", "index.js"}},
+		{"nested flags are dropped", []string{selfPath, "--port", "80", "--authentication", "--http-upstream", "http://127.0.0.1:9/mcp", "--stdio", "server"}, []string{"server"}},
+		{"this gateway without --stdio", []string{selfPath, "--help"}, nil},
+		{"this gateway with nothing after --stdio", []string{selfPath, "--stdio"}, nil},
+		{"another binary named super-gateway", []string{"/tmp/evil/super-gateway", "--port", "80", "--stdio", "x"}, nil},
+		{"wrapper at another path", []string{"/tmp/metamorph-wrapper", "/app", selfPath, "--stdio", "x"}, nil},
+		{"wrapper around another binary", []string{platformWrapper, "/app", "/tmp/evil/super-gateway", "--stdio", "x"}, nil},
+		{"gateway named only in an argument value", []string{"node", "index.js", "--name", selfPath, "--stdio", "x"}, nil},
+		{"truncated wrapper command", []string{platformWrapper, "/app"}, nil},
+		{"empty", nil, nil},
 	}
 	for _, tc := range cases {
-		if got := runsNestedGateway(tc.cmd, isSelfStub); got != tc.want {
-			t.Errorf("%s: runsNestedGateway(%v) = %v, want %v", tc.name, tc.cmd, got, tc.want)
+		got, ok := unwrapNestedGateway(tc.cmd, isSelfStub)
+		if ok != (tc.want != nil) || !reflect.DeepEqual(got, tc.want) {
+			t.Errorf("%s: unwrapNestedGateway(%v) = %v, %v; want %v", tc.name, tc.cmd, got, ok, tc.want)
 		}
+	}
+}
+
+func TestResolveStdioCommandKeepsPlainCommand(t *testing.T) {
+	in := []string{"node", "/app/build/index.js", "--tools=a"}
+	if got := resolveStdioCommand(in); !reflect.DeepEqual(got, in) {
+		t.Fatalf("resolveStdioCommand = %v, want %v", got, in)
 	}
 }
 
@@ -68,8 +78,8 @@ func TestNormalizeCommandPartsSplitsSingleString(t *testing.T) {
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("normalizeCommandParts = %v, want %v", got, want)
 	}
-	if !runsNestedGateway(got, isSelfStub) {
-		t.Fatal("the platform's single-string command must be detected as a nested gateway")
+	if server, ok := unwrapNestedGateway(got, isSelfStub); !ok || !reflect.DeepEqual(server, []string{"./signoz-mcp-server"}) {
+		t.Fatalf("the platform's single-string command must unwrap to its server, got %v, %v", server, ok)
 	}
 }
 
