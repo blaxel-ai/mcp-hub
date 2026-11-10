@@ -112,3 +112,14 @@ func resolveStdioCommand(stdioCmd []string) []string {
 	log.Printf("Command runs this gateway again; supervising its MCP server directly instead of nesting gateways: %v", server)
 	return server
 }
+
+// gatewayFlagArgs returns the arguments that configure this gateway: those
+// before the first --stdio. Everything after it is the subprocess command.
+func gatewayFlagArgs(args []string) []string {
+	for i, arg := range args {
+		if arg == "--stdio" {
+			return args[:i]
+		}
+	}
+	return args
+}
