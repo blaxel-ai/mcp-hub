@@ -89,3 +89,15 @@ func TestNormalizeCommandPartsKeepsSeparateArgs(t *testing.T) {
 		t.Fatalf("normalizeCommandParts = %v, want %v", got, in)
 	}
 }
+
+func TestGatewayFlagArgsStopAtStdio(t *testing.T) {
+	args := []string{"--transport", "http-stream", "--port", "80", "--stdio", platformWrapper, "/app", selfPath, "--port", "9", "--authentication", "--http-upstream", "http://127.0.0.1:9/mcp", "--stdio", "server"}
+	want := []string{"--transport", "http-stream", "--port", "80"}
+	if got := gatewayFlagArgs(args); !reflect.DeepEqual(got, want) {
+		t.Fatalf("gatewayFlagArgs = %v, want %v", got, want)
+	}
+	noStdio := []string{"--port", "80"}
+	if got := gatewayFlagArgs(noStdio); !reflect.DeepEqual(got, noStdio) {
+		t.Fatalf("gatewayFlagArgs without --stdio = %v, want %v", got, noStdio)
+	}
+}

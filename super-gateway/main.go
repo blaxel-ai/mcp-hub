@@ -1091,42 +1091,46 @@ func main() {
 	transport = "websocket"
 	authentication = false
 
+	// Gateway flags come only before --stdio; everything after it belongs to
+	// the subprocess, including any gateway flags of a nested gateway command.
+	flagArgs := gatewayFlagArgs(args)
+
 	// Find --port flag if present
-	for i := 0; i < len(args); i++ {
-		if args[i] == "--port" && i+1 < len(args) {
-			portStr = args[i+1]
+	for i := 0; i < len(flagArgs); i++ {
+		if flagArgs[i] == "--port" && i+1 < len(flagArgs) {
+			portStr = flagArgs[i+1]
 			break
 		}
 	}
 
 	// Find --transport flag if present
-	for i := 0; i < len(args); i++ {
-		if args[i] == "--transport" && i+1 < len(args) {
-			transport = args[i+1]
+	for i := 0; i < len(flagArgs); i++ {
+		if flagArgs[i] == "--transport" && i+1 < len(flagArgs) {
+			transport = flagArgs[i+1]
 			break
 		}
 	}
 
 	// Find --authentication flag if present
-	for i := 0; i < len(args); i++ {
-		if args[i] == "--authentication" {
+	for i := 0; i < len(flagArgs); i++ {
+		if flagArgs[i] == "--authentication" {
 			authentication = true
 			break
 		}
 	}
 
 	// Find --http-upstream flag if present
-	for i := 0; i < len(args); i++ {
-		if args[i] == "--http-upstream" && i+1 < len(args) {
-			httpUpstreamRaw = args[i+1]
+	for i := 0; i < len(flagArgs); i++ {
+		if flagArgs[i] == "--http-upstream" && i+1 < len(flagArgs) {
+			httpUpstreamRaw = flagArgs[i+1]
 			break
 		}
 	}
 
 	// Find --http-upstream-path flag if present
-	for i := 0; i < len(args); i++ {
-		if args[i] == "--http-upstream-path" && i+1 < len(args) {
-			httpUpstreamPath = args[i+1]
+	for i := 0; i < len(flagArgs); i++ {
+		if flagArgs[i] == "--http-upstream-path" && i+1 < len(flagArgs) {
+			httpUpstreamPath = flagArgs[i+1]
 			break
 		}
 	}
