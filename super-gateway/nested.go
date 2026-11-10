@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"syscall"
 )
@@ -41,9 +40,12 @@ func normalizeCommandParts(cmdParts []string) []string {
 	return cmdParts
 }
 
-// runsNestedGateway reports whether the command starts another super-gateway,
-// directly or through a wrapper such as the platform's metamorph-wrapper:
-// some argument names the gateway binary and a --stdio follows it.
+// platformWrapper is the platform's process wrapper, at its fixed path in the guest.
+const platformWrapper = "/bin/metamorph-wrapper"
+
+// runsNestedGateway reports whether the command starts this same gateway
+// binary, either directly or behind the platform wrapper, with a --stdio
+// after it.
 //
 // The platform can append its own full command, e.g.
 //
@@ -53,19 +55,49 @@ func normalizeCommandParts(cmdParts []string) []string {
 // gateway then waits on a child that never answers MCP on stdout, while the
 // inner one serves port 80; after the 30 s readiness timeout the outer one
 // fails to bind port 80, exits 1 and stops the VM, in a loop.
-func runsNestedGateway(cmdParts []string) bool {
-	for i, part := range cmdParts {
-		base := filepath.Base(part)
-		if base != "super-gateway" && base != "supergateway" {
-			continue
-		}
-		for _, later := range cmdParts[i+1:] {
-			if later == "--stdio" {
-				return true
-			}
+//
+// Handing over is only safe to the same gateway binary, which enforces the
+// same routing and header rules. Any other command stays a supervised child,
+// whatever its arguments are named.
+func runsNestedGateway(cmdParts []string, isSelf func(string) bool) bool {
+	if len(cmdParts) == 0 {
+		return false
+	}
+	gatewayIndex := 0
+	if cmdParts[0] == platformWrapper {
+		// metamorph-wrapper <app dir> <command> [args...]
+		gatewayIndex = 2
+	}
+	if gatewayIndex >= len(cmdParts) || !isSelf(cmdParts[gatewayIndex]) {
+		return false
+	}
+	for _, later := range cmdParts[gatewayIndex+1:] {
+		if later == "--stdio" {
+			return true
 		}
 	}
 	return false
+}
+
+// isGatewayBinary reports whether path names the running gateway executable.
+func isGatewayBinary(path string) bool {
+	self, err := os.Executable()
+	if err != nil {
+		return false
+	}
+	resolved, err := exec.LookPath(path)
+	if err != nil {
+		return false
+	}
+	selfInfo, err := os.Stat(self)
+	if err != nil {
+		return false
+	}
+	pathInfo, err := os.Stat(resolved)
+	if err != nil {
+		return false
+	}
+	return os.SameFile(selfInfo, pathInfo)
 }
 
 // execNestedGateway replaces this process with the command when that command
@@ -74,7 +106,7 @@ func runsNestedGateway(cmdParts []string) bool {
 // gateway carries on as before.
 func execNestedGateway(stdioCmd []string) {
 	cmdParts := normalizeCommandParts(stdioCmd)
-	if !runsNestedGateway(cmdParts) {
+	if !runsNestedGateway(cmdParts, isGatewayBinary) {
 		return
 	}
 	path, err := exec.LookPath(cmdParts[0])
