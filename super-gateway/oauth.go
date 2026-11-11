@@ -103,8 +103,17 @@ func loadOAuthConfig(getenv func(string) string) (*oauthConfig, error) {
 // wrap puts authentication in front of every route of the gateway.
 func (c *oauthConfig) wrap(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Browser-based MCP clients call from another origin. Nothing in
+		// front of this process adds these headers, and a browser sends no
+		// ambient credential here: access only ever comes from the bearer.
+		header := w.Header()
+		header.Set("Access-Control-Allow-Origin", "*")
+		header.Set("Access-Control-Expose-Headers", "WWW-Authenticate, Mcp-Session-Id")
 		// CORS preflights carry no credential.
 		if r.Method == http.MethodOptions {
+			header.Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+			header.Set("Access-Control-Allow-Headers", "Authorization, X-Blaxel-Authorization, Content-Type, Accept, Mcp-Session-Id, MCP-Protocol-Version, X-Client-ID")
+			header.Set("Access-Control-Max-Age", "600")
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
