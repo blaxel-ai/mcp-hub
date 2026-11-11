@@ -150,8 +150,16 @@ func TestOAuthChallengesWithoutACredentialAndNeverReachesTheServer(t *testing.T)
 		t.Fatalf("invalid credential: status %d, reached %v, challenge %q", rec.Code, reached, rec.Header().Get("WWW-Authenticate"))
 	}
 
-	if rec, reached, _ := serve(cfg, http.MethodOptions, "/mcp", nil); rec.Code != http.StatusNoContent || reached {
-		t.Errorf("preflight: status %d, reached %v", rec.Code, reached)
+	// A browser client must be able to preflight, then read the challenge.
+	preflight, reached, _ := serve(cfg, http.MethodOptions, "/mcp", nil)
+	if preflight.Code != http.StatusNoContent || reached ||
+		preflight.Header().Get("Access-Control-Allow-Origin") != "*" ||
+		!strings.Contains(preflight.Header().Get("Access-Control-Allow-Headers"), "Authorization") {
+		t.Errorf("preflight: status %d, reached %v, headers %v", preflight.Code, reached, preflight.Header())
+	}
+	if rec.Header().Get("Access-Control-Allow-Origin") != "*" ||
+		!strings.Contains(rec.Header().Get("Access-Control-Expose-Headers"), "WWW-Authenticate") {
+		t.Errorf("401 is not readable cross-origin: %v", rec.Header())
 	}
 }
 
