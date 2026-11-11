@@ -79,9 +79,14 @@ func loadOAuthConfig(getenv func(string) string) (*oauthConfig, error) {
 		resourceURL: strings.TrimRight(getenv("BL_OAUTH_RESOURCE_URL"), "/"),
 		accessURL:   getenv("BL_OAUTH_ACCESS_URL"),
 		workspace:   getenv("BL_WORKSPACE"),
-		client:      &http.Client{Timeout: 5 * time.Second},
-		now:         time.Now,
-		decisions:   make(map[[sha256.Size]byte]oauthDecision),
+		client: &http.Client{
+			Timeout: 5 * time.Second,
+			// The answer is the status of the access endpoint itself: a
+			// redirect (to a login page, say) must never read as "allowed".
+			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+		},
+		now:       time.Now,
+		decisions: make(map[[sha256.Size]byte]oauthDecision),
 	}
 	for name, value := range map[string]string{
 		"BL_OAUTH_RESOURCE_URL": cfg.resourceURL,
@@ -172,7 +177,9 @@ func (c *oauthConfig) challenge(w http.ResponseWriter, r *http.Request, params s
 
 func bearerToken(r *http.Request) string {
 	for _, header := range []string{"Authorization", "X-Blaxel-Authorization"} {
-		if token, ok := strings.CutPrefix(r.Header.Get(header), "Bearer "); ok && token != "" {
+		// The scheme name is case-insensitive (RFC 9110).
+		scheme, token, _ := strings.Cut(r.Header.Get(header), " ")
+		if strings.EqualFold(scheme, "Bearer") && token != "" {
 			return token
 		}
 	}
@@ -231,12 +238,12 @@ func (c *oauthConfig) askControlPlane(ctx context.Context, token string) (oauthV
 	}
 	defer resp.Body.Close()
 
-	switch {
-	case resp.StatusCode >= 200 && resp.StatusCode < 300:
+	switch resp.StatusCode {
+	case http.StatusNoContent:
 		return oauthAllowed, nil
-	case resp.StatusCode == http.StatusUnauthorized:
+	case http.StatusUnauthorized:
 		return oauthUnauthenticated, nil
-	case resp.StatusCode == http.StatusForbidden:
+	case http.StatusForbidden:
 		return oauthForbidden, nil
 	default:
 		return 0, fmt.Errorf("access check returned %d", resp.StatusCode)

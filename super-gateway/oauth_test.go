@@ -166,6 +166,7 @@ func TestOAuthLetsAllowedCredentialsThroughAndDropsThem(t *testing.T) {
 	for _, headers := range []map[string]string{
 		{"Authorization": "Bearer oauth-token"},
 		{"X-Blaxel-Authorization": "Bearer bl_apikey"},
+		{"Authorization": "bearer oauth-token"},
 	} {
 		rec, reached, seen := serve(cfg, http.MethodPost, "/mcp", headers)
 		if rec.Code != http.StatusOK || !reached {
@@ -225,6 +226,27 @@ func TestOAuthCachesAnswersButNeverPastTheTokenExpiry(t *testing.T) {
 	now = now.Add(oauthDenyTTL + time.Second)
 	call("denied")
 	expectCalls(6, "denied answer expires quickly")
+}
+
+// Only the access endpoint's own 204 lets a caller in: a redirect to a page
+// that answers 200, or any other success status, does not.
+func TestOAuthOnlyTrustsTheAccessEndpointsOwnAnswer(t *testing.T) {
+	login := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer login.Close()
+	redirecting := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, login.URL, http.StatusFound)
+	}))
+	defer redirecting.Close()
+
+	for name, accessURL := range map[string]string{"redirect to a 200 page": redirecting.URL, "plain 200": login.URL} {
+		cfg := newOAuth(t, accessURL)
+		rec, reached, _ := serve(cfg, http.MethodPost, "/mcp", map[string]string{"Authorization": "Bearer anything"})
+		if rec.Code != http.StatusServiceUnavailable || reached {
+			t.Errorf("%s: status %d, reached %v", name, rec.Code, reached)
+		}
+	}
 }
 
 func TestOAuthFailsClosedWhenTheControlPlaneIsUnavailable(t *testing.T) {
