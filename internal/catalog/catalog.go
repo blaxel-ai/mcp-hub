@@ -32,6 +32,10 @@ type Artifact struct {
 	Form            Form       `json:"form"`
 	HiddenSecrets   []string   `json:"hiddenSecrets"`
 	Entrypoint      Entrypoint `json:"entrypoint"`
+	// The image runs a super-gateway that can authenticate callers itself
+	// (OAuth sign-in with Blaxel). The control plane only offers the option
+	// on images that declare it, because the workload is then public.
+	OAuthSignIn bool `json:"oauthSignIn"`
 }
 
 type Form struct {
@@ -224,6 +228,7 @@ func (c *Catalog) Load(name string, hub *hub.Repository, imageName string, smith
 		},
 		Enterprise:    hub.Enterprise,
 		ComingSoon:    hub.ComingSoon,
+		OAuthSignIn:   true,
 		Integration:   hub.Integration,
 		HiddenSecrets: hub.HiddenSecrets,
 	}

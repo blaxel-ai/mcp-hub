@@ -1341,6 +1341,15 @@ func main() {
 		})
 	}
 
+	oauth, err := loadOAuthConfig(os.Getenv)
+	if err != nil {
+		log.Fatalf("Invalid OAuth sign-in config: %v", err)
+	}
+	if oauth != nil {
+		log.Printf("  - OAuth sign-in: on (issuer %s)", oauth.issuer)
+		handler = oauth.wrap(handler)
+	}
+
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), handler); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
