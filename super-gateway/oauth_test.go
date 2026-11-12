@@ -637,7 +637,10 @@ func TestOAuthLateAllowedAnswerDoesNotCoverANewerRefusal(t *testing.T) {
 		t.Fatalf("second check: %v, %v", verdict, err)
 	}
 	close(releaseFirst)
-	<-first
+	// The caller that was waiting on the late answer gets the newer one too.
+	if verdict := <-first; verdict != oauthUnauthenticated {
+		t.Fatalf("the late check returned %v, want the newer refusal", verdict)
+	}
 
 	before := calls.Load()
 	if verdict, err := cfg.authorize(context.Background(), "revoked-meanwhile"); err != nil || verdict != oauthUnauthenticated {

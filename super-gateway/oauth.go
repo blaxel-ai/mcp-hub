@@ -378,13 +378,13 @@ func (c *oauthConfig) authorize(ctx context.Context, token string) (oauthVerdict
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	// Two checks of one credential can finish out of order: the answer of
-	// the check that started last wins, so a late "allowed" never covers a
-	// newer refusal.
+	// the check that started last wins, for the cache and for this caller
+	// too, so a late "allowed" never covers a newer refusal.
 	if current, ok := c.allowed[key]; ok && current.at.After(now) {
-		return verdict, nil
+		return current.verdict, nil
 	}
 	if current, ok := c.refused[key]; ok && current.at.After(now) {
-		return verdict, nil
+		return current.verdict, nil
 	}
 	delete(c.allowed, key)
 	delete(c.refused, key)
