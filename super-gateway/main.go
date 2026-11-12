@@ -820,6 +820,9 @@ func (g *Gateway) HandleHTTPStream(w http.ResponseWriter, r *http.Request) {
 	g.sseClientsMu.Unlock()
 }
 
+// maxMessageBytes bounds one MCP message read over HTTP.
+const maxMessageBytes = 16 << 20
+
 // HandleHTTPMessage handles incoming messages in HTTP streaming transport
 func (g *Gateway) HandleHTTPMessage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -854,6 +857,9 @@ func (g *Gateway) HandleHTTPMessage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// An MCP message is small. Without a bound, one caller could fill the
+	// container's memory.
+	r.Body = http.MaxBytesReader(w, r.Body, maxMessageBytes)
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusBadRequest)
@@ -1363,6 +1369,8 @@ func main() {
 		// Bounds a connection that never finishes sending its headers. No
 		// other timeout: responses are long-lived streams.
 		ReadHeaderTimeout: 15 * time.Second,
+		// A connection kept open between requests does not stay forever.
+		IdleTimeout: 120 * time.Second,
 	}
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

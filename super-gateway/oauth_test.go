@@ -502,43 +502,192 @@ func TestOAuthMadeUpTokensNeitherEvictUsersNorFloodTheControlPlane(t *testing.T)
 		}
 	})
 
-	t.Run("calls in flight are capped and the overflow fails closed", func(t *testing.T) {
+	t.Run("calls in flight are capped, and strangers cannot starve users who are in", func(t *testing.T) {
 		release := make(chan struct{})
 		var inFlight atomic.Int32
+		var blocking atomic.Bool
 		cp := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			inFlight.Add(1)
-			<-release
+			if blocking.Load() && strings.HasPrefix(r.Header.Get("Authorization"), "Bearer stranger-") {
+				inFlight.Add(1)
+				<-release
+			}
 			w.WriteHeader(http.StatusNoContent)
 		}))
 		defer cp.Close()
+		defer close(release)
 		cfg := newOAuth(t, cp.URL)
+		cfg.slotWait = 50 * time.Millisecond
+		now := time.Unix(1_800_000_000, 0)
+		var clock sync.Mutex
+		cfg.now = func() time.Time { clock.Lock(); defer clock.Unlock(); return now }
 
-		var wg sync.WaitGroup
-		for i := 0; i < oauthMaxChecks; i++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				_, _ = cfg.authorize(context.Background(), fmt.Sprintf("slow-%d", i))
-			}()
+		// A user who is in, then whose answer lapses.
+		if verdict, err := cfg.authorize(context.Background(), "member"); err != nil || verdict != oauthAllowed {
+			t.Fatalf("member: %v, %v", verdict, err)
+		}
+		clock.Lock()
+		now = now.Add(cfg.recheckEvery + time.Second)
+		clock.Unlock()
+
+		// Strangers fill every slot open to them.
+		blocking.Store(true)
+		strangers := cap(cfg.checks)
+		for i := 0; i < strangers; i++ {
+			go func() { _, _ = cfg.authorize(context.Background(), fmt.Sprintf("stranger-%d", i)) }()
 		}
 		deadline := time.Now().Add(5 * time.Second)
-		for inFlight.Load() < oauthMaxChecks {
+		for inFlight.Load() < int32(strangers) {
 			if time.Now().After(deadline) {
 				t.Fatalf("only %d calls reached the control plane", inFlight.Load())
 			}
 			time.Sleep(time.Millisecond)
 		}
 
-		rec, reached, _ := serve(cfg, http.MethodPost, "/mcp", map[string]string{"Authorization": "Bearer one-too-many"})
+		// One more stranger waits for a slot, then fails closed.
+		rec, reached, _ := serve(cfg, http.MethodPost, "/mcp", map[string]string{"Authorization": "Bearer stranger-one-too-many"})
 		if rec.Code != http.StatusServiceUnavailable || reached {
 			t.Fatalf("overflow: status %d, reached %v, want 503 and not reached", rec.Code, reached)
 		}
-		if got := inFlight.Load(); got != oauthMaxChecks {
-			t.Fatalf("%d calls in flight, want %d", got, oauthMaxChecks)
+		if got := inFlight.Load(); got != int32(strangers) {
+			t.Fatalf("%d calls in flight, want %d", got, strangers)
 		}
-		close(release)
-		wg.Wait()
+		// The member is checked again all the same: their slot is reserved.
+		rec, reached, _ = serve(cfg, http.MethodPost, "/mcp", map[string]string{"Authorization": "Bearer member"})
+		if rec.Code != http.StatusOK || !reached {
+			t.Fatalf("member during the flood: status %d, reached %v", rec.Code, reached)
+		}
 	})
+}
+
+// The control plane cannot always answer. A user who was allowed stays in
+// for one more period, never past their token's expiry; a stranger does not
+// get in on an unknown answer.
+func TestOAuthKeepsARecentAllowedAnswerThroughAnOutage(t *testing.T) {
+	var failing atomic.Bool
+	cp := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if failing.Load() {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer cp.Close()
+	cfg := newOAuth(t, cp.URL)
+	now := time.Unix(1_800_000_000, 0)
+	cfg.now = func() time.Time { return now }
+	expiring := jwtExpiringAt(now.Add(cfg.recheckEvery + 20*time.Second))
+	status := func(token string) int {
+		rec, _, _ := serve(cfg, http.MethodPost, "/mcp", map[string]string{"Authorization": "Bearer " + token})
+		return rec.Code
+	}
+
+	for _, token := range []string{"member", expiring} {
+		if got := status(token); got != http.StatusOK {
+			t.Fatalf("before the outage: %d", got)
+		}
+	}
+	failing.Store(true)
+	now = now.Add(cfg.recheckEvery + time.Second)
+	if got := status("member"); got != http.StatusOK {
+		t.Fatalf("a user who was in, during the outage: %d, want 200", got)
+	}
+	if got := status(expiring); got != http.StatusOK {
+		t.Fatalf("a token still valid, during the outage: %d, want 200", got)
+	}
+	if got := status("stranger"); got != http.StatusServiceUnavailable {
+		t.Fatalf("a stranger, during the outage: %d, want 503", got)
+	}
+	now = now.Add(20 * time.Second)
+	if got := status(expiring); got != http.StatusServiceUnavailable {
+		t.Fatalf("an expired token must not ride the outage: %d, want 503", got)
+	}
+	now = now.Add(cfg.recheckEvery)
+	if got := status("member"); got != http.StatusServiceUnavailable {
+		t.Fatalf("the answer has been unknown for more than a period: %d, want 503", got)
+	}
+}
+
+// Two checks of one credential can finish out of order. The answer of the
+// check that started last wins: a late "allowed" must not cover a refusal.
+func TestOAuthLateAllowedAnswerDoesNotCoverANewerRefusal(t *testing.T) {
+	releaseFirst := make(chan struct{})
+	firstStarted := make(chan struct{})
+	var calls atomic.Int32
+	cp := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if calls.Add(1) == 1 {
+			close(firstStarted)
+			<-releaseFirst
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		w.WriteHeader(http.StatusUnauthorized)
+	}))
+	defer cp.Close()
+	cfg := newOAuth(t, cp.URL)
+	var tick atomic.Int64
+	cfg.now = func() time.Time { return time.Unix(1_800_000_000, tick.Add(1)) }
+
+	first := make(chan oauthVerdict)
+	go func() {
+		verdict, _ := cfg.authorize(context.Background(), "revoked-meanwhile")
+		first <- verdict
+	}()
+	<-firstStarted
+	if verdict, err := cfg.authorize(context.Background(), "revoked-meanwhile"); err != nil || verdict != oauthUnauthenticated {
+		t.Fatalf("second check: %v, %v", verdict, err)
+	}
+	close(releaseFirst)
+	<-first
+
+	before := calls.Load()
+	if verdict, err := cfg.authorize(context.Background(), "revoked-meanwhile"); err != nil || verdict != oauthUnauthenticated {
+		t.Fatalf("after the late answer: %v, %v, want the refusal to stand", verdict, err)
+	}
+	if calls.Load() != before {
+		t.Fatal("the refusal was dropped by the late answer")
+	}
+}
+
+// One setting without the others means the platform made this server
+// public: that must stop the gateway, not start it without authentication.
+func TestOAuthRefusesAHalfSetOrUnsafeConfiguration(t *testing.T) {
+	full := map[string]string{
+		"BL_OAUTH_ISSUER": testIssuer, "BL_OAUTH_RESOURCE_URL": testResource,
+		"BL_OAUTH_ACCESS_URL": "https://api.example.com/v0/mcp/access", "BL_WORKSPACE": "acme",
+	}
+	load := func(change func(map[string]string)) (*oauthConfig, error) {
+		env := map[string]string{}
+		for k, v := range full {
+			env[k] = v
+		}
+		change(env)
+		return loadOAuthConfig(func(name string) string { return env[name] })
+	}
+	if cfg, err := load(func(map[string]string) {}); err != nil || cfg == nil {
+		t.Fatalf("complete configuration: %v, %v", cfg, err)
+	}
+	for name, change := range map[string]func(map[string]string){
+		"issuer missing":       func(env map[string]string) { delete(env, "BL_OAUTH_ISSUER") },
+		"issuer blank":         func(env map[string]string) { env["BL_OAUTH_ISSUER"] = "  " },
+		"only the access URL":  func(env map[string]string) { delete(env, "BL_OAUTH_ISSUER"); delete(env, "BL_OAUTH_RESOURCE_URL") },
+		"access URL over http": func(env map[string]string) { env["BL_OAUTH_ACCESS_URL"] = "http://api.example.com/v0/mcp/access" },
+		"access URL not a URL": func(env map[string]string) { env["BL_OAUTH_ACCESS_URL"] = "api.example.com" },
+	} {
+		if cfg, err := load(change); err == nil {
+			t.Errorf("%s: started with %v, want an error", name, cfg)
+		}
+	}
+}
+
+// A bearer far longer than any credential is refused without asking anyone.
+func TestOAuthRefusesAnOversizedTokenLocally(t *testing.T) {
+	cp := newControlPlane(t, nil)
+	cfg := newOAuth(t, cp.URL)
+	rec, reached, _ := serve(cfg, http.MethodPost, "/mcp", map[string]string{"Authorization": "Bearer " + strings.Repeat("a", oauthMaxTokenLength+1)})
+	if rec.Code != http.StatusUnauthorized || reached || cp.calls.Load() != 0 {
+		t.Fatalf("status %d, reached %v, %d control plane calls", rec.Code, reached, cp.calls.Load())
+	}
+
 }
 
 // The real gateway process, started with the OAuth settings: nothing reaches
