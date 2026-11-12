@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -276,6 +278,133 @@ func TestOAuthFailsClosedWhenTheControlPlaneIsUnavailable(t *testing.T) {
 	if rec.Code != http.StatusServiceUnavailable || reached {
 		t.Fatalf("unreachable control plane: status %d, reached %v", rec.Code, reached)
 	}
+}
+
+// A stream opened with a good credential must not outlive it: once the
+// control plane stops accepting the credential, open requests are cancelled
+// and WebSocket handlers (which return while the socket lives on) are told.
+func TestOAuthEndsOpenConnectionsOnceTheCredentialIsRefused(t *testing.T) {
+	var revoked atomic.Bool
+	cp := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if revoked.Load() {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer cp.Close()
+	cfg := newOAuth(t, cp.URL)
+	cfg.recheckEvery = 5 * time.Millisecond
+	// Every look at the clock is past the previous answer's lifetime.
+	var clock atomic.Int64
+	cfg.now = func() time.Time { return time.Unix(1_800_000_000+clock.Add(int64(2*oauthAllowTTL/time.Second)), 0) }
+
+	streamEnded := make(chan struct{})
+	socketClosed := make(chan struct{})
+	handler := cfg.wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ws" {
+			// Like HandleWebSocket: hand the watch to the socket and return.
+			oauthWatch(r, func() { close(socketClosed) })
+			return
+		}
+		<-r.Context().Done()
+		close(streamEnded)
+	}))
+	request := func(path string) *http.Request {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		req.Header.Set("Authorization", "Bearer good")
+		return req
+	}
+	go handler.ServeHTTP(httptest.NewRecorder(), request("/mcp"))
+	handler.ServeHTTP(httptest.NewRecorder(), request("/ws"))
+
+	select {
+	case <-streamEnded:
+		t.Fatal("stream ended while the credential was still accepted")
+	case <-socketClosed:
+		t.Fatal("socket closed while the credential was still accepted")
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	revoked.Store(true)
+	for name, ended := range map[string]chan struct{}{"stream": streamEnded, "socket": socketClosed} {
+		select {
+		case <-ended:
+		case <-time.After(2 * time.Second):
+			t.Fatalf("%s still open after the credential was refused", name)
+		}
+	}
+}
+
+// Without OAuth sign-in there is nothing to watch.
+func TestOAuthWatchIsANoOpWhenSignInIsOff(t *testing.T) {
+	stop := oauthWatch(httptest.NewRequest(http.MethodGet, "/ws", nil), func() { t.Fatal("revoked") })
+	stop()
+}
+
+// Made-up tokens are free to send: they must neither evict a real user's
+// answer nor turn into an unbounded number of calls to the control plane.
+func TestOAuthMadeUpTokensNeitherEvictUsersNorFloodTheControlPlane(t *testing.T) {
+	t.Run("refused answers never evict an allowed one", func(t *testing.T) {
+		cp := newControlPlane(t, map[string]int{"good": http.StatusNoContent})
+		cfg := newOAuth(t, cp.URL)
+		if verdict, err := cfg.authorize(context.Background(), "good"); err != nil || verdict != oauthAllowed {
+			t.Fatalf("good: %v, %v", verdict, err)
+		}
+		for i := 0; i <= oauthMaxDecisions; i++ {
+			if _, err := cfg.authorize(context.Background(), fmt.Sprintf("junk-%d", i)); err != nil {
+				t.Fatalf("junk %d: %v", i, err)
+			}
+		}
+		before := cp.calls.Load()
+		if verdict, err := cfg.authorize(context.Background(), "good"); err != nil || verdict != oauthAllowed {
+			t.Fatalf("good after the flood: %v, %v", verdict, err)
+		}
+		if cp.calls.Load() != before {
+			t.Fatal("the allowed answer was evicted by refused ones")
+		}
+		if len(cfg.refused) > oauthMaxDecisions {
+			t.Fatalf("refused answers are not bounded: %d", len(cfg.refused))
+		}
+	})
+
+	t.Run("calls in flight are capped and the overflow fails closed", func(t *testing.T) {
+		release := make(chan struct{})
+		var inFlight atomic.Int32
+		cp := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			inFlight.Add(1)
+			<-release
+			w.WriteHeader(http.StatusNoContent)
+		}))
+		defer cp.Close()
+		cfg := newOAuth(t, cp.URL)
+
+		var wg sync.WaitGroup
+		for i := 0; i < oauthMaxChecks; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				_, _ = cfg.authorize(context.Background(), fmt.Sprintf("slow-%d", i))
+			}()
+		}
+		deadline := time.Now().Add(5 * time.Second)
+		for inFlight.Load() < oauthMaxChecks {
+			if time.Now().After(deadline) {
+				t.Fatalf("only %d calls reached the control plane", inFlight.Load())
+			}
+			time.Sleep(time.Millisecond)
+		}
+
+		rec, reached, _ := serve(cfg, http.MethodPost, "/mcp", map[string]string{"Authorization": "Bearer one-too-many"})
+		if rec.Code != http.StatusServiceUnavailable || reached {
+			t.Fatalf("overflow: status %d, reached %v, want 503 and not reached", rec.Code, reached)
+		}
+		if got := inFlight.Load(); got != oauthMaxChecks {
+			t.Fatalf("%d calls in flight, want %d", got, oauthMaxChecks)
+		}
+		close(release)
+		wg.Wait()
+	})
 }
 
 // The real gateway process, started with the OAuth settings: nothing reaches
