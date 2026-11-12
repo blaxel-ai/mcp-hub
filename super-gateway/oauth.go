@@ -6,9 +6,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -67,9 +69,12 @@ type oauthConfig struct {
 
 	client *http.Client
 	now    func() time.Time
-	// How often a request or connection that stays open is checked again.
+	// How long an allowed answer is good for, and so how often a request or
+	// connection that stays open is checked again.
 	recheckEvery time.Duration
 	checks       chan struct{}
+	// Unix second of the last logged failure.
+	lastFailureLog atomic.Int64
 
 	mu sync.Mutex
 	// Allowed and refused answers live apart: a flood of made-up tokens fills
@@ -151,6 +156,7 @@ func (c *oauthConfig) wrap(next http.Handler) http.Handler {
 		}
 		verdict, err := c.authorize(r.Context(), token)
 		if err != nil {
+			c.logFailure(err)
 			http.Error(w, "Authentication is temporarily unavailable", http.StatusServiceUnavailable)
 			return
 		}
@@ -180,6 +186,16 @@ func (c *oauthConfig) wrap(next http.Handler) http.Handler {
 	})
 }
 
+// logFailure says why the answer is unknown, at most once a second: the
+// caller only sees a 503, and a flood of requests must not flood the logs.
+// The error never contains the credential.
+func (c *oauthConfig) logFailure(err error) {
+	now := c.now().Unix()
+	if last := c.lastFailureLog.Load(); last != now && c.lastFailureLog.CompareAndSwap(last, now) {
+		log.Printf("OAuth sign-in: access check failed: %v", err)
+	}
+}
+
 type oauthWatchKey struct{}
 
 // oauthWatch lets a handler whose connection outlives the request (WebSocket)
@@ -193,27 +209,66 @@ func oauthWatch(r *http.Request, revoke func()) (stop func()) {
 	return func() {}
 }
 
-// watch asks again every recheckEvery and calls revoke on the first answer
-// that is not "allowed", an unknown answer included.
+// watch keeps asking whether token is still accepted for as long as a
+// connection stays open, and calls revoke on the first refusal.
+//
+// It asks when the answer it holds lapses (the token's own expiry included),
+// not on a fixed period. An unknown answer (control plane unreachable, too
+// many checks in flight) is not a refusal: it is retried, and only revokes
+// once the answer has been unknown for a whole recheckEvery, so an outage
+// cannot keep an unchecked connection open for long.
 func (c *oauthConfig) watch(token string, revoke func()) (stop func()) {
 	done := make(chan struct{})
 	var once sync.Once
+	// Read the clock here, not in the goroutine: a request that ends at once
+	// stops the watch before it ever looks at anything.
+	wait := c.untilRecheck(token)
 	go func() {
-		ticker := time.NewTicker(c.recheckEvery)
-		defer ticker.Stop()
+		var unknownSince time.Time
 		for {
+			timer := time.NewTimer(wait)
 			select {
 			case <-done:
+				timer.Stop()
 				return
-			case <-ticker.C:
-				if verdict, err := c.authorize(context.Background(), token); err != nil || verdict != oauthAllowed {
+			case <-timer.C:
+			}
+			verdict, err := c.authorize(context.Background(), token)
+			switch {
+			case err != nil:
+				now := c.now()
+				if unknownSince.IsZero() {
+					unknownSince = now
+				}
+				if now.Sub(unknownSince) >= c.recheckEvery {
+					c.logFailure(err)
 					revoke()
 					return
 				}
+				wait = min(c.recheckEvery/10, time.Second)
+			case verdict != oauthAllowed:
+				revoke()
+				return
+			default:
+				unknownSince = time.Time{}
+				wait = c.untilRecheck(token)
 			}
 		}
 	}()
 	return func() { once.Do(func() { close(done) }) }
+}
+
+// untilRecheck is how long the allowed answer held for token stays good, at
+// most recheckEvery and never so short that the watch spins.
+func (c *oauthConfig) untilRecheck(token string) time.Duration {
+	c.mu.Lock()
+	decision, found := c.allowed[sha256.Sum256([]byte(token))]
+	c.mu.Unlock()
+	wait := c.recheckEvery
+	if found {
+		wait = min(wait, decision.until.Sub(c.now()))
+	}
+	return max(wait, min(c.recheckEvery/10, time.Second))
 }
 
 // oauthMetadataResource reports whether r asks for the metadata document,
@@ -288,7 +343,7 @@ func (c *oauthConfig) authorize(ctx context.Context, token string) (oauthVerdict
 
 	ttl := oauthDenyTTL
 	if verdict == oauthAllowed {
-		ttl = oauthAllowTTL
+		ttl = c.recheckEvery
 		if expiry, ok := jwtExpiry(token); ok && expiry.Sub(now) < ttl {
 			ttl = expiry.Sub(now)
 		}

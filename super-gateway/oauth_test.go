@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -267,6 +270,11 @@ func TestOAuthOnlyTrustsTheAccessEndpointsOwnAnswer(t *testing.T) {
 func TestOAuthFailsClosedWhenTheControlPlaneIsUnavailable(t *testing.T) {
 	cp := newControlPlane(t, map[string]int{"token": http.StatusInternalServerError})
 	cfg := newOAuth(t, cp.URL)
+	now := time.Unix(1_800_000_000, 0)
+	cfg.now = func() time.Time { return now }
+	var logs bytes.Buffer
+	log.SetOutput(&logs)
+	t.Cleanup(func() { log.SetOutput(os.Stderr) })
 
 	for range 2 {
 		rec, reached, _ := serve(cfg, http.MethodPost, "/mcp", map[string]string{"Authorization": "Bearer token"})
@@ -277,6 +285,15 @@ func TestOAuthFailsClosedWhenTheControlPlaneIsUnavailable(t *testing.T) {
 	if cp.calls.Load() != 2 {
 		t.Errorf("an unknown answer must not be cached, got %d calls", cp.calls.Load())
 	}
+	// The caller only sees a 503: the reason is logged, once per second and
+	// without the credential.
+	if got := strings.Count(logs.String(), "access check failed"); got != 1 {
+		t.Errorf("%d log lines for two failures in the same second, want 1: %s", got, logs.String())
+	}
+	if !strings.Contains(logs.String(), "500") || strings.Contains(logs.String(), "token") {
+		t.Errorf("log must give the reason and never the credential: %s", logs.String())
+	}
+	now = now.Add(time.Second)
 
 	cp.Close()
 	rec, reached, _ := serve(cfg, http.MethodPost, "/mcp", map[string]string{"Authorization": "Bearer token"})
@@ -338,6 +355,118 @@ func TestOAuthEndsOpenConnectionsOnceTheCredentialIsRefused(t *testing.T) {
 		case <-time.After(2 * time.Second):
 			t.Fatalf("%s still open after the credential was refused", name)
 		}
+	}
+}
+
+// openStream runs a request that stays open behind the sign-in check, waits
+// until the check let it through, and reports when the check ends it.
+func openStream(t *testing.T, cfg *oauthConfig, token string) (ended chan struct{}) {
+	t.Helper()
+	started := make(chan struct{})
+	ended = make(chan struct{})
+	handler := cfg.wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		close(started)
+		<-r.Context().Done()
+		close(ended)
+	}))
+	req := httptest.NewRequest(http.MethodGet, "/mcp", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	go handler.ServeHTTP(httptest.NewRecorder(), req)
+	select {
+	case <-started:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the request was not let through")
+	}
+	return ended
+}
+
+func stillOpen(ended chan struct{}, during time.Duration) bool {
+	select {
+	case <-ended:
+		return false
+	case <-time.After(during):
+		return true
+	}
+}
+
+// An answer the control plane could not give (outage, too many checks in
+// flight) is not a refusal: the connection survives a blip, and is only cut
+// once the answer has been unknown for a whole period.
+func TestOAuthUnknownAnswerDoesNotCutAnOpenConnectionAtOnce(t *testing.T) {
+	var failing atomic.Bool
+	var failures atomic.Int32
+	cp := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if failing.Load() {
+			failures.Add(1)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer cp.Close()
+	waitForFailure := func() {
+		t.Helper()
+		seen := failures.Load()
+		for deadline := time.Now().Add(5 * time.Second); failures.Load() == seen; {
+			if time.Now().After(deadline) {
+				t.Fatal("the open connection was never checked again")
+			}
+			time.Sleep(time.Millisecond)
+		}
+	}
+	const period = 400 * time.Millisecond
+
+	t.Run("a blip is survived", func(t *testing.T) {
+		cfg := newOAuth(t, cp.URL)
+		cfg.recheckEvery = period
+		failing.Store(false)
+		ended := openStream(t, cfg, "blip")
+		failing.Store(true)
+		waitForFailure()
+		failing.Store(false)
+		if !stillOpen(ended, 3*period) {
+			t.Fatal("connection cut although the control plane never refused the credential")
+		}
+	})
+
+	t.Run("a lasting outage fails closed", func(t *testing.T) {
+		cfg := newOAuth(t, cp.URL)
+		cfg.recheckEvery = period
+		failing.Store(false)
+		ended := openStream(t, cfg, "outage")
+		failing.Store(true)
+		waitForFailure()
+		if !stillOpen(ended, period/4) {
+			t.Fatal("connection cut on the first unknown answer")
+		}
+		if stillOpen(ended, 5*period) {
+			t.Fatal("connection still open after the answer stayed unknown for more than a period")
+		}
+	})
+}
+
+// The answer held for a token lapses when the token expires. An open
+// connection is checked again then, not a full period later.
+func TestOAuthOpenConnectionIsCheckedAgainWhenTheTokenExpires(t *testing.T) {
+	expiry := time.Now().Add(2 * time.Second).Truncate(time.Second)
+	token := jwtExpiringAt(expiry)
+	cp := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if time.Now().Before(expiry) {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		w.WriteHeader(http.StatusUnauthorized)
+	}))
+	defer cp.Close()
+	cfg := newOAuth(t, cp.URL)
+	cfg.recheckEvery = time.Minute
+
+	ended := openStream(t, cfg, token)
+	if !stillOpen(ended, time.Until(expiry)-200*time.Millisecond) {
+		t.Fatal("connection cut before the token expired")
+	}
+	if stillOpen(ended, 3*time.Second) {
+		t.Fatal("connection outlived its token by seconds: the check waited for the fixed period")
 	}
 }
 
