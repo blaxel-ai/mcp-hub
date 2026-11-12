@@ -733,8 +733,15 @@ func (g *Gateway) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	g.register <- client
 
+	// With OAuth sign-in, the socket closes once the credential that opened
+	// it is no longer accepted.
+	stopWatch := oauthWatch(r, func() { _ = conn.Close() })
+
 	go client.writePump()
-	go client.readPump(g)
+	go func() {
+		defer stopWatch()
+		client.readPump(g)
+	}()
 }
 
 // HandleHTTPStream handles SSE connections for HTTP streaming transport
@@ -1350,7 +1357,14 @@ func main() {
 		handler = oauth.wrap(handler)
 	}
 
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), handler); err != nil {
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%d", port),
+		Handler: handler,
+		// Bounds a connection that never finishes sending its headers. No
+		// other timeout: responses are long-lived streams.
+		ReadHeaderTimeout: 15 * time.Second,
+	}
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
