@@ -25,6 +25,7 @@ type controlPlane struct {
 	*httptest.Server
 	calls     atomic.Int32
 	workspace atomic.Value
+	resource  atomic.Value
 }
 
 func newControlPlane(t *testing.T, statusByToken map[string]int) *controlPlane {
@@ -33,6 +34,7 @@ func newControlPlane(t *testing.T, statusByToken map[string]int) *controlPlane {
 	cp.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cp.calls.Add(1)
 		cp.workspace.Store(r.Header.Get("X-Blaxel-Workspace"))
+		cp.resource.Store(r.Header.Get("X-Blaxel-Resource"))
 		token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 		status, ok := statusByToken[token]
 		if !ok {
@@ -188,6 +190,9 @@ func TestOAuthLetsAllowedCredentialsThroughAndDropsThem(t *testing.T) {
 	}
 	if got := cp.workspace.Load(); got != "acme" {
 		t.Errorf("access check sent workspace %q", got)
+	}
+	if got := cp.resource.Load(); got != testResource {
+		t.Errorf("access check named server %q, want %q", got, testResource)
 	}
 
 	rec, reached, _ := serve(cfg, http.MethodPost, "/mcp", map[string]string{"Authorization": "Bearer outsider"})

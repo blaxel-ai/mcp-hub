@@ -19,9 +19,11 @@ import (
 // server. It then:
 //   - tells clients where to sign in: the protected resource metadata
 //     (RFC 9728) and a WWW-Authenticate challenge on 401;
-//   - asks the control plane whether the caller's credential (OAuth access
-//     token, API key or Blaxel token) may access the workspace, and caches
-//     the answer.
+//   - asks the control plane whether the caller's token may call this
+//     server, and caches the answer. The only token accepted is the one the
+//     control plane issued for this server when the client signed in: this
+//     process runs next to code the workspace controls, so it must never be
+//     handed a credential that works anywhere else.
 //
 // Nothing here verifies a signature: the control plane owns the keys, the
 // user records and revocation, so it is the one place that decides.
@@ -322,6 +324,8 @@ func (c *oauthConfig) askControlPlane(ctx context.Context, token string) (oauthV
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("X-Blaxel-Workspace", c.workspace)
+	// The control plane only accepts a token issued for this very server.
+	req.Header.Set("X-Blaxel-Resource", c.resourceURL)
 
 	resp, err := c.client.Do(req)
 	if err != nil {
