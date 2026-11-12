@@ -284,9 +284,11 @@ func (c *oauthConfig) untilRecheck(token string) time.Duration {
 	c.mu.Lock()
 	decision, found := c.allowed[sha256.Sum256([]byte(token))]
 	c.mu.Unlock()
-	wait := c.recheckEvery
+	// No allowed answer on record (a newer check refused, or the map was
+	// emptied): look again at once rather than a whole period later.
+	wait := time.Duration(0)
 	if found {
-		wait = min(wait, decision.until.Sub(c.now()))
+		wait = min(c.recheckEvery, decision.until.Sub(c.now()))
 	}
 	return max(wait, min(c.recheckEvery/10, time.Second))
 }
@@ -362,6 +364,14 @@ func (c *oauthConfig) authorize(ctx context.Context, token string) (oauthVerdict
 		// Unknown is not refused. A credential that was allowed keeps that
 		// answer for one more period, never past its own expiry, so an
 		// outage or a busy moment does not lock out users who were in.
+		// A check that ran meanwhile and got a refusal is an answer: the
+		// earlier "allowed" no longer stands in for anything.
+		c.mu.Lock()
+		refused, wasRefused = c.refused[key]
+		c.mu.Unlock()
+		if wasRefused {
+			return refused.verdict, nil
+		}
 		if wasAllowed && now.Before(c.graceEnd(token, allowed)) {
 			return oauthAllowed, nil
 		}

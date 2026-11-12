@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -648,6 +649,40 @@ func TestOAuthLateAllowedAnswerDoesNotCoverANewerRefusal(t *testing.T) {
 	}
 	if calls.Load() != before {
 		t.Fatal("the refusal was dropped by the late answer")
+	}
+}
+
+// A check that cannot get an answer falls back on an earlier "allowed", but
+// not when another check of the same credential was refused meanwhile.
+func TestOAuthUnknownAnswerDoesNotCoverARefusalThatCameMeanwhile(t *testing.T) {
+	cfg := newOAuth(t, "https://control-plane.invalid")
+	start := time.Unix(1_800_000_000, 0)
+	cfg.now = func() time.Time { return start.Add(cfg.recheckEvery + time.Second) }
+	key := sha256.Sum256([]byte("revoked"))
+	cfg.allowed[key] = oauthDecision{verdict: oauthAllowed, at: start, until: start.Add(cfg.recheckEvery)}
+	// Every slot is taken, so this check ends without an answer.
+	cfg.checksKnown = make(chan struct{}, 1)
+	cfg.checksKnown <- struct{}{}
+	cfg.slotWait = 200 * time.Millisecond
+
+	result := make(chan oauthVerdict)
+	go func() {
+		verdict, _ := cfg.authorize(context.Background(), "revoked")
+		result <- verdict
+	}()
+	time.Sleep(20 * time.Millisecond)
+	cfg.mu.Lock()
+	delete(cfg.allowed, key)
+	cfg.refused[key] = oauthDecision{verdict: oauthForbidden, at: cfg.now(), until: cfg.now().Add(oauthDenyTTL)}
+	cfg.mu.Unlock()
+
+	if verdict := <-result; verdict != oauthForbidden {
+		t.Fatalf("got %v, want the refusal", verdict)
+	}
+	// A connection let in with no allowed answer on record is looked at again
+	// at once, not a whole period later.
+	if wait := cfg.untilRecheck("revoked"); wait > time.Second {
+		t.Fatalf("next check in %v, want at most a second", wait)
 	}
 }
 
