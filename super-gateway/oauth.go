@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -45,7 +47,15 @@ const (
 
 	// Calls to the control plane in flight at once. Anyone can send a made-up
 	// token, so the number of outbound calls must not follow the inbound rate.
+	// Half of them are kept for credentials that were allowed before, so a
+	// flood of made-up tokens cannot keep real users from being re-checked.
 	oauthMaxChecks = 32
+
+	// How long a request waits for one of those calls before giving up.
+	oauthSlotWait = 2 * time.Second
+
+	// No credential this server accepts is anywhere near this long.
+	oauthMaxTokenLength = 8192
 )
 
 type oauthVerdict int
@@ -58,7 +68,9 @@ const (
 
 type oauthDecision struct {
 	verdict oauthVerdict
-	until   time.Time
+	// When the check that produced the answer started, and until when the
+	// answer is good.
+	at, until time.Time
 }
 
 type oauthConfig struct {
@@ -72,7 +84,10 @@ type oauthConfig struct {
 	// How long an allowed answer is good for, and so how often a request or
 	// connection that stays open is checked again.
 	recheckEvery time.Duration
-	checks       chan struct{}
+	// Slots for calls to the control plane: one pool for credentials never
+	// allowed before, one for those that were.
+	checks, checksKnown chan struct{}
+	slotWait            time.Duration
 	// Unix second of the last logged failure.
 	lastFailureLog atomic.Int64
 
@@ -87,8 +102,10 @@ type oauthConfig struct {
 // missing setting is fatal: the gateway in front lets everyone through, so
 // starting without authentication would expose the server.
 func loadOAuthConfig(getenv func(string) string) (*oauthConfig, error) {
-	issuer := getenv("BL_OAUTH_ISSUER")
-	if issuer == "" {
+	issuer := strings.TrimSpace(getenv("BL_OAUTH_ISSUER"))
+	// Any one of the three settings means the platform made this server
+	// public: an empty issuer next to the others must not read as "off".
+	if issuer == "" && getenv("BL_OAUTH_RESOURCE_URL") == "" && getenv("BL_OAUTH_ACCESS_URL") == "" {
 		return nil, nil
 	}
 	cfg := &oauthConfig{
@@ -111,18 +128,29 @@ func loadOAuthConfig(getenv func(string) string) (*oauthConfig, error) {
 		},
 		now:          time.Now,
 		recheckEvery: oauthAllowTTL,
-		checks:       make(chan struct{}, oauthMaxChecks),
+		checks:       make(chan struct{}, oauthMaxChecks/2),
+		checksKnown:  make(chan struct{}, oauthMaxChecks/2),
+		slotWait:     oauthSlotWait,
 		allowed:      make(map[[sha256.Size]byte]oauthDecision),
 		refused:      make(map[[sha256.Size]byte]oauthDecision),
 	}
 	for name, value := range map[string]string{
+		"BL_OAUTH_ISSUER":       cfg.issuer,
 		"BL_OAUTH_RESOURCE_URL": cfg.resourceURL,
 		"BL_OAUTH_ACCESS_URL":   cfg.accessURL,
 		"BL_WORKSPACE":          cfg.workspace,
 	} {
 		if value == "" {
-			return nil, fmt.Errorf("BL_OAUTH_ISSUER is set but %s is missing", name)
+			return nil, fmt.Errorf("OAuth sign-in is configured but %s is missing", name)
 		}
+	}
+	// Callers' credentials travel to this URL.
+	access, err := url.Parse(cfg.accessURL)
+	if err != nil || access.Host == "" {
+		return nil, fmt.Errorf("BL_OAUTH_ACCESS_URL is not a URL")
+	}
+	if host := access.Hostname(); access.Scheme != "https" && host != "localhost" && !net.ParseIP(host).IsLoopback() {
+		return nil, fmt.Errorf("BL_OAUTH_ACCESS_URL must use https")
 	}
 	return cfg, nil
 }
@@ -152,6 +180,10 @@ func (c *oauthConfig) wrap(next http.Handler) http.Handler {
 		token := bearerToken(r)
 		if token == "" {
 			c.challenge(w, r, "")
+			return
+		}
+		if len(token) > oauthMaxTokenLength {
+			c.challenge(w, r, `error="invalid_token", `)
 			return
 		}
 		verdict, err := c.authorize(r.Context(), token)
@@ -210,13 +242,13 @@ func oauthWatch(r *http.Request, revoke func()) (stop func()) {
 }
 
 // watch keeps asking whether token is still accepted for as long as a
-// connection stays open, and calls revoke on the first refusal.
+// connection stays open, and calls revoke on the first answer that is not
+// "allowed".
 //
 // It asks when the answer it holds lapses (the token's own expiry included),
-// not on a fixed period. An unknown answer (control plane unreachable, too
-// many checks in flight) is not a refusal: it is retried, and only revokes
-// once the answer has been unknown for a whole recheckEvery, so an outage
-// cannot keep an unchecked connection open for long.
+// not on a fixed period. authorize keeps a recent "allowed" through a short
+// outage of the control plane, so an error here means the answer has been
+// unknown for a whole period: the connection must not stay open unchecked.
 func (c *oauthConfig) watch(token string, revoke func()) (stop func()) {
 	done := make(chan struct{})
 	var once sync.Once
@@ -224,7 +256,6 @@ func (c *oauthConfig) watch(token string, revoke func()) (stop func()) {
 	// stops the watch before it ever looks at anything.
 	wait := c.untilRecheck(token)
 	go func() {
-		var unknownSince time.Time
 		for {
 			timer := time.NewTimer(wait)
 			select {
@@ -234,25 +265,14 @@ func (c *oauthConfig) watch(token string, revoke func()) (stop func()) {
 			case <-timer.C:
 			}
 			verdict, err := c.authorize(context.Background(), token)
-			switch {
-			case err != nil:
-				now := c.now()
-				if unknownSince.IsZero() {
-					unknownSince = now
-				}
-				if now.Sub(unknownSince) >= c.recheckEvery {
-					c.logFailure(err)
-					revoke()
-					return
-				}
-				wait = min(c.recheckEvery/10, time.Second)
-			case verdict != oauthAllowed:
+			if err != nil {
+				c.logFailure(err)
+			}
+			if err != nil || verdict != oauthAllowed {
 				revoke()
 				return
-			default:
-				unknownSince = time.Time{}
-				wait = c.untilRecheck(token)
 			}
+			wait = c.untilRecheck(token)
 		}
 	}()
 	return func() { once.Do(func() { close(done) }) }
@@ -325,19 +345,26 @@ func (c *oauthConfig) authorize(ctx context.Context, token string) (oauthVerdict
 	now := c.now()
 
 	c.mu.Lock()
-	decision, found := c.allowed[key]
-	if !found {
-		decision, found = c.refused[key]
-	}
+	allowed, wasAllowed := c.allowed[key]
+	refused, wasRefused := c.refused[key]
 	c.mu.Unlock()
-	if found && now.Before(decision.until) {
-		return decision.verdict, nil
+	if wasAllowed && now.Before(allowed.until) {
+		return oauthAllowed, nil
+	}
+	if wasRefused && now.Before(refused.until) {
+		return refused.verdict, nil
 	}
 
 	// ponytail: concurrent first requests with one credential each ask the
 	// control plane. Add singleflight if that burst ever shows up.
-	verdict, err := c.askControlPlane(ctx, token)
+	verdict, err := c.askControlPlane(ctx, token, wasAllowed)
 	if err != nil {
+		// Unknown is not refused. A credential that was allowed keeps that
+		// answer for one more period, never past its own expiry, so an
+		// outage or a busy moment does not lock out users who were in.
+		if wasAllowed && now.Before(c.graceEnd(token, allowed)) {
+			return oauthAllowed, nil
+		}
 		return 0, err
 	}
 
@@ -349,7 +376,16 @@ func (c *oauthConfig) authorize(ctx context.Context, token string) (oauthVerdict
 		}
 	}
 	c.mu.Lock()
-	// An answer replaces whatever was known about this credential.
+	defer c.mu.Unlock()
+	// Two checks of one credential can finish out of order: the answer of
+	// the check that started last wins, so a late "allowed" never covers a
+	// newer refusal.
+	if current, ok := c.allowed[key]; ok && current.at.After(now) {
+		return verdict, nil
+	}
+	if current, ok := c.refused[key]; ok && current.at.After(now) {
+		return verdict, nil
+	}
 	delete(c.allowed, key)
 	delete(c.refused, key)
 	if ttl > 0 {
@@ -358,21 +394,58 @@ func (c *oauthConfig) authorize(ctx context.Context, token string) (oauthVerdict
 			decisions = c.allowed
 		}
 		if len(decisions) >= oauthMaxDecisions {
-			clear(decisions)
+			c.prune(decisions, now)
 		}
-		decisions[key] = oauthDecision{verdict: verdict, until: now.Add(ttl)}
+		decisions[key] = oauthDecision{verdict: verdict, at: now, until: now.Add(ttl)}
 	}
-	c.mu.Unlock()
 	return verdict, nil
 }
 
-func (c *oauthConfig) askControlPlane(ctx context.Context, token string) (oauthVerdict, error) {
-	select {
-	case c.checks <- struct{}{}:
-		defer func() { <-c.checks }()
-	default:
-		return 0, fmt.Errorf("too many access checks in flight")
+// graceEnd is until when a lapsed "allowed" still stands in for an answer
+// the control plane could not give.
+func (c *oauthConfig) graceEnd(token string, allowed oauthDecision) time.Time {
+	end := allowed.until.Add(c.recheckEvery)
+	if expiry, ok := jwtExpiry(token); ok && expiry.Before(end) {
+		end = expiry
 	}
+	return end
+}
+
+// prune makes room in a full map: answers of no further use go first, and
+// only if none could go is the map emptied. c.mu is held.
+func (c *oauthConfig) prune(decisions map[[sha256.Size]byte]oauthDecision, now time.Time) {
+	for key, decision := range decisions {
+		if !now.Before(decision.until.Add(c.recheckEvery)) {
+			delete(decisions, key)
+		}
+	}
+	if len(decisions) >= oauthMaxDecisions {
+		clear(decisions)
+	}
+}
+
+// askControlPlane asks whether token may call this server. known says the
+// credential was allowed before: it then takes its slot from the reserved
+// pool.
+func (c *oauthConfig) askControlPlane(ctx context.Context, token string, known bool) (oauthVerdict, error) {
+	slots := c.checks
+	if known {
+		slots = c.checksKnown
+	}
+	select {
+	case slots <- struct{}{}:
+	default:
+		timer := time.NewTimer(c.slotWait)
+		defer timer.Stop()
+		select {
+		case slots <- struct{}{}:
+		case <-timer.C:
+			return 0, fmt.Errorf("too many access checks in flight")
+		case <-ctx.Done():
+			return 0, ctx.Err()
+		}
+	}
+	defer func() { <-slots }()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.accessURL, nil)
 	if err != nil {
 		return 0, err
