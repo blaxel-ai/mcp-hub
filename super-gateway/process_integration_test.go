@@ -192,7 +192,8 @@ func tryStartProcessGateway(t *testing.T, skipReadiness bool) *processGateway {
 		if e == nil {
 			_, _ = io.Copy(io.Discard, response.Body)
 			_ = response.Body.Close()
-			if response.StatusCode == http.StatusOK {
+			// 401 is the answer of a gateway started with OAuth sign-in on.
+			if response.StatusCode == http.StatusOK || response.StatusCode == http.StatusUnauthorized {
 				return gateway
 			}
 		}
