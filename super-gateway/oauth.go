@@ -6,9 +6,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -70,6 +72,8 @@ type oauthConfig struct {
 	// How often a request or connection that stays open is checked again.
 	recheckEvery time.Duration
 	checks       chan struct{}
+	// Unix second of the last logged failure.
+	lastFailureLog atomic.Int64
 
 	mu sync.Mutex
 	// Allowed and refused answers live apart: a flood of made-up tokens fills
@@ -151,6 +155,7 @@ func (c *oauthConfig) wrap(next http.Handler) http.Handler {
 		}
 		verdict, err := c.authorize(r.Context(), token)
 		if err != nil {
+			c.logFailure(err)
 			http.Error(w, "Authentication is temporarily unavailable", http.StatusServiceUnavailable)
 			return
 		}
@@ -178,6 +183,16 @@ func (c *oauthConfig) wrap(next http.Handler) http.Handler {
 		})
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+// logFailure says why the answer is unknown, at most once a second: the
+// caller only sees a 503, and a flood of requests must not flood the logs.
+// The error never contains the credential.
+func (c *oauthConfig) logFailure(err error) {
+	now := c.now().Unix()
+	if last := c.lastFailureLog.Load(); last != now && c.lastFailureLog.CompareAndSwap(last, now) {
+		log.Printf("OAuth sign-in: access check failed: %v", err)
+	}
 }
 
 type oauthWatchKey struct{}

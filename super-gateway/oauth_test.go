@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -267,6 +270,11 @@ func TestOAuthOnlyTrustsTheAccessEndpointsOwnAnswer(t *testing.T) {
 func TestOAuthFailsClosedWhenTheControlPlaneIsUnavailable(t *testing.T) {
 	cp := newControlPlane(t, map[string]int{"token": http.StatusInternalServerError})
 	cfg := newOAuth(t, cp.URL)
+	now := time.Unix(1_800_000_000, 0)
+	cfg.now = func() time.Time { return now }
+	var logs bytes.Buffer
+	log.SetOutput(&logs)
+	t.Cleanup(func() { log.SetOutput(os.Stderr) })
 
 	for range 2 {
 		rec, reached, _ := serve(cfg, http.MethodPost, "/mcp", map[string]string{"Authorization": "Bearer token"})
@@ -277,6 +285,15 @@ func TestOAuthFailsClosedWhenTheControlPlaneIsUnavailable(t *testing.T) {
 	if cp.calls.Load() != 2 {
 		t.Errorf("an unknown answer must not be cached, got %d calls", cp.calls.Load())
 	}
+	// The caller only sees a 503: the reason is logged, once per second and
+	// without the credential.
+	if got := strings.Count(logs.String(), "access check failed"); got != 1 {
+		t.Errorf("%d log lines for two failures in the same second, want 1: %s", got, logs.String())
+	}
+	if !strings.Contains(logs.String(), "500") || strings.Contains(logs.String(), "token") {
+		t.Errorf("log must give the reason and never the credential: %s", logs.String())
+	}
+	now = now.Add(time.Second)
 
 	cp.Close()
 	rec, reached, _ := serve(cfg, http.MethodPost, "/mcp", map[string]string{"Authorization": "Bearer token"})
